@@ -36,12 +36,10 @@ export async function POST(req: Request) {
         expiresAt: new Date(Date.now() + 10 * 60 * 1000),
       },
     });
-    try {
-      await sendRegistrationOtpEmail(email, code);
-    } catch (error) {
+    const sent = await sendRegistrationOtpEmail(email, code);
+    if (!sent.ok) {
       await prisma.emailOtp.delete({ where: { id: otp.id } }).catch(() => null);
-      const message = error instanceof Error ? error.message : String(error ?? "");
-      if (message.includes("SMTP_")) {
+      if (sent.reason === "SMTP_CONFIG_MISSING") {
         return fail("Chua cau hinh SMTP nen khong gui duoc OTP. Hay them SMTP_HOST, SMTP_USER, SMTP_PASS vao .env/Vercel env.", 503);
       }
       return fail("Khong gui duoc OTP den email nay. Vui long kiem tra cau hinh SMTP hoac thu lai sau.", 502);

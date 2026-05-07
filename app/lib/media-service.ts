@@ -24,10 +24,6 @@ function extensionFromName(name: string) {
   return ext || ".jpg";
 }
 
-function isProduction() {
-  return process.env.NODE_ENV === "production";
-}
-
 async function uploadLocal(file: File): Promise<UploadResult> {
   const bytes = Buffer.from(await file.arrayBuffer());
   const filename = `${Date.now()}-${randomUUID()}${extensionFromName(file.name)}`;
@@ -42,7 +38,7 @@ async function uploadCloudinary(file: File): Promise<UploadResult> {
   const apiKey = process.env.CLOUDINARY_API_KEY;
   const apiSecret = process.env.CLOUDINARY_API_SECRET;
   if (!cloudName || !apiKey || !apiSecret) {
-    if (isProduction()) throw new Error("MEDIA_STORAGE_NOT_CONFIGURED");
+    console.warn("Cloudinary is not configured. Falling back to local media storage.");
     return uploadLocal(file);
   }
 
@@ -64,8 +60,7 @@ async function uploadCloudinary(file: File): Promise<UploadResult> {
   });
 
   if (!response.ok) {
-    if (isProduction()) throw new Error("CLOUDINARY_UPLOAD_FAILED");
-    console.warn("Cloudinary upload failed, falling back to local storage in development.");
+    console.warn("Cloudinary upload failed. Falling back to local media storage.");
     return uploadLocal(file);
   }
   const data = (await response.json()) as { secure_url: string; public_id: string };
