@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: meo-xinh-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: meo_xinh_studio
+      POSTGRES_USER: meo_xinh
+      POSTGRES_PASSWORD: meo_xinh_dev_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - meo_xinh_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meo_xinh -d meo_xinh_studio"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  meo_xinh_postgres_data:

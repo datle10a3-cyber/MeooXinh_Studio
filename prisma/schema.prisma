@@ -1,0 +1,762 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Studio {
+  id                String           @id @default(cuid())
+  name              String
+  slug              String           @unique
+  email             String?
+  phone             String?
+  address           String?
+  currency          String           @default("VND")
+  shiftPasswordHash String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  deletedAt         DateTime?
+  users             User[]
+  roles             Role[]
+  customers         Customer[]
+  customerTags      CustomerTag[]
+  services          ServicePackage[]
+  bookings          Booking[]
+  projects          Project[]
+  transactions      Transaction[]
+  wallets           Wallet[]
+  invoices          Invoice[]
+  payments          Payment[]
+  employees         Employee[]
+  equipment         Equipment[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+  automationRules   AutomationRule[]
+  media             Media[]
+  aiMessages        AiChatMessage[]
+  aiMemories        AiMemory[]
+  aiAuditLogs       AiAuditLog[]
+  aiActionSuggestions AiActionSuggestion[]
+  categories        Category[]
+  packages          Package[]
+}
+
+model Role {
+  id          String           @id @default(cuid())
+  studioId    String?
+  name        String
+  description String?
+  createdAt   DateTime         @default(now())
+  studio      Studio?          @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  users       User[]
+  permissions RolePermission[]
+
+  @@unique([studioId, name])
+  @@index([studioId])
+}
+
+model Permission {
+  id          String           @id @default(cuid())
+  key         String           @unique
+  description String?
+  roles       RolePermission[]
+}
+
+model RolePermission {
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model User {
+  id                 String          @id @default(cuid())
+  studioId           String
+  roleId             String?
+  name               String
+  email              String          @unique
+  phone              String?
+  avatarUrl          String?
+  passwordHash       String
+  status             String          @default("ACTIVE")
+  lastLoginAt        DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  studio             Studio          @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  role               Role?           @relation(fields: [roleId], references: [id])
+  refreshTokens      RefreshToken[]
+  auditLogs          AuditLog[]
+  assignedBookings   BookingStaff[]
+  projectMembers     ProjectMember[]
+  notifications      Notification[]
+  aiMessages         AiChatMessage[]
+  aiMemories         AiMemory[]
+  aiAuditLogs        AiAuditLog[]
+  aiActionSuggestions AiActionSuggestion[]
+  openedWalletShifts WalletShift[]   @relation("WalletShiftOpenedBy")
+  closedWalletShifts WalletShift[]   @relation("WalletShiftClosedBy")
+
+  @@index([studioId])
+  @@index([roleId])
+}
+
+model RefreshToken {
+  id         String    @id @default(cuid())
+  userId     String
+  tokenHash  String    @unique
+  userAgent  String?
+  ipAddress  String?
+  deviceName String?
+  deviceKey  String?
+  lastUsedAt DateTime?
+  expiresAt  DateTime
+  revokedAt  DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, lastUsedAt])
+  @@index([userId, deviceKey])
+}
+
+model EmailOtp {
+  id          String    @id @default(cuid())
+  email       String
+  purpose     String
+  codeHash    String
+  attempts    Int       @default(0)
+  expiresAt   DateTime
+  consumedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  @@index([email, purpose, createdAt])
+  @@index([email, purpose, consumedAt, expiresAt])
+}
+
+model Customer {
+  id           String           @id @default(cuid())
+  studioId     String
+  name         String
+  phone        String?
+  email        String?
+  avatarUrl    String?
+  galleryUrls  String?
+  source       String?
+  note         String?
+  totalSpent   Decimal          @default(0)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  deletedAt    DateTime?
+  studio       Studio           @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  tags         CustomerTagMap[]
+  bookings     Booking[]
+  projects     Project[]
+  invoices     Invoice[]
+  transactions Transaction[]
+
+  @@index([studioId])
+  @@index([studioId, createdAt])
+  @@index([studioId, updatedAt])
+  @@index([studioId, deletedAt])
+  @@index([phone])
+  @@index([email])
+}
+
+model CustomerTag {
+  id        String           @id @default(cuid())
+  studioId  String
+  name      String
+  color     String           @default("#facc15")
+  studio    Studio           @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  customers CustomerTagMap[]
+
+  @@unique([studioId, name])
+}
+
+model CustomerTagMap {
+  customerId String
+  tagId      String
+  customer   Customer    @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  tag        CustomerTag @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([customerId, tagId])
+}
+
+model ServicePackage {
+  id          String    @id @default(cuid())
+  studioId    String
+  name        String
+  category    String
+  imageUrl    String?
+  galleryUrls String?
+  description String?
+  price       Decimal   @default(0)
+  promoPrice  Decimal?
+  durationMin Int       @default(60)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  studio      Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  bookings    Booking[]
+  projects    Project[]
+
+  @@index([studioId])
+}
+
+model Category {
+  id          String    @id @default(cuid())
+  studioId    String
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+  studio      Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  packages    Package[]
+
+  @@unique([studioId, name])
+  @@index([studioId, createdAt])
+}
+
+model Package {
+  id           String    @id @default(cuid())
+  studioId     String
+  name         String
+  categoryId   String
+  price        Decimal   @default(0)
+  description  String?
+  duration     String?
+  suitableFor  String?
+  includes     String?
+  deliverables String?
+  outfitCount  String?
+  peopleCount  String?
+  location     String?
+  customerNote String?
+  imageUrl     String?
+  galleryUrls  String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  studio       Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  category     Category  @relation(fields: [categoryId], references: [id], onDelete: Restrict)
+  bookings     Booking[]
+
+  @@index([studioId, createdAt])
+  @@index([categoryId])
+}
+
+model Booking {
+  id           String          @id @default(cuid())
+  studioId     String
+  customerId   String?
+  serviceId    String?
+  packageId    String?
+  customerName String?
+  packageName  String?
+  categoryName String?
+  price        Decimal         @default(0)
+  startTime    DateTime?
+  endTime      DateTime?
+  title        String
+  imageUrl     String?
+  galleryUrls  String?
+  studioRoom   String?
+  startAt      DateTime
+  endAt        DateTime
+  status       String          @default("PENDING")
+  deposit      Decimal         @default(0)
+  total        Decimal         @default(0)
+  note         String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  deletedAt    DateTime?
+  studio       Studio          @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  customer     Customer?       @relation(fields: [customerId], references: [id])
+  service      ServicePackage? @relation(fields: [serviceId], references: [id])
+  package      Package?        @relation(fields: [packageId], references: [id])
+  staff        BookingStaff[]
+  project      Project?
+
+  @@index([studioId, startAt, endAt])
+  @@index([studioId, status, startAt])
+  @@index([studioId, customerId, startAt])
+  @@index([studioId, packageId, startAt])
+  @@index([studioId, createdAt])
+  @@index([studioId, deletedAt])
+  @@index([customerId])
+  @@index([packageId])
+}
+
+model BookingStaff {
+  bookingId String
+  userId    String
+  role      String?
+  booking   Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([bookingId, userId])
+}
+
+model Project {
+  id           String          @id @default(cuid())
+  studioId     String
+  bookingId    String?         @unique
+  customerId   String?
+  serviceId    String?
+  code         String
+  name         String
+  coverUrl     String?
+  galleryUrls  String?
+  status       String          @default("PENDING")
+  amount       Decimal         @default(0)
+  dueAmount    Decimal         @default(0)
+  deadlineAt   DateTime?
+  folderUrl    String?
+  note         String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  deletedAt    DateTime?
+  studio       Studio          @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  booking      Booking?        @relation(fields: [bookingId], references: [id])
+  customer     Customer?       @relation(fields: [customerId], references: [id])
+  service      ServicePackage? @relation(fields: [serviceId], references: [id])
+  members      ProjectMember[]
+  invoices     Invoice[]
+  transactions Transaction[]
+
+  @@unique([studioId, code])
+  @@index([studioId, status])
+  @@index([studioId, deadlineAt])
+  @@index([studioId, customerId, createdAt])
+  @@index([studioId, createdAt])
+  @@index([studioId, deletedAt])
+}
+
+model ProjectMember {
+  projectId String
+  userId    String
+  role      String?
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([projectId, userId])
+}
+
+model Wallet {
+  id             String        @id @default(cuid())
+  studioId       String
+  name           String
+  type           String
+  imageUrl       String?
+  galleryUrls    String?
+  bankName       String?
+  accountNo      String?
+  openingBalance Decimal       @default(0)
+  balance        Decimal       @default(0)
+  isActive       Boolean       @default(true)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  deletedAt      DateTime?
+  studio         Studio        @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  transactions   Transaction[]
+  payments       Payment[]
+
+  @@index([studioId])
+  @@index([studioId, createdAt])
+  @@index([studioId, deletedAt])
+}
+
+model WalletShift {
+  id                     String        @id @default(cuid())
+  studioId               String
+  walletId               String
+  code                   String?
+  openedById             String?
+  closedById             String?
+  status                 String        @default("OPEN")
+  openingBalance         Decimal       @default(0)
+  totalIncome            Decimal       @default(0)
+  totalExpense           Decimal       @default(0)
+  expectedClosingBalance Decimal       @default(0)
+  actualClosingBalance   Decimal?
+  difference             Decimal       @default(0)
+  note                   String?
+  closeNote              String?
+  openedAt               DateTime      @default(now())
+  closedAt               DateTime?
+  createdAt              DateTime      @default(now())
+  updatedAt              DateTime      @updatedAt
+  openedBy               User?         @relation("WalletShiftOpenedBy", fields: [openedById], references: [id])
+  closedBy               User?         @relation("WalletShiftClosedBy", fields: [closedById], references: [id])
+  transactions           Transaction[]
+
+  @@unique([studioId, code])
+  @@index([studioId, walletId, status])
+  @@index([studioId, status, openedAt])
+  @@index([studioId, openedAt])
+  @@index([openedById])
+  @@index([closedById])
+}
+
+model TransactionCategory {
+  id           String        @id @default(cuid())
+  studioId     String
+  name         String
+  type         String
+  createdAt    DateTime      @default(now())
+  transactions Transaction[]
+
+  @@unique([studioId, name, type])
+}
+
+model Transaction {
+  id             String               @id @default(cuid())
+  studioId       String
+  walletId       String?
+  categoryId     String?
+  customerId     String?
+  projectId      String?
+  walletShiftId  String?
+  type           String
+  title          String
+  imageUrl       String?
+  galleryUrls    String?
+  amount         Decimal
+  method         String               @default("CASH")
+  approvalStatus String               @default("APPROVED")
+  approvedBy     String?
+  attachmentUrl  String?
+  note           String?
+  occurredAt     DateTime             @default(now())
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+  deletedAt      DateTime?
+  studio         Studio               @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  wallet         Wallet?              @relation(fields: [walletId], references: [id])
+  walletShift    WalletShift?         @relation(fields: [walletShiftId], references: [id])
+  category       TransactionCategory? @relation(fields: [categoryId], references: [id])
+  customer       Customer?            @relation(fields: [customerId], references: [id])
+  project        Project?             @relation(fields: [projectId], references: [id])
+
+  @@index([studioId, type, occurredAt])
+  @@index([studioId, occurredAt])
+  @@index([studioId, walletId, occurredAt])
+  @@index([studioId, walletShiftId, occurredAt])
+  @@index([studioId, customerId, occurredAt])
+  @@index([studioId, projectId, occurredAt])
+  @@index([studioId, approvalStatus, occurredAt])
+  @@index([studioId, createdAt])
+  @@index([studioId, deletedAt])
+  @@index([walletId])
+}
+
+model Invoice {
+  id          String        @id @default(cuid())
+  studioId    String
+  customerId  String?
+  projectId   String?
+  code        String
+  status      String        @default("DRAFT")
+  imageUrl    String?
+  galleryUrls String?
+  issueDate   DateTime      @default(now())
+  dueDate     DateTime?
+  subtotal    Decimal       @default(0)
+  discount    Decimal       @default(0)
+  tax         Decimal       @default(0)
+  total       Decimal       @default(0)
+  paid        Decimal       @default(0)
+  due         Decimal       @default(0)
+  pdfUrl      String?
+  note        String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  deletedAt   DateTime?
+  studio      Studio        @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  customer    Customer?     @relation(fields: [customerId], references: [id])
+  project     Project?      @relation(fields: [projectId], references: [id])
+  items       InvoiceItem[]
+  payments    Payment[]
+
+  @@unique([studioId, code])
+  @@index([studioId, status])
+  @@index([studioId, issueDate])
+  @@index([studioId, dueDate])
+  @@index([studioId, customerId, issueDate])
+  @@index([studioId, projectId, issueDate])
+  @@index([studioId, due])
+  @@index([studioId, createdAt])
+  @@index([studioId, deletedAt])
+}
+
+model InvoiceItem {
+  id          String  @id @default(cuid())
+  invoiceId   String
+  description String
+  quantity    Int     @default(1)
+  unitPrice   Decimal @default(0)
+  total       Decimal @default(0)
+  invoice     Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id        String   @id @default(cuid())
+  studioId  String
+  invoiceId String?
+  walletId  String?
+  amount    Decimal
+  method    String   @default("CASH")
+  paidAt    DateTime @default(now())
+  note      String?
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+  wallet    Wallet?  @relation(fields: [walletId], references: [id])
+
+  @@index([studioId, paidAt])
+  @@index([studioId, walletId, paidAt])
+  @@index([studioId, invoiceId])
+}
+
+model Employee {
+  id           String    @id @default(cuid())
+  studioId     String
+  userId       String?
+  name         String
+  avatarUrl    String?
+  galleryUrls  String?
+  phone        String?
+  email        String?
+  position     String
+  address      String?
+  salaryType   String    @default("FIXED")
+  baseSalary   Decimal   @default(0)
+  workSchedule String?
+  note         String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+  studio       Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  workLogs     WorkLog[]
+
+  @@index([studioId])
+  @@index([studioId, createdAt])
+  @@index([studioId, deletedAt])
+}
+
+model WorkLog {
+  id          String   @id @default(cuid())
+  employeeId  String
+  projectId   String?
+  workDate    DateTime
+  hours       Decimal  @default(0)
+  description String?
+  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+}
+
+model Equipment {
+  id          String           @id @default(cuid())
+  studioId    String
+  name        String
+  type        String
+  imageUrl    String?
+  galleryUrls String?
+  serial      String?
+  status      String           @default("AVAILABLE")
+  assignedTo  String?
+  note        String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+  deletedAt   DateTime?
+  studio      Studio           @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  maintenance MaintenanceLog[]
+
+  @@index([studioId, status])
+  @@index([studioId, createdAt])
+  @@index([studioId, deletedAt])
+}
+
+model MaintenanceLog {
+  id          String    @id @default(cuid())
+  equipmentId String
+  title       String
+  cost        Decimal   @default(0)
+  servicedAt  DateTime  @default(now())
+  nextDueAt   DateTime?
+  note        String?
+  equipment   Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id          String    @id @default(cuid())
+  studioId    String
+  userId      String?
+  title       String
+  message     String
+  imageUrl    String?
+  galleryUrls String?
+  type        String    @default("SYSTEM")
+  isRead      Boolean   @default(false)
+  dueAt       DateTime?
+  createdAt   DateTime  @default(now())
+  deletedAt   DateTime?
+  studio      Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  user        User?     @relation(fields: [userId], references: [id])
+
+  @@index([studioId, isRead])
+  @@index([studioId, createdAt])
+  @@index([studioId, dueAt])
+  @@index([studioId, deletedAt])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  studioId  String
+  userId    String
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([studioId])
+  @@index([userId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  studioId  String
+  userId    String?
+  action    String
+  entity    String
+  entityId  String?
+  metadata  String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  user      User?    @relation(fields: [userId], references: [id])
+
+  @@index([studioId, createdAt])
+  @@index([studioId, userId, createdAt])
+  @@index([studioId, action, createdAt])
+  @@index([studioId, entity, createdAt])
+  @@index([entity, entityId])
+}
+
+model AutomationRule {
+  id        String   @id @default(cuid())
+  studioId  String
+  name      String
+  trigger   String
+  condition String?
+  action    String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  @@index([studioId, isActive])
+}
+
+model Media {
+  id        String   @id @default(cuid())
+  studioId  String
+  userId    String?
+  url       String
+  publicId  String?
+  filename  String
+  mimeType  String
+  type      String
+  size      Int
+  width     Int?
+  height    Int?
+  provider  String   @default("LOCAL")
+  createdAt DateTime @default(now())
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  @@index([studioId, createdAt])
+  @@index([studioId, type, createdAt])
+  @@index([studioId, userId, createdAt])
+  @@index([type])
+}
+
+model AiChatMessage {
+  id        String   @id @default(cuid())
+  studioId  String
+  userId    String
+  role      String
+  content   String
+  createdAt DateTime @default(now())
+  studio    Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([studioId, userId, createdAt])
+}
+
+model AiMemory {
+  id         String   @id @default(cuid())
+  studioId   String
+  userId     String?
+  type       String   @default("PREFERENCE")
+  key        String
+  value      String
+  source     String?
+  confidence Decimal  @default(0.75)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  lastUsedAt DateTime?
+  studio     Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([studioId, userId, type, key])
+  @@index([studioId, isActive, updatedAt])
+  @@index([studioId, userId, isActive])
+  @@index([studioId, type])
+}
+
+model AiAuditLog {
+  id            String   @id @default(cuid())
+  studioId      String
+  userId        String
+  question      String
+  answer        String
+  mode          String   @default("model")
+  sourceSummary String?
+  imageCount    Int      @default(0)
+  blocked       Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  studio        Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([studioId, createdAt])
+  @@index([studioId, userId, createdAt])
+  @@index([studioId, mode, createdAt])
+}
+
+model AiActionSuggestion {
+  id          String    @id @default(cuid())
+  studioId    String
+  userId      String
+  type        String
+  title       String
+  description String
+  payload     String
+  status      String    @default("PENDING")
+  result      String?
+  createdAt   DateTime  @default(now())
+  decidedAt   DateTime?
+  studio      Studio    @relation(fields: [studioId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([studioId, userId, status, createdAt])
+  @@index([studioId, status, createdAt])
+  @@index([studioId, type])
+}

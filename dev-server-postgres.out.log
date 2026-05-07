@@ -1,0 +1,13 @@
+
+> thuthao_studio@0.1.0 dev
+> next dev -H 127.0.0.1
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://127.0.0.1:3000
+- Network:       http://127.0.0.1:3000
+- Environments: .env
+✓ Ready in 675ms
+
+ GET / 200 in 1273ms (next.js: 370ms, application-code: 902ms)
+ GET / 200 in 160ms (next.js: 9ms, application-code: 151ms)
+[?25h
