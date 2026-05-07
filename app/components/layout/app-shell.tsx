@@ -28,9 +28,29 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
-import { Sidebar } from "@/app/components/layout/sidebar";
-import { UserMenu } from "@/app/components/layout/user-menu";
-import { NotificationBell } from "@/app/components/notifications/notification-bell";
+const Sidebar = dynamic(
+  () =>
+    import("@/app/components/layout/sidebar").then(
+      (mod) => mod.Sidebar,
+    ),
+  { ssr: false },
+);
+const UserMenu = dynamic(
+  () =>
+    import("@/app/components/layout/user-menu").then(
+      (mod) => mod.UserMenu,
+    ),
+  { ssr: false },
+);
+import dynamic from "next/dynamic";
+
+const NotificationBell = dynamic(
+  () =>
+    import("@/app/components/notifications/notification-bell").then(
+      (mod) => mod.NotificationBell,
+    ),
+  { ssr: false },
+);
 import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/components/brand/studio-brand";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
@@ -180,8 +200,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [searching, setSearching] = useState(false);
 
   const loadSession = useCallback(async () => {
-    if (session) return;
-    try {
+  if (session || pathname === "/login") return;
+      try {
       let res = await fetchWithTimeout("/api/auth/me", { credentials: "include" });
       if (res.status === 401) {
         const refreshed = await fetchWithTimeout("/api/auth/refresh", { method: "POST", credentials: "include" });
@@ -237,7 +257,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [loadSession]);
 
   useEffect(() => {
-    if (!searchOpen || searchQuery.trim().length < 2) {
+    if (!searchOpen || searchQuery.trim().length < 3) {
       return;
     }
     const controller = new AbortController();
@@ -251,7 +271,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         .catch(() => null);
       setSearching(false);
       setSearchResults(result?.data ?? []);
-    }, 180);
+    }, 500);
     return () => {
       controller.abort();
       window.clearTimeout(timer);
