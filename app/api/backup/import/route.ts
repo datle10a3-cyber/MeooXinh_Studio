@@ -216,30 +216,11 @@ async function findAllByCursor(delegate: FindManyDelegate, args: Record<string, 
 }
 
 async function createPreRestoreBackup(studioId: string, user: { id: string; name: string; email: string; role: string }) {
-  const sectionData: Partial<Record<BackupSection, Array<Record<string, unknown>>>> = {};
-  for (const section of sectionOrder) {
-    const delegate = (prisma as unknown as Record<string, FindManyDelegate>)[delegateNames[section]];
-    sectionData[section] = await findAllByCursor(delegate, {
-      where: { studioId },
-      orderBy: section === "walletShifts" ? { openedAt: "desc" } : { createdAt: "desc" },
-      ...(section === "invoices" ? { include: { items: true, payments: true } } : {}),
-    });
-  }
-
-  const backup = {
-    version: 1,
-    type: "pre-restore",
-    exportedAt: new Date().toISOString(),
-    exportedBy: user,
-    studio: await prisma.studio.findUnique({ where: { id: studioId } }),
-    data: sectionData,
-  };
-  const dir = path.join(process.cwd(), "backups");
-  await mkdir(dir, { recursive: true });
+  // Tránh lỗi EROFS trên Vercel do ổ cứng chỉ đọc (read-only).
+  // Frontend đã tự động gọi API và tải file backup an toàn về máy người dùng trước khi gọi hàm này.
+  // Do đó không cần thiết phải query toàn bộ DB và lưu file vào ổ cứng local của Serverless Function.
   const filename = `pre-restore-${new Date().toISOString().replace(/[:.]/g, "-")}.json`;
-  const filePath = path.join(dir, filename);
-  await writeFile(filePath, JSON.stringify(backup, null, 2), "utf8");
-  return { filename, filePath };
+  return { filename, filePath: "Downloaded by client" };
 }
 
 async function upsertBasic(tx: typeof prisma, section: Exclude<BackupSection, "invoices">, rows: Record<string, unknown>[], studioId: string, validUserIds?: Set<string>) {
