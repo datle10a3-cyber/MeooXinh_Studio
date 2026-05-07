@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BadgeDollarSign,
@@ -39,6 +40,7 @@ type NavItem = {
   id: string;
   label: string;
   icon: LucideIcon;
+  href?: string;
   adminOnly?: boolean;
 };
 
@@ -51,21 +53,59 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
       { id: "ai", label: "AI", icon: Sparkles },
     ],
   },
+
   {
     title: "Booking",
     items: [
-      { id: "categories", label: "Danh mục", icon: FolderOpen },
-      { id: "packages", label: "Gói", icon: Package },
-      { id: "bookings", label: "Booking", icon: CalendarDays },
-      { id: "projects", label: "Dự án", icon: BriefcaseBusiness },
+      {
+        id: "categories",
+        label: "Danh mục",
+        icon: FolderOpen,
+        href: "/categories",
+      },
+
+      {
+        id: "packages",
+        label: "Gói",
+        icon: Package,
+        href: "/packages",
+      },
+
+      {
+        id: "bookings",
+        label: "Booking",
+        icon: CalendarDays,
+      },
+
+      {
+        id: "projects",
+        label: "Dự án",
+        icon: BriefcaseBusiness,
+      },
     ],
   },
+
   {
     title: "Tài chính",
     items: [
-      { id: "transactions", label: "Thu chi", icon: BadgeDollarSign },
-      { id: "wallets", label: "Ví", icon: WalletCards },
-      { id: "invoices", label: "Hóa đơn", icon: FileText },
+      {
+        id: "transactions",
+        label: "Thu chi",
+        icon: BadgeDollarSign,
+      },
+
+      {
+        id: "wallets",
+        label: "Ví",
+        icon: WalletCards,
+      },
+
+      {
+        id: "invoices",
+        label: "Hóa đơn",
+        icon: FileText,
+      },
+
       {
         id: "reports",
         label: "Báo cáo",
@@ -74,23 +114,42 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
       },
     ],
   },
+
   {
     title: "Quản lý",
     items: [
-      { id: "customers", label: "Khách", icon: Users },
+      {
+        id: "customers",
+        label: "Khách",
+        icon: Users,
+      },
+
       {
         id: "completed-bookings",
         label: "Booking hoàn tất",
         icon: CheckCircle2,
+        href: "/completed-bookings",
       },
+
       {
         id: "users",
         label: "Nhân sự",
         icon: Users,
         adminOnly: true,
       },
-      { id: "equipment", label: "Thiết bị", icon: Camera },
-      { id: "notifications", label: "Thông báo", icon: Bell },
+
+      {
+        id: "equipment",
+        label: "Thiết bị",
+        icon: Camera,
+      },
+
+      {
+        id: "notifications",
+        label: "Thông báo",
+        icon: Bell,
+      },
+
       {
         id: "trash",
         label: "Thùng rác",
@@ -111,6 +170,12 @@ export function Sidebar({ session }: { session: CurrentSession | null }) {
 
   function goTo(item: NavItem) {
     setActiveResource(item.id);
+
+    if (item.href) {
+      router.push(item.href, { scroll: false });
+      return;
+    }
+
     navigateStudioView(router, pathname, item.id);
   }
 
@@ -175,7 +240,9 @@ export function Sidebar({ session }: { session: CurrentSession | null }) {
                 .map((item) => {
                   const Icon = item.icon;
 
-                  const active = activeResource === item.id && pathname === "/";
+                  const active = item.href
+                    ? pathname === item.href
+                    : activeResource === item.id && pathname === "/";
 
                   return (
                     <button
