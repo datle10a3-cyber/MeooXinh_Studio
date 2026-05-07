@@ -1,3 +1,4 @@
+import { memo } from "react";
 import { Card } from "@/app/components/ui/card";
 import { formatMoney } from "@/app/utils/format";
 
@@ -30,7 +31,7 @@ const toneMap = {
   },
 };
 
-export function StatCard({ label, value, tone = "debt" }: StatCardProps) {
+export const StatCard = memo(function StatCard({ label, value, tone = "debt" }: StatCardProps) {
   const style = toneMap[tone];
 
   return (
@@ -40,4 +41,4 @@ export function StatCard({ label, value, tone = "debt" }: StatCardProps) {
       <p className={`mt-2 break-words text-lg font-black leading-tight sm:mt-4 sm:text-2xl ${style.value}`}>{formatMoney(value)}</p>
     </Card>
   );
-}
+});

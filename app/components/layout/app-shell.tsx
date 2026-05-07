@@ -186,7 +186,12 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const { activeResource, setActiveResource, darkMode, setDarkMode, session, setSession } = useUiStore();
+  const activeResource = useUiStore((state) => state.activeResource);
+  const setActiveResource = useUiStore((state) => state.setActiveResource);
+  const darkMode = useUiStore((state) => state.darkMode);
+  const setDarkMode = useUiStore((state) => state.setDarkMode);
+  const session = useUiStore((state) => state.session);
+  const setSession = useUiStore((state) => state.setSession);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
   const setTransactionViewIntent = useUiStore((state) => state.setTransactionViewIntent);
   const router = useRouter();
@@ -200,8 +205,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [searching, setSearching] = useState(false);
 
   const loadSession = useCallback(async () => {
-  if (session || pathname === "/login") return;
-      try {
+    if (session || pathname === "/login") return;
+    try {
+      const cached = sessionStorage.getItem("studio-session");
+      if (cached) {
+        setSession(JSON.parse(cached));
+        return;
+      }
       let res = await fetchWithTimeout("/api/auth/me", { credentials: "include" });
       if (res.status === 401) {
         const refreshed = await fetchWithTimeout("/api/auth/refresh", { method: "POST", credentials: "include" });
@@ -212,11 +222,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         return;
       }
       const result = await res.json();
-      if (result?.data) setSession(result.data);
+      if (result?.data) {
+        setSession(result.data);
+        sessionStorage.setItem("studio-session", JSON.stringify(result.data));
+      }
     } catch {
       if (isDevBypassHost()) setSession(devSession);
     }
-  }, [session, setSession]);
+  }, [session, setSession, pathname]);
 
   function goTo(item: NavItem) {
     setActiveResource(item.id);

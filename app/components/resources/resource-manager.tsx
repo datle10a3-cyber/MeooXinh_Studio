@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownLeft,
   ArrowRight,
@@ -185,7 +185,7 @@ function statusTone(value: unknown) {
   return "bg-[#FFF3EC] text-[#5B342C] ring-[#F4C7C4]";
 }
 
-function RowImage({ row, field, index }: { row: Row; field?: string; index: number }) {
+const RowImage = memo(function RowImage({ row, field, index }: { row: Row; field?: string; index: number }) {
   const src = field ? String(row[field] ?? "") : "";
   const image = src || fallbackImages[index % fallbackImages.length];
   return (
@@ -199,7 +199,7 @@ function RowImage({ row, field, index }: { row: Row; field?: string; index: numb
       )}
     </div>
   );
-}
+});
 
 function rowGallery(row: Row) {
   const raw = row.galleryUrls;
@@ -421,7 +421,7 @@ function printResourceInvoice(row: Row) {
   popup.document.close();
 }
 
-function PrintInvoiceMenu({ row }: { row: Row }) {
+const PrintInvoiceMenu = memo(function PrintInvoiceMenu({ row }: { row: Row }) {
   const [open, setOpen] = useState(false);
 
   if (!canPrintInvoice(row)) return null;
@@ -456,7 +456,7 @@ function PrintInvoiceMenu({ row }: { row: Row }) {
       ) : null}
     </div>
   );
-}
+});
 
 function splitFields(fields: FieldConfig[]) {
   return {
@@ -549,7 +549,7 @@ function FinancialPackageThumb({ row, resource, onOpenGallery }: { row: Row; res
   );
 }
 
-function FinancialCompactCard({
+const FinancialCompactCard = memo(function FinancialCompactCard({
   row,
   resource,
   indexLabel,
@@ -688,7 +688,7 @@ function FinancialCompactCard({
       </div>
     </Card>
   );
-}
+});
 
 export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const config = getConfig(resource);

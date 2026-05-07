@@ -115,8 +115,57 @@ function ImageSlot({
   async function upload(file?: File) {
     if (!file) return;
     setUploading(true);
+    
+    let finalFile = file;
+    if (file.type.startsWith("image/") && !file.type.includes("svg")) {
+      try {
+        const img = document.createElement("img");
+        const url = URL.createObjectURL(file);
+        
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = url;
+        });
+        
+        URL.revokeObjectURL(url);
+        
+        let width = img.width;
+        let height = img.height;
+        const MAX_SIZE = 1920;
+        
+        if (width > MAX_SIZE || height > MAX_SIZE) {
+          if (width > height) {
+            height = Math.round((height * MAX_SIZE) / width);
+            width = MAX_SIZE;
+          } else {
+            width = Math.round((width * MAX_SIZE) / height);
+            height = MAX_SIZE;
+          }
+        }
+        
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/jpeg", 0.85));
+          if (blob) {
+            finalFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+              type: "image/jpeg",
+              lastModified: Date.now(),
+            });
+          }
+        }
+      } catch (e) {
+        console.error("Compression failed", e);
+      }
+    }
+
     const form = new FormData();
-    form.append("file", file);
+    form.append("file", finalFile);
     const result = await fetch("/api/media", { method: "POST", body: form })
       .then((res) => res.json())
       .catch(() => null);

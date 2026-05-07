@@ -219,3 +219,13 @@ video {
     box-shadow: 0 12px 30px rgba(184, 95, 108, 0.1) !important;
   }
 }
+
+/* Performance Optimizations */
+.studio-content-auto {
+  content-visibility: auto;
+  contain-intrinsic-size: 0 200px;
+}
+
+.studio-contain-layout {
+  contain: layout style;
+}

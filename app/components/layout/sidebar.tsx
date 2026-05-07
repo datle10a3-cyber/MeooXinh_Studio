@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BadgeDollarSign,
@@ -158,11 +159,12 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
   },
 ];
 
-export function Sidebar({ session }: { session: CurrentSession | null }) {
+export const Sidebar = memo(function Sidebar({ session }: { session: CurrentSession | null }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  const { activeResource, setActiveResource } = useUiStore();
+  const activeResource = useUiStore((state) => state.activeResource);
+  const setActiveResource = useUiStore((state) => state.setActiveResource);
 
   const role = session?.user.role;
 
@@ -267,4 +269,4 @@ export function Sidebar({ session }: { session: CurrentSession | null }) {
       </div>
     </aside>
   );
-}
+});

@@ -6,13 +6,10 @@ import { AppShell } from "@/app/components/layout/app-shell";
 import { useUiStore } from "@/app/store/ui-store";
 import type { ResourceKey } from "@/app/lib/studio-config";
 import { STUDIO_VIEW_NAVIGATION_EVENT } from "@/app/utils/studio-navigation";
+import { ViewSkeleton } from "@/app/components/ui/skeleton";
 
 function ViewLoading() {
-  return (
-    <div className="rounded-2xl border border-[#F4C7C4] bg-white px-4 py-6 text-sm font-bold text-[#9B746B] shadow-sm">
-      Đang mở màn hình...
-    </div>
-  );
+  return <ViewSkeleton />;
 }
 
 const DashboardView = dynamic(

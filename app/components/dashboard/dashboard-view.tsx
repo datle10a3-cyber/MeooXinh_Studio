@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarDays, Download, RefreshCw, Sparkles, Target, WalletCards, type LucideIcon } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardTitle } from "@/app/components/ui/card";
@@ -226,7 +226,7 @@ export function DashboardView() {
   );
 }
 
-function PulseItem({ icon: Icon, title, desc }: { icon: LucideIcon; title: string; desc: string }) {
+const PulseItem = memo(function PulseItem({ icon: Icon, title, desc }: { icon: LucideIcon; title: string; desc: string }) {
   return (
     <div className="flex gap-3 rounded-[1.25rem] border border-[#F4C7C4] bg-white p-3">
       <div className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#FFE4EA] text-[#EA7188]">
@@ -238,4 +238,4 @@ function PulseItem({ icon: Icon, title, desc }: { icon: LucideIcon; title: strin
       </div>
     </div>
   );
-}
+});
