@@ -185,6 +185,8 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
   }
 }
 
+import { startTransition } from "react";
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const activeResource = useUiStore((state) => state.activeResource);
   const setActiveResource = useUiStore((state) => state.setActiveResource);
@@ -232,13 +234,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [session, setSession, pathname]);
 
   function goTo(item: NavItem) {
-    setActiveResource(item.id);
-    setMobileMenuOpen(false);
-    if (item.href && item.href !== "/") {
-      router.push(item.href, { scroll: false });
-      return;
-    }
-    navigateStudioView(router, pathname, item.id);
+    startTransition(() => {
+      setActiveResource(item.id);
+      setMobileMenuOpen(false);
+      if (item.href && item.href !== "/") {
+        router.push(item.href, { scroll: false });
+        return;
+      }
+      navigateStudioView(router, pathname, item.id);
+    });
   }
 
   function goToSearchResult(item: SearchResult) {
