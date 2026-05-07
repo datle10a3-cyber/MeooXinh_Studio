@@ -9,9 +9,6 @@ import { registerOtpSchema } from "@/app/lib/validators";
 export async function POST(req: Request) {
   try {
     assertProductionSafe();
-    if (process.env.ALLOW_STUDIO_REGISTRATION !== "true") {
-      return fail("Dang ky studio moi dang bi khoa.", 403);
-    }
 
     const parsed = registerOtpSchema.safeParse(await req.json());
     if (!parsed.success) return fail("Email khong hop le.", 422, parsed.error.flatten());

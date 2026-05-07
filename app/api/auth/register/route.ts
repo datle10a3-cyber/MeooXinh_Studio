@@ -30,9 +30,6 @@ function configuredInviteCode() {
 export async function POST(req: Request) {
   try {
     assertProductionSafe();
-    if (process.env.ALLOW_STUDIO_REGISTRATION !== "true") {
-      return fail("Dang ky studio moi dang bi khoa. Chi quan tri vien moi duoc mo dang ky.", 403);
-    }
 
     const limited = rateLimit(`register:${clientIp(req)}`, { limit: 5, windowMs: 60 * 60 * 1000, blockMs: 60 * 60 * 1000 });
     if (!limited.allowed) return fail(`Ban thu tao studio qua nhieu lan. Vui long thu lai sau ${Math.ceil(limited.retryAfter / 60)} phut.`, 429);
