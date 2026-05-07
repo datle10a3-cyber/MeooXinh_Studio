@@ -78,7 +78,7 @@ const ProfilePage = dynamic(
 const resourceKeys = new Set([
   "customers",
   "services",
-  "bookings",
+  "booking",
   "transactions",
   "wallets",
   "projects",
