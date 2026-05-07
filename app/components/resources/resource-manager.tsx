@@ -46,6 +46,7 @@ type PaginatedRows = {
 type ShiftData = {
   openShift: Row | null;
   shifts: Row[];
+  nextCode?: string;
 };
 
 const fallbackImages = [
@@ -2345,7 +2346,7 @@ function WalletAppView({
           <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
             <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-2xl font-black text-[#2F2F2F]">Mở ca</h3>
+                <h3 className="text-2xl font-black text-[#2F2F2F]">Mở ca {shiftData.nextCode ? `(${shiftData.nextCode})` : ""}</h3>
                 <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setOpeningOpen(false)}>
                   <X size={18} />
                 </Button>

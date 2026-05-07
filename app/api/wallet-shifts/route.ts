@@ -85,6 +85,7 @@ export async function GET(req: Request) {
     return ok({
       openShift: await enrichOpenShift(openShift as ShiftRow | null),
       shifts,
+      nextCode: await nextShiftCode(user.studioId),
     });
   } catch (error) {
     if ((error as Error).message === "UNAUTHORIZED") return fail("Chưa đăng nhập.", 401);
