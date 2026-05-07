@@ -71,7 +71,7 @@ async function writeSlowly(controller: ReadableStreamDefaultController<Uint8Arra
 export async function POST(req: Request) {
   const user = await requireUser().catch(() => null);
   if (!user) {
-    return new Response("PhiĂªn Ä‘Äƒng nháº­p Ä‘Ă£ háº¿t háº¡n. Báº¡n Ä‘Äƒng nháº­p láº¡i rá»“i há»i AI tiáº¿p giĂºp mĂ¬nh.", {
+    return new Response("Phiên đăng nhập đã hết hạn. Bạn đăng nhập lại rồi hỏi AI tiếp giúp mình.", {
       status: 401,
       headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" },
     });
