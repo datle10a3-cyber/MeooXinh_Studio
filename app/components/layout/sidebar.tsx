@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   BadgeDollarSign,
@@ -72,9 +71,10 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
       },
 
       {
-        id: "bookings",
+        id: "booking",
         label: "Booking",
         icon: CalendarDays,
+        href: "/booking",
       },
 
       {
@@ -242,7 +242,7 @@ export function Sidebar({ session }: { session: CurrentSession | null }) {
 
                   const active = item.href
                     ? pathname === item.href
-                    : activeResource === item.id && pathname === "/";
+                    : activeResource === item.id;
 
                   return (
                     <button
