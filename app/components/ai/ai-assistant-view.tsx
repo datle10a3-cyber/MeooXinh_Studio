@@ -135,7 +135,7 @@ export function AiAssistantView() {
     if ((!prompt.trim() && images.length === 0) || loading) return;
     setNotice("");
     const nextMessages: ChatMessage[] = [...messages, { role: "user", content: prompt || "Phân tích ảnh giúp mình", imageDataUrls: images }];
-    setMessages(nextMessages);
+    setMessages([...nextMessages, { role: "assistant", content: "" }]);
     setInput("");
     setImageDataUrls([]);
     setLoading(true);
@@ -164,7 +164,6 @@ export function AiAssistantView() {
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let assistantText = "";
-      setMessages([...nextMessages, { role: "assistant", content: "" }]);
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;

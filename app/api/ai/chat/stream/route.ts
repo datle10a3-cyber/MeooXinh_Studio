@@ -103,19 +103,21 @@ export async function POST(req: Request) {
     });
   }
 
-  const learnedMemory = await learnFromUserMessage(user, lastQuestion).catch(() => null);
-  const context = await getStudioAIContext(user, lastQuestion).catch((error) =>
-    getMinimalStudioAIContext(user, error instanceof Error ? error.message : "context error"),
-  );
+  const [learnedMemory, context] = await Promise.all([
+    learnFromUserMessage(user, lastQuestion).catch(() => null),
+    getStudioAIContext(user, lastQuestion).catch((error) =>
+      getMinimalStudioAIContext(user, error instanceof Error ? error.message : "context error"),
+    ),
+    prisma.aiChatMessage.create({
+      data: {
+        studioId: user.studioId,
+        userId: user.id,
+        role: "user",
+        content: imageCount > 0 ? `${lastQuestion || "Phân tích ảnh giúp mình"}\n[Đã gửi ${imageCount} ảnh]` : lastQuestion,
+      },
+    }).catch(() => null),
+  ]);
   const sourceSummary = summarizeAIContext(context);
-  await prisma.aiChatMessage.create({
-    data: {
-      studioId: user.studioId,
-      userId: user.id,
-      role: "user",
-      content: imageCount > 0 ? `${lastQuestion || "Phân tích ảnh giúp mình"}\n[Đã gửi ${imageCount} ảnh]` : lastQuestion,
-    },
-  }).catch(() => null);
 
   if (!canViewStudioFinance(user.role) && isFinanceQuestion(lastQuestion)) {
     const text = financeAccessDeniedAnswer();
