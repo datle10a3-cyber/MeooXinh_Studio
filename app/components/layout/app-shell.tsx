@@ -34,6 +34,7 @@ import { NotificationBell } from "@/app/components/notifications/notification-be
 import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/components/brand/studio-brand";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
+import { navigateStudioPath, navigateStudioView, studioViewPath } from "@/app/utils/studio-navigation";
 
 type NavItem = {
   id: string;
@@ -134,7 +135,7 @@ function displayStudioName(session: CurrentSession | null) {
 
 function navTarget(item: NavItem) {
   if (item.href) return item.href;
-  return `/?view=${encodeURIComponent(item.id)}`;
+  return studioViewPath(item.id);
 }
 
 function canScrollElement(element: Element, deltaY: number) {
@@ -179,6 +180,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [searching, setSearching] = useState(false);
 
   const loadSession = useCallback(async () => {
+    if (session) return;
     try {
       let res = await fetchWithTimeout("/api/auth/me", { credentials: "include" });
       if (res.status === 401) {
@@ -194,12 +196,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     } catch {
       if (isDevBypassHost()) setSession(devSession);
     }
-  }, [setSession]);
+  }, [session, setSession]);
 
   function goTo(item: NavItem) {
     setActiveResource(item.id);
     setMobileMenuOpen(false);
-    router.push(navTarget(item), { scroll: false });
+    if (item.href && item.href !== "/") {
+      router.push(item.href, { scroll: false });
+      return;
+    }
+    navigateStudioView(router, pathname, item.id);
   }
 
   function goToSearchResult(item: SearchResult) {
@@ -214,9 +220,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setSearchOpen(false);
     setSearchQuery("");
     const targetPath = item.targetPath === "/"
-      ? `/?view=${encodeURIComponent(item.targetResource)}${item.transactionView ? `&tab=${item.transactionView}` : ""}`
+      ? studioViewPath(item.targetResource, { tab: item.transactionView })
       : item.targetPath;
-    router.push(targetPath, { scroll: false });
+    navigateStudioPath(router, pathname, targetPath);
   }
 
   function isActive(item: NavItem) {
@@ -228,7 +234,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const timer = window.setTimeout(() => void loadSession(), 0);
     return () => window.clearTimeout(timer);
-  }, [loadSession, pathname]);
+  }, [loadSession]);
 
   useEffect(() => {
     if (!searchOpen || searchQuery.trim().length < 2) {

@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Building2, CalendarPlus, LogOut, Moon, Settings, ShieldCheck, Sun, User, type LucideIcon } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { AvatarUser } from "@/app/components/profile/avatar-user";
 import { Button } from "@/app/components/ui/button";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
+import { navigateStudioView } from "@/app/utils/studio-navigation";
 
 function roleText(role: string) {
   if (role === "ADMIN") return "ADMIN";
@@ -16,6 +17,7 @@ function roleText(role: string) {
 
 export function AvatarDropdown({ session, onLogout }: { session: CurrentSession; onLogout: () => void }) {
   const router = useRouter();
+  const pathname = usePathname();
   const boxRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const { darkMode, setDarkMode, setActiveResource } = useUiStore();
@@ -38,7 +40,7 @@ export function AvatarDropdown({ session, onLogout }: { session: CurrentSession;
   function go(resource: string) {
     setOpen(false);
     setActiveResource(resource);
-    router.push(resource === "home" ? "/" : `/?view=${encodeURIComponent(resource)}`, { scroll: false });
+    navigateStudioView(router, pathname, resource);
   }
 
   return (

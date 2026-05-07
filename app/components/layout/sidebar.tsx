@@ -27,6 +27,7 @@ import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/com
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { cn } from "@/app/utils/cn";
+import { navigateStudioView } from "@/app/utils/studio-navigation";
 
 type NavItem = {
   id: string;
@@ -84,7 +85,11 @@ export function Sidebar({ session }: { session: CurrentSession | null }) {
 
   function goTo(item: NavItem) {
     setActiveResource(item.id);
-    router.push(item.href ?? `/?view=${encodeURIComponent(item.id)}`, { scroll: false });
+    if (item.href && item.href !== "/") {
+      router.push(item.href, { scroll: false });
+      return;
+    }
+    navigateStudioView(router, pathname, item.id);
   }
 
   function classes(active: boolean) {
@@ -134,9 +139,15 @@ export function Sidebar({ session }: { session: CurrentSession | null }) {
                     </>
                   );
                   return item.href ? (
-                    <Link key={item.id} href={item.href} scroll={false} onClick={() => setActiveResource(item.id)} className={classes(active)}>
-                      {content}
-                    </Link>
+                    item.href === "/" ? (
+                      <button key={item.id} type="button" onClick={() => goTo(item)} className={classes(active)}>
+                        {content}
+                      </button>
+                    ) : (
+                      <Link key={item.id} href={item.href} scroll={false} onClick={() => setActiveResource(item.id)} className={classes(active)}>
+                        {content}
+                      </Link>
+                    )
                   ) : (
                     <button
                       key={item.id}

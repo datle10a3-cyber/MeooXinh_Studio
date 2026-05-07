@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import {
   BadgeDollarSign,
@@ -21,6 +21,7 @@ import { Card, CardTitle } from "@/app/components/ui/card";
 import { useUiStore } from "@/app/store/ui-store";
 import type { ApiResult, DashboardData } from "@/app/types/studio";
 import { formatDate, formatMoney } from "@/app/utils/format";
+import { navigateStudioView } from "@/app/utils/studio-navigation";
 
 const flow = [
   { title: "Danh mục", id: "categories", href: "/categories", icon: FolderOpen },
@@ -53,6 +54,7 @@ export function ModuleHome() {
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
   const setTransactionViewIntent = useUiStore((state) => state.setTransactionViewIntent);
   const router = useRouter();
+  const pathname = usePathname();
   const [dashboard, setDashboard] = useState<DashboardData>(fallbackDashboard);
   const [showAllBookings, setShowAllBookings] = useState(false);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
@@ -63,7 +65,7 @@ export function ModuleHome() {
     setActiveResource(id);
     setFocusedItemId(null);
     setTransactionViewIntent(null);
-    router.push(`/?view=${encodeURIComponent(id)}`, { scroll: false });
+    navigateStudioView(router, pathname, id);
   }
 
   function goToBooking(item: Record<string, unknown>) {
@@ -81,7 +83,7 @@ export function ModuleHome() {
     setActiveResource("transactions");
     setTransactionViewIntent(view);
     if (id) setFocusedItemId(id);
-    router.push(`/?view=transactions&tab=${view}`, { scroll: false });
+    navigateStudioView(router, pathname, "transactions", { tab: view });
   }
 
   useEffect(() => {

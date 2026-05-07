@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Bell, CheckCheck, Volume2 } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/app/components/ui/button";
 import { useUiStore } from "@/app/store/ui-store";
+import { navigateStudioPath, navigateStudioView, studioViewPath } from "@/app/utils/studio-navigation";
 
 type NotificationItem = {
   id: string;
@@ -85,6 +86,7 @@ function pushRequirementMessage() {
 
 export function NotificationBell() {
   const router = useRouter();
+  const pathname = usePathname();
   const rootRef = useRef<HTMLDivElement>(null);
   const setActiveResource = useUiStore((state) => state.setActiveResource);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
@@ -215,8 +217,8 @@ export function NotificationBell() {
     setOpen(false);
     setActiveResource(item.targetResource);
     setFocusedItemId(item.sourceId);
-    const targetPath = !item.targetPath || item.targetPath === "/" ? `/?view=${encodeURIComponent(item.targetResource)}` : item.targetPath;
-    router.push(targetPath, { scroll: false });
+    const targetPath = !item.targetPath || item.targetPath === "/" ? studioViewPath(item.targetResource) : item.targetPath;
+    navigateStudioPath(router, pathname, targetPath);
   }
 
   return (
@@ -301,7 +303,7 @@ export function NotificationBell() {
                 setOpen(false);
                 setActiveResource("notifications");
                 setFocusedItemId(null);
-                router.push("/?view=notifications", { scroll: false });
+                navigateStudioView(router, pathname, "notifications");
               }}
               className="w-full rounded-xl px-3 py-2 text-sm font-bold text-[#5B342C] hover:bg-[#FFF3EC]"
             >

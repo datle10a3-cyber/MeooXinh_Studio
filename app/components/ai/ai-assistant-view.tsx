@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { Bot, CheckCircle2, Database, ImagePlus, Lightbulb, RotateCcw, Send, Sparkles, User, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardTitle } from "@/app/components/ui/card";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 import { Textarea } from "@/app/components/ui/input";
+import { navigateStudioView } from "@/app/utils/studio-navigation";
 
 type ChatMessage = {
   role: "user" | "assistant";
@@ -31,6 +33,8 @@ function cleanAssistantText(text: string) {
 }
 
 export function AiAssistantView() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
@@ -144,8 +148,16 @@ export function AiAssistantView() {
       }).catch(() => null);
 
       if (!response?.ok || !response.body) {
-        const text = await response?.text().catch(() => "");
+        const fallbackResult = await fetch("/api/ai/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ messages: nextMessages }),
+        })
+          .then((res) => res.json())
+          .catch(() => null);
+        const text = fallbackResult?.data?.message || (await response?.text().catch(() => ""));
         setMessages([...nextMessages, { role: "assistant", content: cleanAssistantText(text || "Mình chưa trả lời được lúc này. Bạn thử lại giúp mình.") }]);
+        await loadActions();
         return;
       }
 
@@ -361,7 +373,7 @@ export function AiAssistantView() {
                           size="sm"
                           onClick={() => {
                             const view = String(action.payload?.view ?? "");
-                            if (view) window.location.href = `/?view=${view}`;
+                            if (view) navigateStudioView(router, pathname, view);
                           }}
                         >
                           Mở màn hình

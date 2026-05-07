@@ -20,7 +20,7 @@ type AIProviderMessage = {
   content: AIProviderContent;
 };
 
-type StudioAIContext = Awaited<ReturnType<typeof getStudioAIContext>>;
+export type StudioAIContext = Awaited<ReturnType<typeof getStudioAIContext>>;
 
 export type AIActionSuggestionInput = {
   type: "CREATE_TRANSACTION" | "UPDATE_BOOKING_STATUS" | "OPEN_VIEW";
@@ -572,6 +572,101 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
     aiMemories,
     deepSearch,
   };
+}
+
+export function getMinimalStudioAIContext(user: SessionUser, reason = "khong tai duoc context day du") {
+  const now = new Date();
+  const today = dayRange(now);
+  const month = monthRange(now);
+  const canViewFinance = canViewStudioFinance(user.role);
+  const counts = {
+    categories: 0,
+    packages: 0,
+    bookings: 0,
+    bookingsToday: 0,
+    bookingsUpcoming: 0,
+    bookingsCompleted: 0,
+    customers: 0,
+    projects: 0,
+    projectsOpen: 0,
+    invoices: 0,
+    invoicesUnpaid: 0,
+    incomeTransactions: 0,
+    expenseTransactions: 0,
+    wallets: 0,
+    openShifts: 0,
+    employees: 0,
+    equipment: 0,
+    equipmentNeedsAttention: 0,
+    notificationsUnread: 0,
+    auditLogs: 0,
+  };
+
+  return {
+    now,
+    today,
+    month,
+    canViewFinance,
+    userRole: user.role,
+    counts,
+    studio: {
+      id: user.studioId,
+      name: "studio hien tai",
+      slug: "chua cap nhat",
+      email: "chua cap nhat",
+      phone: "chua cap nhat",
+      address: "chua cap nhat",
+      currency: "VND",
+    },
+    currentUser: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      phone: "chua cap nhat",
+      role: user.role,
+      roleLabel: roleLabel(user.role),
+      status: "ACTIVE",
+    },
+    finance: {
+      todayIncome: 0,
+      todayExpense: 0,
+      todayProfit: 0,
+      monthIncome: 0,
+      monthExpense: 0,
+      monthProfit: 0,
+      completedBookingRevenueThisMonth: 0,
+      totalDebt: 0,
+      unpaidInvoiceCount: 0,
+      invoices: [],
+      transactions: [],
+      wallets: [],
+      openShifts: [],
+      recentClosedShifts: [],
+    },
+    bookings: {
+      today: [],
+      upcoming: [],
+      completedThisMonth: [],
+      recent: [],
+    },
+    customers: [],
+    packages: [],
+    categories: [],
+    projects: [],
+    employees: [],
+    equipment: [],
+    notifications: [],
+    auditLogs: [],
+    aiMemories: [],
+    deepSearch: {
+      reason,
+      tokens: [],
+      matchedBookings: [],
+      missingImageBookings: [],
+      matchedCustomers: [],
+      matchedTransactions: [],
+    },
+  } satisfies StudioAIContext;
 }
 
 async function getDeepSearchContext(user: SessionUser, question: string, canViewFinance: boolean) {

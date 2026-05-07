@@ -5,6 +5,7 @@ import {
   createAIActionSuggestions,
   fallbackStudioAnswer,
   financeAccessDeniedAnswer,
+  getMinimalStudioAIContext,
   getStudioAIContext,
   isFinanceQuestion,
   learnFromUserMessage,
@@ -14,6 +15,10 @@ import {
 } from "@/app/lib/ai-studio";
 import { requireUser } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
+
+export const maxDuration = 30;
+
+const GROQ_TIMEOUT_MS = 18000;
 
 function cleanEnv(value?: string) {
   return value?.trim().replace(/^["']|["']$/g, "") ?? "";
@@ -63,6 +68,16 @@ function polishAnswer(text: string, question: string) {
   return `${trimmed} ${contextualFaceEmoji(trimmed, question)}`;
 }
 
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const user = await requireUser();
@@ -96,7 +111,9 @@ export async function POST(req: Request) {
     }
 
     const learnedMemory = await learnFromUserMessage(user, lastQuestion).catch(() => null);
-    const context = await getStudioAIContext(user, lastQuestion);
+    const context = await getStudioAIContext(user, lastQuestion).catch((contextError) =>
+      getMinimalStudioAIContext(user, contextError instanceof Error ? contextError.message : "context error"),
+    );
     const sourceSummary = summarizeAIContext(context);
     if (!hasGroqKey()) {
       const text = fallbackStudioAnswer(lastQuestion, context, "chưa có GROQ_API_KEY hợp lệ trong .env", imageCount);
@@ -107,7 +124,7 @@ export async function POST(req: Request) {
       return ok({ mode: "local", message: finalText });
     }
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    const response = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${groqApiKey()}`,
@@ -120,7 +137,7 @@ export async function POST(req: Request) {
         max_completion_tokens: 900,
         messages: buildStudioAIMessages(messages, context),
       }),
-    });
+    }, GROQ_TIMEOUT_MS);
 
     if (!response.ok) {
       const errorText = await response.text().catch(() => "");

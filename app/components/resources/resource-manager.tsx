@@ -1,6 +1,6 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDownLeft,
@@ -34,6 +34,7 @@ import { viOption } from "@/app/lib/vietnamese-labels";
 import { formatDate, formatMoney } from "@/app/utils/format";
 import { cn } from "@/app/utils/cn";
 import { useUiStore } from "@/app/store/ui-store";
+import { navigateStudioView } from "@/app/utils/studio-navigation";
 
 type Row = Record<string, unknown>;
 type TransactionView = "income" | "expense" | null;
@@ -692,6 +693,7 @@ function FinancialCompactCard({
 export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const config = getConfig(resource);
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const setActiveResource = useUiStore((state) => state.setActiveResource);
   const focusedItemId = useUiStore((state) => state.focusedItemId);
@@ -740,7 +742,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
 
   function goToResource(id: string) {
     setActiveResource(id);
-    router.push(`/?view=${encodeURIComponent(id)}`, { scroll: false });
+    navigateStudioView(router, pathname, id);
   }
 
   function startRowLongPress(event: React.PointerEvent, row: Row) {
@@ -945,7 +947,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     setEditingId(null);
     setShowForm(false);
     setForm({ ...emptyForm(config.fields), type, walletId: firstWalletId });
-    router.push(`/?view=transactions&tab=${view}`, { scroll: false });
+    navigateStudioView(router, pathname, "transactions", { tab: view });
   }
 
   function openCreateForm() {
@@ -1095,7 +1097,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
             setShowForm(false);
             setEditingId(null);
             setSelectedIds([]);
-            router.push("/?view=transactions", { scroll: false });
+            navigateStudioView(router, pathname, "transactions");
           }}
           className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-4 text-sm font-black text-[#5B342C] shadow-sm transition hover:bg-[#FFF3EC]"
         >

@@ -1,17 +1,28 @@
 "use client";
 
 import { useEffect } from "react";
+import dynamic from "next/dynamic";
 import { AppShell } from "@/app/components/layout/app-shell";
-import { DashboardView } from "@/app/components/dashboard/dashboard-view";
-import { ReportsView } from "@/app/components/dashboard/system-overview";
-import { AiAssistantView } from "@/app/components/ai/ai-assistant-view";
-import { ResourceManager } from "@/app/components/resources/resource-manager";
-import { ModuleHome } from "@/app/components/home/module-home";
-import { TrashView } from "@/app/components/trash/trash-view";
-import { UserManagement } from "@/app/components/users/user-management";
-import { ProfilePage } from "@/app/components/profile/profile-page";
 import { useUiStore } from "@/app/store/ui-store";
 import type { ResourceKey } from "@/app/lib/studio-config";
+import { STUDIO_VIEW_NAVIGATION_EVENT } from "@/app/utils/studio-navigation";
+
+function ViewLoading() {
+  return (
+    <div className="rounded-2xl border border-[#F4C7C4] bg-white px-4 py-6 text-sm font-bold text-[#9B746B] shadow-sm">
+      Dang mo man hinh...
+    </div>
+  );
+}
+
+const DashboardView = dynamic(() => import("@/app/components/dashboard/dashboard-view").then((mod) => mod.DashboardView), { loading: ViewLoading, ssr: false });
+const ReportsView = dynamic(() => import("@/app/components/dashboard/system-overview").then((mod) => mod.ReportsView), { loading: ViewLoading, ssr: false });
+const AiAssistantView = dynamic(() => import("@/app/components/ai/ai-assistant-view").then((mod) => mod.AiAssistantView), { loading: ViewLoading, ssr: false });
+const ResourceManager = dynamic(() => import("@/app/components/resources/resource-manager").then((mod) => mod.ResourceManager), { loading: ViewLoading, ssr: false });
+const ModuleHome = dynamic(() => import("@/app/components/home/module-home").then((mod) => mod.ModuleHome), { loading: ViewLoading, ssr: false });
+const TrashView = dynamic(() => import("@/app/components/trash/trash-view").then((mod) => mod.TrashView), { loading: ViewLoading, ssr: false });
+const UserManagement = dynamic(() => import("@/app/components/users/user-management").then((mod) => mod.UserManagement), { loading: ViewLoading, ssr: false });
+const ProfilePage = dynamic(() => import("@/app/components/profile/profile-page").then((mod) => mod.ProfilePage), { loading: ViewLoading, ssr: false });
 
 const resourceKeys = new Set([
   "customers",
@@ -50,7 +61,11 @@ export default function Home() {
 
     syncViewFromUrl();
     window.addEventListener("popstate", syncViewFromUrl);
-    return () => window.removeEventListener("popstate", syncViewFromUrl);
+    window.addEventListener(STUDIO_VIEW_NAVIGATION_EVENT, syncViewFromUrl);
+    return () => {
+      window.removeEventListener("popstate", syncViewFromUrl);
+      window.removeEventListener(STUDIO_VIEW_NAVIGATION_EVENT, syncViewFromUrl);
+    };
   }, [setActiveResource]);
 
   return (

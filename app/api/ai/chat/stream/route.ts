@@ -4,6 +4,7 @@ import {
   createAIActionSuggestions,
   fallbackStudioAnswer,
   financeAccessDeniedAnswer,
+  getMinimalStudioAIContext,
   getStudioAIContext,
   isFinanceQuestion,
   learnFromUserMessage,
@@ -14,7 +15,10 @@ import {
 import { requireUser } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
 
+export const maxDuration = 30;
+
 const encoder = new TextEncoder();
+const GROQ_TIMEOUT_MS = 18000;
 function cleanEnv(value?: string) {
   return value?.trim().replace(/^["']|["']$/g, "") ?? "";
 }
@@ -68,6 +72,16 @@ async function writeSlowly(controller: ReadableStreamDefaultController<Uint8Arra
   }
 }
 
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function POST(req: Request) {
   const user = await requireUser().catch(() => null);
   if (!user) {
@@ -90,7 +104,9 @@ export async function POST(req: Request) {
   }
 
   const learnedMemory = await learnFromUserMessage(user, lastQuestion).catch(() => null);
-  const context = await getStudioAIContext(user, lastQuestion);
+  const context = await getStudioAIContext(user, lastQuestion).catch((error) =>
+    getMinimalStudioAIContext(user, error instanceof Error ? error.message : "context error"),
+  );
   const sourceSummary = summarizeAIContext(context);
   await prisma.aiChatMessage.create({
     data: {
@@ -99,7 +115,7 @@ export async function POST(req: Request) {
       role: "user",
       content: imageCount > 0 ? `${lastQuestion || "Phân tích ảnh giúp mình"}\n[Đã gửi ${imageCount} ảnh]` : lastQuestion,
     },
-  });
+  }).catch(() => null);
 
   if (!canViewStudioFinance(user.role) && isFinanceQuestion(lastQuestion)) {
     const text = financeAccessDeniedAnswer();
@@ -119,7 +135,7 @@ export async function POST(req: Request) {
       let finalText = "";
       try {
         if (hasGroqKey()) {
-          const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+          const response = await fetchWithTimeout("https://api.groq.com/openai/v1/chat/completions", {
             method: "POST",
             headers: { Authorization: `Bearer ${groqApiKey()}`, "Content-Type": "application/json" },
             body: JSON.stringify({
@@ -130,7 +146,7 @@ export async function POST(req: Request) {
               max_completion_tokens: 900,
               messages: buildStudioAIMessages(messages, context),
             }),
-          });
+          }, GROQ_TIMEOUT_MS);
 
           if (!response.ok) {
             const text = await response.text().catch(() => "");
