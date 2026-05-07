@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useRef, useState } from "react";
 import { Bot, CheckCircle2, Database, ImagePlus, Lightbulb, RotateCcw, Send, Sparkles, User, X } from "lucide-react";
@@ -25,7 +25,7 @@ type AiActionSuggestion = {
 function cleanAssistantText(text: string) {
   const lower = text.toLowerCase();
   if (lower.includes("rate limit") || lower.includes("tokens per day") || lower.includes('"error"') || lower.includes("service_tier")) {
-    return "AI đang bận hoặc đã chạm giới hạn tạm thời. Mình sẽ trả lời bằng dữ liệu nội bộ của studio trước nha. Bạn có thể hỏi lại sau ít phút để AI phân tích sâu hơn.";
+    return "AI Ä‘ang báº­n hoáº·c Ä‘Ă£ cháº¡m giá»›i háº¡n táº¡m thá»i. MĂ¬nh sáº½ tráº£ lá»i báº±ng dá»¯ liá»‡u ná»™i bá»™ cá»§a studio trÆ°á»›c nha. Báº¡n cĂ³ thá»ƒ há»i láº¡i sau Ă­t phĂºt Ä‘á»ƒ AI phĂ¢n tĂ­ch sĂ¢u hÆ¡n.";
   }
   return text;
 }
@@ -36,7 +36,7 @@ export function AiAssistantView() {
     {
       role: "assistant",
       content:
-        "Chào bạn, mình là trợ lý AI của Mèoo Xinhh. Mình đã được đồng bộ với dữ liệu studio: booking, khách hàng, gói chụp, thu chi, hóa đơn, ví, ca làm, dự án, nhân sự, thiết bị, thông báo và lịch sử hoạt động.",
+        "ChĂ o báº¡n, mĂ¬nh lĂ  trá»£ lĂ½ AI cá»§a MĂ¨oo Xinhh. MĂ¬nh Ä‘Ă£ Ä‘Æ°á»£c Ä‘á»“ng bá»™ vá»›i dá»¯ liá»‡u studio: booking, khĂ¡ch hĂ ng, gĂ³i chá»¥p, thu chi, hĂ³a Ä‘Æ¡n, vĂ­, ca lĂ m, dá»± Ă¡n, nhĂ¢n sá»±, thiáº¿t bá»‹, thĂ´ng bĂ¡o vĂ  lá»‹ch sá»­ hoáº¡t Ä‘á»™ng.",
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -49,23 +49,23 @@ export function AiAssistantView() {
   const suggestionDragRef = useRef({ active: false, moved: false, startX: 0, scrollLeft: 0 });
   const skipSuggestionClickUntilRef = useRef(0);
   const suggestions = [
-    "Tóm tắt studio hôm nay",
-    "Hôm nay có booking nào?",
-    "Tháng này thu chi sao?",
-    "Ca nào đang mở?",
-    "Hóa đơn nào còn nợ?",
-    "Thiết bị nào cần chú ý?",
-    "Nhớ là hãy trả lời dễ thương nhưng gọn gàng",
-    "Khách nào sắp tới lịch chụp?",
-    "Booking nào chưa có ảnh?",
-    "Booking nào chưa hoàn tất?",
-    "Khách nào quay lại nhiều nhất?",
-    "Gói chụp nào bán chạy nhất?",
-    "Doanh thu tuần này bao nhiêu?",
-    "Khoản chi nào lớn nhất tháng này?",
-    "Dự án nào đang xử lý?",
-    "Nhân sự nào có lịch hôm nay?",
-    "Kiểm tra hóa đơn và phiếu thu hôm nay",
+    "TĂ³m táº¯t studio hĂ´m nay",
+    "HĂ´m nay cĂ³ booking nĂ o?",
+    "ThĂ¡ng nĂ y thu chi sao?",
+    "Ca nĂ o Ä‘ang má»Ÿ?",
+    "HĂ³a Ä‘Æ¡n nĂ o cĂ²n ná»£?",
+    "Thiáº¿t bá»‹ nĂ o cáº§n chĂº Ă½?",
+    "Nhá»› lĂ  hĂ£y tráº£ lá»i dá»… thÆ°Æ¡ng nhÆ°ng gá»n gĂ ng",
+    "KhĂ¡ch nĂ o sáº¯p tá»›i lá»‹ch chá»¥p?",
+    "Booking nĂ o chÆ°a cĂ³ áº£nh?",
+    "Booking nĂ o chÆ°a hoĂ n táº¥t?",
+    "KhĂ¡ch nĂ o quay láº¡i nhiá»u nháº¥t?",
+    "GĂ³i chá»¥p nĂ o bĂ¡n cháº¡y nháº¥t?",
+    "Doanh thu tuáº§n nĂ y bao nhiĂªu?",
+    "Khoáº£n chi nĂ o lá»›n nháº¥t thĂ¡ng nĂ y?",
+    "Dá»± Ă¡n nĂ o Ä‘ang xá»­ lĂ½?",
+    "NhĂ¢n sá»± nĂ o cĂ³ lá»‹ch hĂ´m nay?",
+    "Kiá»ƒm tra hĂ³a Ä‘Æ¡n vĂ  phiáº¿u thu hĂ´m nay",
   ];
 
   async function loadActions() {
@@ -114,12 +114,12 @@ export function AiAssistantView() {
       .filter((file) => file.type.startsWith("image/"))
       .slice(0, Math.max(0, 3 - imageDataUrls.length));
     if (!selected.length) {
-      setNotice("Bạn chọn file ảnh giúp mình nha.");
+      setNotice("Báº¡n chá»n file áº£nh giĂºp mĂ¬nh nha.");
       return;
     }
     const tooLarge = selected.find((file) => file.size > 4 * 1024 * 1024);
     if (tooLarge) {
-      setNotice("Ảnh hơi nặng rồi, bạn chọn ảnh dưới 4 MB để AI đọc mượt hơn nha.");
+      setNotice("áº¢nh hÆ¡i náº·ng rá»“i, báº¡n chá»n áº£nh dÆ°á»›i 4 MB Ä‘á»ƒ AI Ä‘á»c mÆ°á»£t hÆ¡n nha.");
       return;
     }
     const dataUrls = await Promise.all(selected.map(fileToDataUrl));
@@ -130,36 +130,42 @@ export function AiAssistantView() {
   async function send(prompt = input, images = imageDataUrls) {
     if ((!prompt.trim() && images.length === 0) || loading) return;
     setNotice("");
-    const nextMessages: ChatMessage[] = [...messages, { role: "user", content: prompt || "Phân tích ảnh giúp mình", imageDataUrls: images }];
+    const nextMessages: ChatMessage[] = [...messages, { role: "user", content: prompt || "PhĂ¢n tĂ­ch áº£nh giĂºp mĂ¬nh", imageDataUrls: images }];
     setMessages(nextMessages);
     setInput("");
     setImageDataUrls([]);
     setLoading(true);
 
-    const response = await fetch("/api/ai/chat/stream", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: nextMessages }),
-    }).catch(() => null);
+    try {
+      const response = await fetch("/api/ai/chat/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: nextMessages }),
+      }).catch(() => null);
 
-    if (!response?.body) {
-      setMessages([...nextMessages, { role: "assistant", content: "Mình chưa trả lời được lúc này. Bạn thử lại giúp mình." }]);
+      if (!response?.ok || !response.body) {
+        const text = await response?.text().catch(() => "");
+        setMessages([...nextMessages, { role: "assistant", content: cleanAssistantText(text || "MĂ¬nh chÆ°a tráº£ lá»i Ä‘Æ°á»£c lĂºc nĂ y. Báº¡n thá»­ láº¡i giĂºp mĂ¬nh.") }]);
+        return;
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let assistantText = "";
+      setMessages([...nextMessages, { role: "assistant", content: "" }]);
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        assistantText += decoder.decode(value, { stream: true });
+        setMessages([...nextMessages, { role: "assistant", content: cleanAssistantText(assistantText) }]);
+      }
+      await loadActions();
+    } catch {
+      const errorMessage = "\u004d\u00ecnh b\u1ecb m\u1ea5t k\u1ebft n\u1ed1i AI t\u1ea1m th\u1eddi. B\u1ea1n th\u1eed g\u1eedi l\u1ea1i gi\u00fap m\u00ecnh.";
+      setMessages([...nextMessages, { role: "assistant", content: errorMessage }]);
+    } finally {
       setLoading(false);
-      return;
     }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let assistantText = "";
-    setMessages([...nextMessages, { role: "assistant", content: "" }]);
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-      assistantText += decoder.decode(value, { stream: true });
-      setMessages([...nextMessages, { role: "assistant", content: cleanAssistantText(assistantText) }]);
-    }
-    await loadActions();
-    setLoading(false);
   }
 
   async function decideAction(id: string, decision: "APPROVE" | "REJECT") {
@@ -172,10 +178,10 @@ export function AiAssistantView() {
       .then((res) => res.json())
       .catch(() => null);
     if (result?.error) {
-      setNotice(result.error.message ?? "Chưa xử lý được đề xuất AI.");
+      setNotice(result.error.message ?? "ChÆ°a xá»­ lĂ½ Ä‘Æ°á»£c Ä‘á» xuáº¥t AI.");
       return;
     }
-    setNotice(decision === "APPROVE" ? "Đã xác nhận đề xuất AI." : "Đã bỏ qua đề xuất AI.");
+    setNotice(decision === "APPROVE" ? "ÄĂ£ xĂ¡c nháº­n Ä‘á» xuáº¥t AI." : "ÄĂ£ bá» qua Ä‘á» xuáº¥t AI.");
     await loadActions();
   }
 
@@ -184,13 +190,13 @@ export function AiAssistantView() {
       .then((res) => res.json())
       .catch(() => null);
     if (result?.error) {
-      setNotice(result.error.message ?? "Bạn không có quyền xóa lịch sử chat.");
+      setNotice(result.error.message ?? "Báº¡n khĂ´ng cĂ³ quyá»n xĂ³a lá»‹ch sá»­ chat.");
       return;
     }
     setMessages([
       {
         role: "assistant",
-        content: "Mình đã xóa lịch sử chat trên máy chủ. Bạn có thể bắt đầu cuộc trò chuyện mới.",
+        content: "MĂ¬nh Ä‘Ă£ xĂ³a lá»‹ch sá»­ chat trĂªn mĂ¡y chá»§. Báº¡n cĂ³ thá»ƒ báº¯t Ä‘áº§u cuá»™c trĂ² chuyá»‡n má»›i.",
       },
     ]);
   }
@@ -231,9 +237,9 @@ export function AiAssistantView() {
   return (
     <div className="space-y-6">
       <StudioBrandPanel
-        eyebrow="Trợ lý AI"
+        eyebrow="Trá»£ lĂ½ AI"
         title="AI studio"
-        description="Chat tự nhiên, đọc dữ liệu studio, phân tích ảnh và hỗ trợ hỏi về booking, khách hàng, tài chính, ví, ca làm và vận hành."
+        description="Chat tá»± nhiĂªn, Ä‘á»c dá»¯ liá»‡u studio, phĂ¢n tĂ­ch áº£nh vĂ  há»— trá»£ há»i vá» booking, khĂ¡ch hĂ ng, tĂ i chĂ­nh, vĂ­, ca lĂ m vĂ  váº­n hĂ nh."
       />
 
       <div className="grid gap-5">
@@ -242,18 +248,18 @@ export function AiAssistantView() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
-                  <CardTitle className="mr-1 w-full text-xl sm:w-auto sm:text-2xl">Cuộc trò chuyện</CardTitle>
+                  <CardTitle className="mr-1 w-full text-xl sm:w-auto sm:text-2xl">Cuá»™c trĂ² chuyá»‡n</CardTitle>
                   <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#E9FFF5] px-2.5 py-1 text-[11px] font-black text-[#00885B] sm:px-3 sm:text-xs">
                     <Database size={13} />
-                    Đã đồng bộ dữ liệu
+                    ÄĂ£ Ä‘á»“ng bá»™ dá»¯ liá»‡u
                   </span>
                   <span className="inline-flex shrink-0 items-center gap-1 rounded-full bg-[#FFF0F4] px-2.5 py-1 text-[11px] font-black text-[#EA7188] sm:px-3 sm:text-xs">
                     <Sparkles size={13} />
-                    Dễ thương, chuyên nghiệp
+                    Dá»… thÆ°Æ¡ng, chuyĂªn nghiá»‡p
                   </span>
                 </div>
                 <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-[#A84E61] sm:line-clamp-none sm:text-sm">
-                  AI đọc dữ liệu studio theo quyền tài khoản và có thể nhận ảnh để hỗ trợ xem hóa đơn, QR, chứng từ, thiết bị, ảnh khách hoặc ảnh lỗi giao diện.
+                  AI Ä‘á»c dá»¯ liá»‡u studio theo quyá»n tĂ i khoáº£n vĂ  cĂ³ thá»ƒ nháº­n áº£nh Ä‘á»ƒ há»— trá»£ xem hĂ³a Ä‘Æ¡n, QR, chá»©ng tá»«, thiáº¿t bá»‹, áº£nh khĂ¡ch hoáº·c áº£nh lá»—i giao diá»‡n.
                 </p>
               </div>
               <Button
@@ -262,7 +268,7 @@ export function AiAssistantView() {
                 onClick={() => void clearHistory()}
               >
                 <RotateCcw size={16} />
-                Xóa lịch sử
+                XĂ³a lá»‹ch sá»­
               </Button>
             </div>
           </div>
@@ -319,14 +325,14 @@ export function AiAssistantView() {
                     {message.role === "user" ? <User size={15} /> : <Bot size={15} />}
                   </div>
                   <div className="min-w-0">
-                    <p className="whitespace-pre-line text-sm leading-6 sm:text-base sm:leading-7">{message.content || "Đang trả lời..."}</p>
+                    <p className="whitespace-pre-line text-sm leading-6 sm:text-base sm:leading-7">{message.content || "Äang tráº£ lá»i..."}</p>
                     {message.imageDataUrls?.length ? (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {message.imageDataUrls.map((src, imageIndex) => (
                           <img
                             key={`${src.slice(0, 30)}-${imageIndex}`}
                             src={src}
-                            alt="Ảnh đã gửi cho AI"
+                            alt="áº¢nh Ä‘Ă£ gá»­i cho AI"
                             className="h-20 w-20 rounded-2xl object-cover ring-1 ring-white/60"
                           />
                         ))}
@@ -341,7 +347,7 @@ export function AiAssistantView() {
             <div className="border-t border-[#F4C7C4] bg-[#FFF8F1] p-4 sm:p-5">
               <div className="mb-3 flex items-center gap-2 text-sm font-black text-[#5B342C]">
                 <Sparkles size={16} className="text-[#EA7188]" />
-                Đề xuất thao tác cần xác nhận
+                Äá» xuáº¥t thao tĂ¡c cáº§n xĂ¡c nháº­n
               </div>
               <div className="space-y-2">
                 {actions.map((action) => (
@@ -358,16 +364,16 @@ export function AiAssistantView() {
                             if (view) window.location.href = `/?view=${view}`;
                           }}
                         >
-                          Mở màn hình
+                          Má»Ÿ mĂ n hĂ¬nh
                         </Button>
                       ) : (
                         <Button type="button" size="sm" onClick={() => void decideAction(action.id, "APPROVE")}>
                           <CheckCircle2 size={15} />
-                          Xác nhận
+                          XĂ¡c nháº­n
                         </Button>
                       )}
                       <Button type="button" variant="secondary" size="sm" onClick={() => void decideAction(action.id, "REJECT")}>
-                        Bỏ qua
+                        Bá» qua
                       </Button>
                     </div>
                   </div>
@@ -380,12 +386,12 @@ export function AiAssistantView() {
               <div className="mb-3 flex flex-wrap gap-2">
                 {imageDataUrls.map((src, index) => (
                   <div key={`${src.slice(0, 30)}-${index}`} className="relative h-20 w-20 overflow-hidden rounded-2xl border border-[#F4C7C4] bg-[#FFF8F1]">
-                    <img src={src} alt="Ảnh chuẩn bị gửi" className="h-full w-full object-cover" />
+                    <img src={src} alt="áº¢nh chuáº©n bá»‹ gá»­i" className="h-full w-full object-cover" />
                     <button
                       type="button"
                       className="absolute right-1 top-1 grid h-7 w-7 place-items-center rounded-full bg-white text-[#5B342C] shadow-sm"
                       onClick={() => setImageDataUrls((current) => current.filter((_, itemIndex) => itemIndex !== index))}
-                      aria-label="Bỏ ảnh"
+                      aria-label="Bá» áº£nh"
                     >
                       <X size={14} />
                     </button>
@@ -397,7 +403,7 @@ export function AiAssistantView() {
               <Textarea
                 className="min-h-20 rounded-[1.5rem] text-base leading-7 sm:min-h-24"
                 value={input}
-                placeholder="Nhập tin nhắn hoặc gửi ảnh cho AI..."
+                placeholder="Nháº­p tin nháº¯n hoáº·c gá»­i áº£nh cho AI..."
                 onChange={(event) => setInput(event.target.value)}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
@@ -420,13 +426,13 @@ export function AiAssistantView() {
                 className="min-h-20 rounded-[1.5rem] px-4 sm:min-h-24"
                 disabled={loading || imageDataUrls.length >= 3}
                 onClick={() => fileRef.current?.click()}
-                aria-label="Gửi ảnh cho AI"
+                aria-label="Gá»­i áº£nh cho AI"
               >
                 <ImagePlus size={24} />
               </Button>
-              <Button className="min-h-20 rounded-[1.5rem] px-5 sm:min-h-24 sm:px-7" disabled={loading} onClick={() => void send()} aria-label="Gửi tin nhắn">
+              <Button className="min-h-20 rounded-[1.5rem] px-5 sm:min-h-24 sm:px-7" disabled={loading} onClick={() => void send()} aria-label="Gá»­i tin nháº¯n">
                 <Send size={24} />
-                <span className="hidden text-base font-black sm:inline">Gửi</span>
+                <span className="hidden text-base font-black sm:inline">Gá»­i</span>
               </Button>
             </div>
           </div>

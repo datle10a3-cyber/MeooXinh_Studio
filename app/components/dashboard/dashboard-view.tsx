@@ -85,13 +85,14 @@ export function DashboardView() {
       fromYear: String(Math.min(fromYear, toYear)),
       toYear: String(Math.max(fromYear, toYear)),
     });
-    const [dashboardRes, insightRes] = await Promise.all([
-      fetch(`/api/dashboard?${params.toString()}`).then((res) => res.json() as Promise<ApiResult<DashboardData>>).catch(() => null),
-      fetch("/api/ai/insights").then((res) => res.json() as Promise<ApiResult<Insight>>).catch(() => null),
-    ]);
+    const dashboardRes = await fetch(`/api/dashboard?${params.toString()}`).then((res) => res.json() as Promise<ApiResult<DashboardData>>).catch(() => null);
     if (dashboardRes?.data) setDashboard(dashboardRes.data);
-    if (insightRes?.data) setInsight(insightRes.data);
     setLoading(false);
+
+    window.setTimeout(async () => {
+      const insightRes = await fetch("/api/ai/insights").then((res) => res.json() as Promise<ApiResult<Insight>>).catch(() => null);
+      if (insightRes?.data) setInsight(insightRes.data);
+    }, 120);
   }, [chartMode, fromYear, selectedMonth, selectedYear, toYear]);
 
   useEffect(() => {

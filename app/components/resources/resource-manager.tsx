@@ -29,7 +29,6 @@ import { ImagePreview } from "@/app/components/media/image-preview";
 import { BookingCalendar } from "@/app/components/bookings/booking-calendar";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 import { RESOURCE_CONFIG, type FieldConfig, type ResourceKey } from "@/app/lib/studio-config";
-import type { CurrentSession } from "@/app/types/auth";
 import { canCreate, canDelete, canMutate } from "@/app/types/auth";
 import { viOption } from "@/app/lib/vietnamese-labels";
 import { formatDate, formatMoney } from "@/app/utils/format";
@@ -700,7 +699,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const transactionViewIntent = useUiStore((state) => state.transactionViewIntent);
   const setTransactionIntent = useUiStore((state) => state.setTransactionIntent);
   const setTransactionViewIntent = useUiStore((state) => state.setTransactionViewIntent);
-  const [session, setSession] = useState<CurrentSession | null>(null);
+  const session = useUiStore((state) => state.session);
   const [rows, setRows] = useState<Row[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMoreRows, setHasMoreRows] = useState(false);
@@ -833,16 +832,6 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     }, 0);
     return () => window.clearTimeout(timer);
   }, [resource, transactionViewIntent, setTransactionViewIntent]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(async () => {
-      const result = await fetch("/api/auth/me")
-        .then((res) => res.json())
-        .catch(() => null);
-      setSession(result?.data ?? null);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     if (!focusedItemId || !rows.length) return;

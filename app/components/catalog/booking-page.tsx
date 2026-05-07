@@ -265,12 +265,12 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleteMode, setBulkDeleteMode] = useState<"selected" | "all" | null>(null);
   const [longPressActivated, setLongPressActivated] = useState(false);
-  const [role, setRole] = useState<"ADMIN" | "MANAGER" | "STAFF" | null>(null);
   const [editStudioPassword, setEditStudioPassword] = useState("");
   const [groupPackageIds, setGroupPackageIds] = useState<string[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
   const [selectedGroupKeys, setSelectedGroupKeys] = useState<string[]>([]);
   const [groupSelectionMode, setGroupSelectionMode] = useState(false);
+  const role = useUiStore((state) => state.session?.user.role ?? null);
   const focusedItemId = useUiStore((state) => state.focusedItemId);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
   const longPressTimer = useRef<number | null>(null);
@@ -390,14 +390,6 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     const timer = window.setTimeout(() => void loadData(), 0);
     return () => window.clearTimeout(timer);
   }, [loadData]);
-
-  useEffect(() => {
-    const timer = window.setTimeout(async () => {
-      const result = await fetch("/api/auth/me").then((res) => res.json()).catch(() => null);
-      setRole(result?.data?.user?.role ?? null);
-    }, 0);
-    return () => window.clearTimeout(timer);
-  }, []);
 
   useEffect(() => {
     if (!showForm || completedOnly) return;

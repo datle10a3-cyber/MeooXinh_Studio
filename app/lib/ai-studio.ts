@@ -382,7 +382,7 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
       where: { studioId, deletedAt: null, startAt: { gte: today.start, lt: today.end } },
       include: { package: { include: { category: true } }, customer: true },
       orderBy: { startAt: "asc" },
-      take: 30,
+      take: 10,
     }),
     prisma.booking.findMany({
       where: {
@@ -393,51 +393,51 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
       },
       include: { package: { include: { category: true } }, customer: true },
       orderBy: { startAt: "asc" },
-      take: 40,
+      take: 15,
     }),
     prisma.booking.findMany({
       where: { studioId, deletedAt: null, status: "COMPLETED", startAt: { gte: month.start, lt: month.end } },
       include: { package: { include: { category: true } }, customer: true },
       orderBy: { startAt: "desc" },
-      take: 30,
+      take: 10,
     }),
     prisma.booking.findMany({
       where: { studioId, deletedAt: null },
       include: { package: { include: { category: true } }, customer: true },
       orderBy: { updatedAt: "desc" },
-      take: 30,
+      take: 15,
     }),
     prisma.customer.findMany({
       where: { studioId, deletedAt: null },
       orderBy: [{ totalSpent: "desc" }, { updatedAt: "desc" }],
-      take: 40,
+      take: 15,
     }),
     prisma.package.findMany({
       where: { studioId, deletedAt: null },
       include: { category: true },
       orderBy: { updatedAt: "desc" },
-      take: 60,
+      take: 20,
     }),
-    prisma.category.findMany({ where: { studioId, deletedAt: null }, orderBy: { createdAt: "desc" }, take: 60 }),
+    prisma.category.findMany({ where: { studioId, deletedAt: null }, orderBy: { createdAt: "desc" }, take: 20 }),
     prisma.project.findMany({
       where: { studioId, deletedAt: null },
       include: { customer: true, booking: true },
       orderBy: [{ deadlineAt: "asc" }, { updatedAt: "desc" }],
-      take: 40,
+      take: 15,
     }),
-    prisma.employee.findMany({ where: { studioId, deletedAt: null }, orderBy: { updatedAt: "desc" }, take: 40 }),
+    prisma.employee.findMany({ where: { studioId, deletedAt: null }, orderBy: { updatedAt: "desc" }, take: 20 }),
     prisma.equipment.findMany({
       where: { studioId, deletedAt: null },
       include: { maintenance: { orderBy: { servicedAt: "desc" }, take: 2 } },
       orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
-      take: 40,
+      take: 15,
     }),
-    prisma.notification.findMany({ where: { studioId, deletedAt: null }, orderBy: { createdAt: "desc" }, take: 30 }),
+    prisma.notification.findMany({ where: { studioId, deletedAt: null }, orderBy: { createdAt: "desc" }, take: 10 }),
     prisma.auditLog.findMany({
       where: { studioId },
       include: { user: { select: { name: true, role: { select: { name: true } } } } },
       orderBy: { createdAt: "desc" },
-      take: 40,
+      take: 15,
     }),
     prisma.walletShift.findMany({
       where: { studioId, status: "OPEN" },
@@ -486,7 +486,7 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
           where: { studioId, deletedAt: null },
           include: { customer: true, project: true, items: true },
           orderBy: [{ due: "desc" }, { issueDate: "desc" }],
-          take: 40,
+          take: 15,
         })
       : Promise.resolve([]),
     canViewFinance
@@ -494,14 +494,14 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
           where: { studioId, deletedAt: null },
           include: { customer: true, project: true, wallet: true, category: true, walletShift: true },
           orderBy: { occurredAt: "desc" },
-          take: 60,
+          take: 20,
         })
       : Promise.resolve([]),
-    canViewFinance ? prisma.wallet.findMany({ where: { studioId, deletedAt: null }, orderBy: { createdAt: "desc" }, take: 30 }) : Promise.resolve([]),
+    canViewFinance ? prisma.wallet.findMany({ where: { studioId, deletedAt: null }, orderBy: { createdAt: "desc" }, take: 10 }) : Promise.resolve([]),
     prisma.aiMemory.findMany({
       where: { studioId, isActive: true, OR: [{ userId: null }, { userId: user.id }] },
       orderBy: [{ updatedAt: "desc" }],
-      take: 40,
+      take: 15,
     }),
   ]);
 
@@ -605,7 +605,7 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
           where: bookingWhere,
           include: { customer: true, package: { include: { category: true } } },
           orderBy: { startAt: "desc" },
-          take: range ? 300 : 160,
+          take: range ? 100 : 60,
         })
       : Promise.resolve([]),
     wantsMissingImage
@@ -617,14 +617,14 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
           },
           include: { customer: true, package: { include: { category: true } } },
           orderBy: { startAt: "desc" },
-          take: 80,
+          take: 40,
         })
       : Promise.resolve([]),
     wantsCustomer
       ? prisma.customer.findMany({
           where: { studioId: user.studioId, deletedAt: null },
           orderBy: { updatedAt: "desc" },
-          take: 200,
+          take: 80,
         })
       : Promise.resolve([]),
     canViewFinance && isFinanceQuestion(question)
@@ -632,7 +632,7 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
           where: { studioId: user.studioId, deletedAt: null, ...(range ? { occurredAt: { gte: range.start, lt: range.end } } : {}) },
           include: { customer: true, project: true, wallet: true },
           orderBy: { occurredAt: "desc" },
-          take: 120,
+          take: 60,
         })
       : Promise.resolve([]),
   ]);

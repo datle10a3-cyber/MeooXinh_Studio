@@ -92,7 +92,7 @@ export function ModuleHome() {
           if (result.data) setDashboard(result.data);
         })
         .catch(() => undefined);
-    }, 0);
+    }, 350);
     return () => window.clearTimeout(timer);
   }, []);
 

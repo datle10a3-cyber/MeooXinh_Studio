@@ -29,9 +29,9 @@ export function CategoryPage() {
   const [longPressActivated, setLongPressActivated] = useState(false);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
-  const [role, setRole] = useState<"ADMIN" | "MANAGER" | "STAFF" | null>(null);
   const [editStudioPassword, setEditStudioPassword] = useState("");
   const focusedItemId = useUiStore((state) => state.focusedItemId);
+  const role = useUiStore((state) => state.session?.user.role ?? null);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
 
   async function loadRows() {
@@ -42,14 +42,6 @@ export function CategoryPage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadRows(), 0);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    const timer = window.setTimeout(async () => {
-      const result = await fetch("/api/auth/me").then((res) => res.json()).catch(() => null);
-      setRole(result?.data?.user?.role ?? null);
-    }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 

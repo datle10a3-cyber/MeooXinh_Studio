@@ -81,11 +81,11 @@ export function PackagePage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleteMode, setBulkDeleteMode] = useState<"selected" | "all" | null>(null);
   const [longPressActivated, setLongPressActivated] = useState(false);
-  const [role, setRole] = useState<"ADMIN" | "MANAGER" | "STAFF" | null>(null);
   const [editStudioPassword, setEditStudioPassword] = useState("");
   const formRef = useRef<HTMLDivElement>(null);
   const longPressTimer = useRef<number | null>(null);
   const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const role = useUiStore((state) => state.session?.user.role ?? null);
   const focusedItemId = useUiStore((state) => state.focusedItemId);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
 
@@ -152,14 +152,6 @@ export function PackagePage() {
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadData(), 0);
-    return () => window.clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    const timer = window.setTimeout(async () => {
-      const result = await fetch("/api/auth/me").then((res) => res.json()).catch(() => null);
-      setRole(result?.data?.user?.role ?? null);
-    }, 0);
     return () => window.clearTimeout(timer);
   }, []);
 
