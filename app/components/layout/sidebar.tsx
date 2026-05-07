@@ -240,7 +240,7 @@ export function Sidebar({ session }: { session: CurrentSession | null }) {
 
                   const active = item.href
                     ? pathname === item.href
-                    : activeResource === item.id;
+                    : activeResource === item.id && pathname === "/";
 
                   return (
                     <button
