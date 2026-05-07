@@ -42,19 +42,20 @@ async function enrichOpenShift(shift: ShiftRow | null) {
   return { ...shift, totalIncome, totalExpense, expectedClosingBalance, difference: 0 };
 }
 
-async function nextShiftCode(studioId: string, openedAt = new Date()) {
+async function nextShiftCode(studioId: string) {
   const shifts = await prisma.walletShift.findMany({
-    where: { studioId, openedAt: { lte: openedAt }, code: { startsWith: "CA-MEOXINH-" } },
+    where: { studioId, code: { startsWith: "CA-MEOXINH-" } },
     select: { code: true },
   });
-  const used = new Set<number>();
+  let max = 0;
   shifts.forEach((shift) => {
     const match = /^CA-MEOXINH-(\d+)$/i.exec(String(shift.code ?? ""));
-    if (match) used.add(Number(match[1]));
+    if (match) {
+      const num = Number(match[1]);
+      if (num > max) max = num;
+    }
   });
-  let next = 1;
-  while (used.has(next)) next += 1;
-  return `CA-MEOXINH-${String(next).padStart(3, "0")}`;
+  return `CA-MEOXINH-${String(max + 1).padStart(3, "0")}`;
 }
 
 export async function GET(req: Request) {
@@ -108,7 +109,7 @@ export async function POST(req: Request) {
 
     const openingBalance = body.openingBalance !== undefined && body.openingBalance !== "" ? Number(body.openingBalance) : Number(wallet.balance);
     const openedAt = new Date();
-    const code = await nextShiftCode(user.studioId, openedAt);
+    const code = await nextShiftCode(user.studioId);
     const shift = await prisma.walletShift.create({
       data: {
         studioId: user.studioId,

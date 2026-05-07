@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { memo, type ReactNode, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { memo, type ReactNode, useCallback, useEffect, useMemo, useRef, useState, startTransition } from "react";
 import {
   ArrowDownLeft,
   ArrowRight,
@@ -1988,6 +1988,9 @@ function WalletAppView({
   const [deleteShiftTarget, setDeleteShiftTarget] = useState<Row | null>(null);
   const [deleteShiftPassword, setDeleteShiftPassword] = useState("");
   const [deleteShiftMessage, setDeleteShiftMessage] = useState("");
+  const [isOpening, setIsOpening] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [walletLongPressTimer, setWalletLongPressTimer] = useState<number | null>(null);
   const [walletLongPressActivated, setWalletLongPressActivated] = useState(false);
   const activeWallet = rows.find((row) => String(row.id ?? "") === activeWalletId) ?? rows[0];
@@ -2063,6 +2066,7 @@ function WalletAppView({
   const endingBalance = openShift ? openShift.expectedClosingBalance : activeWallet?.openingBalance;
 
   async function openShiftNow() {
+    setIsOpening(true);
     setShiftMessage("");
     let wallet = activeWallet;
     if (!wallet) {
@@ -2080,6 +2084,7 @@ function WalletAppView({
       }).then((res) => res.json()).catch(() => null);
       if (walletPayload?.error) {
         setShiftMessage(walletPayload.error.message);
+        setIsOpening(false);
         return false;
       }
       wallet = walletPayload?.data;
@@ -2087,6 +2092,7 @@ function WalletAppView({
     }
     if (!wallet) {
       setShiftMessage("Chưa tạo được quỹ tiền để mở ca.");
+      setIsOpening(false);
       return false;
     }
     const payload = await fetch("/api/wallet-shifts", {
@@ -2100,12 +2106,16 @@ function WalletAppView({
     }).then((res) => res.json()).catch(() => null);
     if (payload?.error) {
       setShiftMessage(payload.error.message);
+      setIsOpening(false);
       return false;
     }
     setOpeningBalance("");
     setOpeningNote("");
     setShiftMessage("Đã mở ca. Mọi khoản thu/chi trong ví này sẽ được tính vào ca đang hoạt động.");
-    setOpeningOpen(false);
+    startTransition(() => {
+      setOpeningOpen(false);
+      setIsOpening(false);
+    });
     if (wallet.id) {
       setActiveWalletId(String(wallet.id));
       await loadShiftData(String(wallet.id));
@@ -2115,6 +2125,7 @@ function WalletAppView({
 
   async function closeShiftNow() {
     if (!openShift || !activeWallet) return false;
+    setIsClosing(true);
     setShiftMessage("");
     const payload = await fetch("/api/wallet-shifts", {
       method: "PATCH",
@@ -2127,13 +2138,17 @@ function WalletAppView({
     }).then((res) => res.json()).catch(() => null);
     if (payload?.error) {
       setShiftMessage(payload.error.message);
+      setIsClosing(false);
       return false;
     }
     setActualClosingBalance("");
     setCloseNote("");
-    setClosingOpen(false);
-    setSelectedShift(null);
     setShiftMessage("Đã đóng ca và lưu vào danh sách ca.");
+    startTransition(() => {
+      setClosingOpen(false);
+      setSelectedShift(null);
+      setIsClosing(false);
+    });
     await loadShiftData(String(activeWallet.id ?? ""));
     window.scrollTo({ top: 0, behavior: "smooth" });
     return true;
@@ -2141,6 +2156,7 @@ function WalletAppView({
 
   async function deleteShiftNow() {
     if (!deleteShiftTarget || !activeWallet) return;
+    setIsDeleting(true);
     setDeleteShiftMessage("");
     const payload = await fetch("/api/wallet-shifts", {
       method: "DELETE",
@@ -2153,14 +2169,18 @@ function WalletAppView({
 
     if (payload?.error) {
       setDeleteShiftMessage(payload.error.message);
+      setIsDeleting(false);
       return;
     }
 
     setDeleteShiftTarget(null);
     setDeleteShiftPassword("");
     setDeleteShiftMessage("");
-    setSelectedShift(null);
     setShiftMessage("Đã xóa ca.");
+    startTransition(() => {
+      setSelectedShift(null);
+      setIsDeleting(false);
+    });
     await loadShiftData(String(activeWallet.id ?? ""));
   }
 
@@ -2339,7 +2359,8 @@ function WalletAppView({
                   <span className="mb-2 block text-sm font-black text-[#5B342C]">Ghi chú mở ca</span>
                   <Input value={openingNote} placeholder="Ví dụ: ca sáng / ca tối" onChange={(event) => setOpeningNote(event.target.value)} />
                 </label>
-                <Button className="h-12 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => void openShiftNow()}>
+                <Button className="h-12 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => void openShiftNow()} disabled={isOpening}>
+                  {isOpening ? <Loader2 className="mr-2 animate-spin" size={18} /> : null}
                   Xác nhận
                 </Button>
               </div>
@@ -2364,7 +2385,8 @@ function WalletAppView({
                 <Input type="password" inputMode="numeric" value={deleteShiftPassword} placeholder="000000" onChange={(event) => setDeleteShiftPassword(event.target.value.replace(/\D/g, "").slice(0, 6))} />
               </label>
               {deleteShiftMessage ? <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{deleteShiftMessage}</p> : null}
-              <Button variant="danger" className="mt-4 h-12 w-full rounded-2xl text-base font-black" onClick={() => void deleteShiftNow()}>
+              <Button variant="danger" className="mt-4 h-12 w-full rounded-2xl text-base font-black" onClick={() => void deleteShiftNow()} disabled={isDeleting}>
+                {isDeleting ? <Loader2 className="mr-2 animate-spin" size={18} /> : null}
                 Xác nhận xóa
               </Button>
             </Card>
