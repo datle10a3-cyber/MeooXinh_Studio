@@ -75,11 +75,17 @@ const ProfilePage = dynamic(
   { loading: ViewLoading, ssr: false },
 );
 
+const BookingPage = dynamic(
+  () =>
+    import("@/app/components/catalog/booking-page").then(
+      (mod) => mod.BookingPage,
+    ),
+  { loading: ViewLoading, ssr: false },
+);
+
 const resourceKeys = new Set([
   "customers",
   "services",
-  "booking",
-  "bookings",
   "transactions",
   "wallets",
   "projects",
@@ -89,10 +95,6 @@ const resourceKeys = new Set([
   "notifications",
 ]);
 
-const viewToResourceKey: Record<string, ResourceKey> = {
-  booking: "bookings",
-};
-
 const rootViewKeys = new Set([
   "home",
   "dashboard",
@@ -101,6 +103,7 @@ const rootViewKeys = new Set([
   "trash",
   "users",
   "profile",
+  "booking",
   ...Array.from(resourceKeys),
 ]);
 
@@ -183,9 +186,15 @@ export default function Home() {
         </div>
       )}
 
+      {loadedViews.has("booking") && (
+        <div className={activeResource === "booking" ? "block" : "hidden"}>
+          <BookingPage />
+        </div>
+      )}
+
       {resourceKeys.has(activeResource) && (
         <div className="block">
-          <ResourceManager resource={(viewToResourceKey[activeResource] ?? activeResource) as ResourceKey} />
+          <ResourceManager resource={activeResource as ResourceKey} />
         </div>
       )}
     </AppShell>
