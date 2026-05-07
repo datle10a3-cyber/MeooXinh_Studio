@@ -74,9 +74,7 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
         id: "booking",
         label: "Booking",
         icon: CalendarDays,
-        href: "/booking",
       },
-
       {
         id: "projects",
         label: "Dự án",
