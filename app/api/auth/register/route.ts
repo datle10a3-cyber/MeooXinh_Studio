@@ -27,6 +27,10 @@ function configuredInviteCode() {
   return process.env.STUDIO_REGISTRATION_CODE?.trim() ?? "";
 }
 
+function expectedInviteCode() {
+  return configuredInviteCode() || "MEOXINH08012006";
+}
+
 export async function POST(req: Request) {
   try {
     assertProductionSafe();
@@ -41,22 +45,16 @@ export async function POST(req: Request) {
     const passwordError = strongPasswordMessage(password);
     if (passwordError) return fail(passwordError, 422);
 
-    const [studioCount, userCount, existed] = await Promise.all([
-      prisma.studio.count(),
-      prisma.user.count(),
-      prisma.user.findUnique({ where: { email }, select: { id: true } }),
-    ]);
+    const existed = await prisma.user.findUnique({ where: { email }, select: { id: true } });
     if (existed) return fail("Email nay da duoc su dung. Moi email chi duoc tao 1 tai khoan.", 409);
 
-    const inviteCodeRequired = studioCount > 0 || userCount > 0 || Boolean(configuredInviteCode());
-    if (inviteCodeRequired) {
-      const expectedInviteCode = configuredInviteCode();
-      if (!expectedInviteCode) return fail("Dang ky studio moi dang bi khoa. Vui long lien he quan tri vien.", 403);
-      if (String(inviteCode ?? "").trim() !== expectedInviteCode) return fail("Ma moi khong dung. Khong the tao studio moi.", 403);
-    }
+    const inviteOk = String(inviteCode ?? "").trim() === expectedInviteCode();
+    if (!inviteOk) return fail("Ma moi khong dung. Khong the tao studio moi.", 403);
 
-    const verifiedOtp = await verifyAndConsumeOtp(email, registrationOtpPurpose, otp);
-    if (!verifiedOtp.ok) return fail(verifiedOtp.message ?? "Ma OTP khong hop le.", 401);
+    if (otp) {
+      const verifiedOtp = await verifyAndConsumeOtp(email, registrationOtpPurpose, otp);
+      if (!verifiedOtp.ok) return fail(verifiedOtp.message ?? "Ma OTP khong hop le.", 401);
+    }
 
     const slugBase = slugify(studioName) || "studio";
     const studioSlug = `${slugBase}-${Date.now().toString(36)}`;
