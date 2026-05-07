@@ -18,6 +18,7 @@ import {
   Pencil,
   Phone,
   ShieldCheck,
+  Trash2,
   Upload,
   Users,
   WalletCards,
@@ -133,6 +134,7 @@ export function ProfilePage() {
   const [loginSessions, setLoginSessions] = useState<LoginSession[]>([]);
   const [showAllLoginSessions, setShowAllLoginSessions] = useState(false);
   const [loggingOutAll, setLoggingOutAll] = useState(false);
+  const [deletingAccount, setDeletingAccount] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
   const [editingStudio, setEditingStudio] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
@@ -159,6 +161,9 @@ export function ProfilePage() {
   const [studio, setStudio] = useState<StudioForm>({ name: "", email: "", phone: "", address: "" });
   const [password, setPassword] = useState<PasswordForm>({ currentPassword: "", newPassword: "", confirmPassword: "" });
   const [studioPassword, setStudioPassword] = useState<StudioPasswordForm>({ currentPassword: "", newPassword: "", confirmPassword: "" });
+  const [deletePassword, setDeletePassword] = useState("");
+  const [showDeleteAccount, setShowDeleteAccount] = useState(false);
+  const [visibleDeletePassword, setVisibleDeletePassword] = useState(false);
   const { darkMode, setDarkMode } = useUiStore();
 
   async function currentPushSubscription() {
@@ -454,6 +459,26 @@ export function ProfilePage() {
     void loadLoginSessions();
   }
 
+  async function deleteAccount() {
+    if (!deletePassword) {
+      setMessage("Vui lòng nhập mật khẩu hiện tại để xóa tài khoản.");
+      return;
+    }
+    setDeletingAccount(true);
+    setMessage("");
+    const result = await fetch("/api/profile/account", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: deletePassword }),
+    }).then((res) => res.json()).catch(() => null);
+    setDeletingAccount(false);
+    if (result?.error) {
+      setMessage(result.error.message);
+      return;
+    }
+    window.location.assign("/login");
+  }
+
   if (!summary) {
     return (
       <div className="space-y-5">
@@ -600,6 +625,45 @@ export function ProfilePage() {
               </span>
               {loggingOutAll ? <Loader2 className="animate-spin" size={18} /> : <LogOut size={18} />}
             </button>
+            {!showDeleteAccount ? (
+              <button
+                type="button"
+                onClick={() => setShowDeleteAccount(true)}
+                className="mt-3 flex w-full items-center justify-between rounded-2xl bg-rose-50 px-4 py-3 text-left text-rose-700 transition hover:bg-rose-100"
+              >
+                <span>
+                  <span className="block text-sm font-bold">Xóa tài khoản này</span>
+                  <span className="text-xs">Tài khoản sẽ bị khóa, email cũ được giải phóng và phiên đăng nhập bị thu hồi.</span>
+                </span>
+                <Trash2 size={18} />
+              </button>
+            ) : (
+              <div className="mt-3 rounded-2xl bg-rose-50 p-4 text-rose-700">
+                <p className="text-sm font-black">Xác nhận xóa tài khoản</p>
+                <p className="mt-1 text-xs font-semibold">Nhập mật khẩu hiện tại để xác nhận. Hành động này sẽ đăng xuất bạn ngay sau khi xóa.</p>
+                <div className="mt-3">
+                  <PasswordField label="Mật khẩu hiện tại" visible={visibleDeletePassword} onToggle={() => setVisibleDeletePassword((value) => !value)} value={deletePassword} onChange={setDeletePassword} />
+                </div>
+                <div className="mt-4 flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setDeletePassword("");
+                      setShowDeleteAccount(false);
+                    }}
+                  >
+                    <X size={15} />
+                    Hủy
+                  </Button>
+                  <Button type="button" variant="danger" size="sm" onClick={() => void deleteAccount()} disabled={deletingAccount}>
+                    {deletingAccount ? <Loader2 className="animate-spin" size={15} /> : <Trash2 size={15} />}
+                    Xóa tài khoản
+                  </Button>
+                </div>
+              </div>
+            )}
               <div className="mt-3 rounded-2xl bg-[#FFF3EC] p-3 sm:p-4">
               <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm font-black text-[#5B342C]">

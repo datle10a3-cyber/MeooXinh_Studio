@@ -99,6 +99,10 @@ export default function LoginPage() {
             Đăng nhập
           </Button>
 
+          <Link href="/forgot-password" className="mt-3 block text-center text-sm font-black text-[#A84E61] transition hover:text-[#EA7188]">
+            Quên mật khẩu?
+          </Link>
+
           <Link href="/register" className="mt-5 block rounded-2xl border border-[#F4C7C4] bg-white px-4 py-3 text-center text-sm font-black text-[#EA7188] shadow-sm transition hover:bg-[#FFF3EC]">
             Tạo studio mới bằng mã mời
           </Link>

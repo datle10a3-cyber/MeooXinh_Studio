@@ -2,6 +2,7 @@ import { createHash, randomInt } from "crypto";
 import { prisma } from "@/app/lib/prisma";
 
 export const registrationOtpPurpose = "STUDIO_REGISTRATION";
+export const passwordResetOtpPurpose = "PASSWORD_RESET";
 
 export function createOtpCode() {
   return String(randomInt(0, 1_000_000)).padStart(6, "0");

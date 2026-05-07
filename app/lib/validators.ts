@@ -13,6 +13,17 @@ export const registerOtpSchema = z.object({
   email: z.string().email("Email khong hop le.").trim().toLowerCase(),
 });
 
+export const passwordResetOtpSchema = z.object({
+  email: z.string().email("Email khong hop le.").trim().toLowerCase(),
+});
+
+export const passwordResetSchema = z.object({
+  email: z.string().email("Email khong hop le.").trim().toLowerCase(),
+  otp: z.string().regex(/^\d{6}$/, "Ma OTP phai gom 6 chu so."),
+  password: z.string().min(10, "Mat khau can it nhat 10 ky tu."),
+  confirmPassword: z.string().min(10, "Mat khau xac nhan can it nhat 10 ky tu."),
+});
+
 export const loginSchema = z.object({
   email: z.string().email("Email khong hop le.").trim().toLowerCase(),
   password: z.string().min(1, "Vui long nhap mat khau."),

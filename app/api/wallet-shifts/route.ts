@@ -43,10 +43,18 @@ async function enrichOpenShift(shift: ShiftRow | null) {
 }
 
 async function nextShiftCode(studioId: string, openedAt = new Date()) {
-  const count = await prisma.walletShift.count({
-    where: { studioId, openedAt: { lte: openedAt } },
+  const shifts = await prisma.walletShift.findMany({
+    where: { studioId, openedAt: { lte: openedAt }, code: { startsWith: "CA-MEOXINH-" } },
+    select: { code: true },
   });
-  return `CA-MEOXINH-${String(count + 1).padStart(3, "0")}`;
+  const used = new Set<number>();
+  shifts.forEach((shift) => {
+    const match = /^CA-MEOXINH-(\d+)$/i.exec(String(shift.code ?? ""));
+    if (match) used.add(Number(match[1]));
+  });
+  let next = 1;
+  while (used.has(next)) next += 1;
+  return `CA-MEOXINH-${String(next).padStart(3, "0")}`;
 }
 
 export async function GET(req: Request) {
