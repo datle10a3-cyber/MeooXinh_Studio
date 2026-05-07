@@ -10,7 +10,7 @@ import { STUDIO_VIEW_NAVIGATION_EVENT } from "@/app/utils/studio-navigation";
 function ViewLoading() {
   return (
     <div className="rounded-2xl border border-[#F4C7C4] bg-white px-4 py-6 text-sm font-bold text-[#9B746B] shadow-sm">
-      Dang mo man hinh...
+      Đang mở màn hình...
     </div>
   );
 }
@@ -79,6 +79,7 @@ const resourceKeys = new Set([
   "customers",
   "services",
   "booking",
+  "bookings",
   "transactions",
   "wallets",
   "projects",
@@ -87,6 +88,10 @@ const resourceKeys = new Set([
   "equipment",
   "notifications",
 ]);
+
+const viewToResourceKey: Record<string, ResourceKey> = {
+  booking: "bookings",
+};
 
 const rootViewKeys = new Set([
   "home",
@@ -180,7 +185,7 @@ export default function Home() {
 
       {resourceKeys.has(activeResource) && (
         <div className="block">
-          <ResourceManager resource={activeResource as ResourceKey} />
+          <ResourceManager resource={(viewToResourceKey[activeResource] ?? activeResource) as ResourceKey} />
         </div>
       )}
     </AppShell>
