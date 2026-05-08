@@ -51,13 +51,13 @@ const mobileWebviewSafetyScript = `
 export const metadata: Metadata = {
   title: "MÈOO XINHH STUDIO | Make & Photo",
   description: "Quản lý booking, tài chính, CRM và vận hành MÈOO XINHH STUDIO.",
-  manifest: "/manifest.json?v=3",
+  manifest: "/manifest.json?v=4",
   icons: {
     icon: [
-      { url: "/pwa-icon-192.png?v=3", sizes: "192x192", type: "image/png" },
-      { url: "/pwa-icon-512.png?v=3", sizes: "512x512", type: "image/png" },
+      { url: "/pwa-icon-192.png?v=4", sizes: "192x192", type: "image/png" },
+      { url: "/pwa-icon-512.png?v=4", sizes: "512x512", type: "image/png" },
     ],
-    apple: "/apple-touch-icon.png?v=3",
+    apple: "/apple-touch-icon.png?v=4",
   },
   appleWebApp: {
     capable: true,
@@ -70,6 +70,7 @@ export const metadata: Metadata = {
     "apple-mobile-web-app-capable": "yes",
     "apple-mobile-web-app-status-bar-style": "black-translucent",
     "apple-mobile-web-app-title": "MÈOO XINHH STUDIO",
+    "application-name": "MÈOO XINHH STUDIO",
     "format-detection": "telephone=no",
   },
 };
@@ -80,7 +81,7 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: "cover",
-  themeColor: "#f5a3c7",
+  themeColor: "#EA7188",
 };
 
 export default function RootLayout({
@@ -104,7 +105,9 @@ export default function RootLayout({
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Mèoo Xinhh Studio" />
-        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <meta name="application-name" content="MÈOO XINHH STUDIO" />
+        <meta name="theme-color" content="#EA7188" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=4" />
         <link
           rel="apple-touch-startup-image"
           href="/splash/splash-iphone-1170x2532.png"
