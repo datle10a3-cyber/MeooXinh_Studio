@@ -1654,10 +1654,25 @@ function ResourceDetailModal({
   onDelete: (row: Row) => void;
   onOpenGallery: (row: Row, index: number) => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
   useEffect(() => {
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = ""; };
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    return () => { 
+      document.body.style.overflow = ""; 
+      document.body.style.position = "";
+      document.body.style.width = "";
+    };
   }, []);
+
+  useEffect(() => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTop = 0;
+    }
+  }, [row.id]);
+
   const printable = printableInvoiceData(row);
   const isFinancial = ["transactions", "invoices", "projects"].includes(resource);
   const isPlainTransaction = resource === "transactions" && !canPrintInvoice(row);
@@ -1681,8 +1696,10 @@ function ResourceDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/45 p-3 backdrop-blur-sm sm:p-4">
-      <Card className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-[1.75rem] border-[#F4C7C4] bg-white p-4 shadow-2xl sm:rounded-[2rem] sm:p-6">
+    <div className="fixed inset-0 z-50 flex flex-col bg-slate-950/45 backdrop-blur-sm">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto">
+        <div className="min-h-full flex items-start justify-center p-3 pb-[max(env(safe-area-inset-bottom),3rem)] sm:p-4 sm:pb-4">
+          <Card className="w-full max-w-4xl rounded-[1.75rem] border-[#F4C7C4] bg-white p-4 shadow-2xl sm:rounded-[2rem] sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết</p>
@@ -1753,9 +1770,10 @@ function ResourceDetailModal({
           ) : null}
         </div>
         {/* Thêm khoảng trống ở cuối modal để không bị che bởi menu/nav bar điện thoại */}
-        <div className="h-16 sm:hidden" />
       </Card>
+      </div>
     </div>
+  </div>
   );
 }
 
