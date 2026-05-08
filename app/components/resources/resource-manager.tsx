@@ -748,7 +748,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
 
   function goToResource(id: string) {
     setActiveResource(id);
-    navigateStudioView(router, pathname, id);
+    navigateStudioView(router, id);
   }
 
   function startRowLongPress(event: React.PointerEvent, row: Row) {
@@ -981,7 +981,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     setEditingId(null);
     setShowForm(false);
     setForm({ ...emptyForm(config.fields), type, walletId: firstWalletId });
-    navigateStudioView(router, pathname, "transactions", { tab: view });
+    navigateStudioView(router, "transactions", { tab: view });
   }
 
   function openCreateForm() {
@@ -1151,7 +1151,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
             setShowForm(false);
             setEditingId(null);
             setSelectedIds([]);
-            navigateStudioView(router, pathname, "transactions");
+            navigateStudioView(router, "transactions");
           }}
           className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-4 text-sm font-black text-[#5B342C] shadow-sm transition hover:bg-[#FFF3EC]"
         >

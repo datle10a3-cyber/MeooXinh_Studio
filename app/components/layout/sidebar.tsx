@@ -34,7 +34,7 @@ import {
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { cn } from "@/app/utils/cn";
-import { navigateStudioView, studioViewPath } from "@/app/utils/studio-navigation";
+import { studioViewPath } from "@/app/utils/studio-navigation";
 
 type NavItem = {
   id: string;
@@ -167,17 +167,6 @@ export const Sidebar = memo(function Sidebar({ session }: { session: CurrentSess
   const setActiveResource = useUiStore((state) => state.setActiveResource);
 
   const role = session?.user.role;
-
-  function goTo(item: NavItem) {
-    setActiveResource(item.id);
-
-    if (item.href) {
-      router.push(item.href, { scroll: false });
-      return;
-    }
-
-    navigateStudioView(router, pathname, item.id);
-  }
 
   function classes(active: boolean) {
     return cn(

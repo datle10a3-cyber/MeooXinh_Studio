@@ -390,7 +390,7 @@ export function AiAssistantView() {
                           size="sm"
                           onClick={() => {
                             const view = String(action.payload?.view ?? "");
-                            if (view) navigateStudioView(router, pathname, view);
+                            if (view) navigateStudioView(router, view);
                           }}
                         >
                           Mở màn hình

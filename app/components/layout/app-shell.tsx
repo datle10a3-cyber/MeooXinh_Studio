@@ -54,7 +54,7 @@ const NotificationBell = dynamic(
 import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/components/brand/studio-brand";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
-import { navigateStudioPath, navigateStudioView, studioViewPath } from "@/app/utils/studio-navigation";
+import { studioViewPath } from "@/app/utils/studio-navigation";
 
 type NavItem = {
   id: string;
@@ -233,9 +233,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [session, setSession, pathname]);
 
+  // Sync activeResource với pathname thực tế
+  useEffect(() => {
+    const segments = pathname.split("/").filter(Boolean);
+    const view = segments[0] || "home";
+    setActiveResource(view);
+  }, [pathname, setActiveResource]);
+
   function goTo(item: NavItem) {
     startTransition(() => {
-      setActiveResource(item.id);
       setMobileMenuOpen(false);
       const target = item.href || studioViewPath(item.id);
       router.push(target, { scroll: false });
@@ -245,16 +251,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   function goToSearchResult(item: SearchResult) {
     if (item.type === "transactions" && item.transactionView) {
       setTransactionViewIntent(item.transactionView);
-      setActiveResource("transactions");
     } else {
       setTransactionViewIntent(null);
-      setActiveResource(item.targetResource);
     }
     setFocusedItemId(item.id);
     setSearchOpen(false);
     setSearchQuery("");
     
-    // Luôn ưu tiên targetPath nếu có, không dùng query params cho / nữa
     router.push(item.targetPath, { scroll: false });
   }
 

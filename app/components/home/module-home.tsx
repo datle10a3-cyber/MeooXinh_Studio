@@ -66,7 +66,7 @@ export function ModuleHome() {
     setActiveResource(id);
     setFocusedItemId(null);
     setTransactionViewIntent(null);
-    navigateStudioView(router, pathname, id);
+    navigateStudioView(router, id);
   }
 
   function goToBooking(item: Record<string, unknown>) {
@@ -84,7 +84,7 @@ export function ModuleHome() {
     setActiveResource("transactions");
     setTransactionViewIntent(view);
     if (id) setFocusedItemId(id);
-    navigateStudioView(router, pathname, "transactions", { tab: view });
+    navigateStudioView(router, "transactions", { tab: view });
   }
 
   useEffect(() => {

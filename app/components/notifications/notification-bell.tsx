@@ -86,7 +86,6 @@ function pushRequirementMessage() {
 
 export function NotificationBell() {
   const router = useRouter();
-  const pathname = usePathname();
   const rootRef = useRef<HTMLDivElement>(null);
   const setActiveResource = useUiStore((state) => state.setActiveResource);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
@@ -218,7 +217,7 @@ export function NotificationBell() {
     setActiveResource(item.targetResource);
     setFocusedItemId(item.sourceId);
     const targetPath = !item.targetPath || item.targetPath === "/" ? studioViewPath(item.targetResource) : item.targetPath;
-    navigateStudioPath(router, pathname, targetPath);
+    navigateStudioPath(router, targetPath);
   }
 
   return (
@@ -303,7 +302,7 @@ export function NotificationBell() {
                 setOpen(false);
                 setActiveResource("notifications");
                 setFocusedItemId(null);
-                navigateStudioView(router, pathname, "notifications");
+                navigateStudioView(router, "notifications");
               }}
               className="w-full rounded-xl px-3 py-2 text-sm font-bold text-[#5B342C] hover:bg-[#FFF3EC]"
             >
