@@ -223,12 +223,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         if (isDevBypassHost()) setSession(devSession);
         return;
       }
-      const result = await res.json();
+      const result = await res.json().catch(() => null);
       if (result?.data) {
         setSession(result.data);
         sessionStorage.setItem("studio-session", JSON.stringify(result.data));
       }
-    } catch {
+    } catch (err) {
+      console.error("Session load error:", err);
       if (isDevBypassHost()) setSession(devSession);
     }
   }, [session, setSession, pathname]);

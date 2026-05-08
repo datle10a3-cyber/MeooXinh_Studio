@@ -90,7 +90,20 @@ export function ModuleHome() {
   useEffect(() => {
     let cancelled = false;
     cachedFetch<DashboardData>("/api/dashboard?chartMode=month", { staleTime: 30_000 })
-      .then((data) => { if (!cancelled) setDashboard(data); })
+      .then((data) => {
+        if (cancelled || !data) return;
+        // Chuẩn hóa dữ liệu để tránh lỗi render nếu API trả về thiếu field
+        const normalized: DashboardData = {
+          summary: data.summary || fallbackDashboard.summary,
+          revenue: Array.isArray(data.revenue) ? data.revenue : [],
+          monthly: Array.isArray(data.monthly) ? data.monthly : [],
+          recentTransactions: Array.isArray(data.recentTransactions) ? data.recentTransactions : [],
+          openInvoices: Array.isArray(data.openInvoices) ? data.openInvoices : [],
+          upcomingBookings: Array.isArray(data.upcomingBookings) ? data.upcomingBookings : [],
+          wallets: Array.isArray(data.wallets) ? data.wallets : [],
+        };
+        setDashboard(normalized);
+      })
       .catch(() => undefined);
     return () => { cancelled = true; };
   }, []);
@@ -106,6 +119,14 @@ export function ModuleHome() {
     media.addListener(update);
     return () => media.removeListener(update);
   }, []);
+
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-4 overflow-hidden sm:space-y-5">
@@ -141,11 +162,11 @@ export function ModuleHome() {
             ) : null}
           </div>
           <div className={`studio-ios-scroll mt-3 space-y-2 ${showAllBookings ? "max-h-[18rem] overflow-y-auto pr-1" : ""}`}>
-            {dashboard.upcomingBookings.length === 0 ? <p className="text-xs font-semibold text-[#9B746B] sm:text-sm">Chưa có booking sắp tới.</p> : null}
-            {(showAllBookings ? dashboard.upcomingBookings : dashboard.upcomingBookings.slice(0, previewLimit)).map((item, index) => (
-              <button key={String(item.id ?? index)} type="button" onClick={() => goToBooking(item)} className="block w-full min-w-0 rounded-2xl bg-[#FFF3EC] p-2.5 text-left transition hover:bg-[#FFE4EA] sm:p-3">
-                <p className="line-clamp-2 break-words text-xs font-black leading-5 text-[#5B342C] sm:text-sm">{String(item.title ?? "Booking")}</p>
-                <p className="mt-1 text-[11px] font-semibold text-[#9B746B] sm:text-xs">{formatDate(item.startAt as string | Date)}</p>
+            {(dashboard?.upcomingBookings || []).length === 0 ? <p className="text-xs font-semibold text-[#9B746B] sm:text-sm">Chưa có booking sắp tới.</p> : null}
+            {(showAllBookings ? (dashboard?.upcomingBookings || []) : (dashboard?.upcomingBookings || []).slice(0, previewLimit)).map((item, index) => (
+              <button key={item?.id ? String(item.id) : `booking-${index}`} type="button" onClick={() => item && goToBooking(item)} className="block w-full min-w-0 rounded-2xl bg-[#FFF3EC] p-2.5 text-left transition hover:bg-[#FFE4EA] sm:p-3">
+                <p className="line-clamp-2 break-words text-xs font-black leading-5 text-[#5B342C] sm:text-sm">{String(item?.title ?? "Booking")}</p>
+                <p className="mt-1 text-[11px] font-semibold text-[#9B746B] sm:text-xs">{formatDate(item?.startAt as string | Date)}</p>
               </button>
             ))}
           </div>
@@ -161,16 +182,16 @@ export function ModuleHome() {
             ) : null}
           </div>
           <div className={`studio-ios-scroll mt-3 space-y-2 ${showAllTransactions ? "max-h-[18rem] overflow-y-auto pr-1" : ""}`}>
-            {dashboard.recentTransactions.length === 0 ? <p className="text-xs font-semibold text-[#9B746B] sm:text-sm">Chưa có giao dịch.</p> : null}
-            {(showAllTransactions ? dashboard.recentTransactions : dashboard.recentTransactions.slice(0, previewLimit)).map((item, index) => (
-              <button key={String(item.id ?? index)} onClick={() => goToTransaction(item)} className="grid w-full min-w-0 grid-cols-1 gap-1 rounded-2xl bg-[#FFF3EC] p-2.5 text-left transition hover:bg-[#FFE4EA] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3 sm:p-3">
+            {(dashboard?.recentTransactions || []).length === 0 ? <p className="text-xs font-semibold text-[#9B746B] sm:text-sm">Chưa có giao dịch.</p> : null}
+            {(showAllTransactions ? (dashboard?.recentTransactions || []) : (dashboard?.recentTransactions || []).slice(0, previewLimit)).map((item, index) => (
+              <button key={item?.id ? String(item.id) : `tx-${index}`} onClick={() => item && goToTransaction(item)} className="grid w-full min-w-0 grid-cols-1 gap-1 rounded-2xl bg-[#FFF3EC] p-2.5 text-left transition hover:bg-[#FFE4EA] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3 sm:p-3">
                 <div className="min-w-0">
-                  <p className="line-clamp-2 break-words text-xs font-black leading-5 text-[#5B342C] sm:text-sm">{String(item.title ?? "Giao dịch")}</p>
-                  <p className="mt-1 text-[11px] font-semibold text-[#9B746B] sm:text-xs">{formatDate(item.occurredAt as string | Date)}</p>
+                  <p className="line-clamp-2 break-words text-xs font-black leading-5 text-[#5B342C] sm:text-sm">{String(item?.title ?? "Giao dịch")}</p>
+                  <p className="mt-1 text-[11px] font-semibold text-[#9B746B] sm:text-xs">{formatDate(item?.occurredAt as string | Date)}</p>
                 </div>
-                <p className={`min-w-0 break-words text-left text-xs font-black leading-5 sm:max-w-[10rem] sm:text-right sm:text-sm ${String(item.type ?? "") === "EXPENSE" ? "text-rose-600" : "text-emerald-700"}`}>
-                  {String(item.type ?? "") === "EXPENSE" ? "-" : "+"}
-                  {formatMoney(item.amount as number | string)}
+                <p className={`min-w-0 break-words text-left text-xs font-black leading-5 sm:max-w-[10rem] sm:text-right sm:text-sm ${String(item?.type ?? "") === "EXPENSE" ? "text-rose-600" : "text-emerald-700"}`}>
+                  {String(item?.type ?? "") === "EXPENSE" ? "-" : "+"}
+                  {formatMoney(item?.amount as number | string)}
                 </p>
               </button>
             ))}
