@@ -1461,23 +1461,8 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
             setDeleteTarget={setDeleteTarget}
             openRowGallery={openRowGallery}
           />
-        )}t.stopPropagation(); edit(row); }}>
-                        Sửa
-                      </Button>
-                      {canDelete(session) ? (
-                        <Button variant="danger" size="icon" aria-label="Xóa dữ liệu" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
-                          <Trash2 size={16} />
-                        </Button>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-              </Card>
-            );
-              })}
-            </div>
-          ))
         )}
+
       </section>
 
       {hasMoreRows ? (
@@ -1733,7 +1718,7 @@ function ResourceListWithProgressive({
   setDeleteTarget,
   openRowGallery,
 }: {
-  resource: string;
+  resource: ResourceKey;
   visibleRows: Row[];
   config: any;
   session: any;
