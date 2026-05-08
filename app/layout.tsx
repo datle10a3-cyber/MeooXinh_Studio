@@ -22,11 +22,14 @@ const mobileWebviewSafetyScript = `
     try {
       if (navigator && navigator.standalone === true) isStandalone = true;
     } catch (_) {}
+    function versionKey(key) {
+      return key + ":" + APP_VERSION;
+    }
     function storageGet(key) {
-      try { return sessionStorage.getItem(key); } catch (_) { return null; }
+      try { return sessionStorage.getItem(versionKey(key)); } catch (_) { return null; }
     }
     function storageSet(key, value) {
-      try { sessionStorage.setItem(key, value); } catch (_) {}
+      try { sessionStorage.setItem(versionKey(key), value); } catch (_) {}
     }
     function localGet(key) {
       try { return localStorage.getItem(key); } catch (_) { return null; }

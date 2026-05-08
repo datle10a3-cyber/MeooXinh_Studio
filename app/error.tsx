@@ -11,15 +11,29 @@ function recoverFromChunkError() {
   try {
     if (sessionStorage.getItem("studio-error-boundary-chunk-reload")) return false;
     sessionStorage.setItem("studio-error-boundary-chunk-reload", "1");
-    if (window.location.pathname !== "/") {
-      window.location.replace("/");
-      return true;
-    }
-    window.location.reload();
+    hardRecover();
     return true;
   } catch {
     return false;
   }
+}
+
+function clearCaches() {
+  if (!("caches" in window)) return Promise.resolve();
+  return caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))).then(() => undefined);
+}
+
+function unregisterWorkers() {
+  if (!("serviceWorker" in navigator)) return Promise.resolve();
+  return navigator.serviceWorker.getRegistrations().then((registrations) => Promise.all(registrations.map((registration) => registration.unregister()))).then(() => undefined);
+}
+
+function hardRecover() {
+  const reload = () => {
+    const target = `${window.location.origin}/?recovered=${Date.now()}`;
+    window.location.replace(target);
+  };
+  unregisterWorkers().then(clearCaches).then(reload).catch(reload);
 }
 
 export default function Error({
@@ -41,10 +55,10 @@ export default function Error({
           <h1 className="mt-3 text-2xl font-black">Ứng dụng cần tải lại</h1>
           <p className="mt-2 text-sm font-semibold text-[#9B746B]">Trình duyệt có thể đang giữ bundle cũ. Hãy thử tải lại để đồng bộ phiên bản mới.</p>
           <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <button className="rounded-full bg-[#EA7188] px-5 py-3 text-sm font-black text-white" onClick={() => unstable_retry()} type="button">
+            <button className="rounded-full bg-[#EA7188] px-5 py-3 text-sm font-black text-white" onClick={hardRecover} type="button">
               Thử lại
             </button>
-            <button className="rounded-full border border-[#F4C7C4] px-5 py-3 text-sm font-black text-[#5B342C]" onClick={() => window.location.replace("/")} type="button">
+            <button className="rounded-full border border-[#F4C7C4] px-5 py-3 text-sm font-black text-[#5B342C]" onClick={hardRecover} type="button">
               Về trang chính
             </button>
           </div>
