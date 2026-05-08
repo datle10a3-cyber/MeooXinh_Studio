@@ -730,15 +730,27 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         ) : null}
 
         {!completedOnly ? (
-          <div className="mt-4 flex gap-2">
-            <Button variant="secondary" size="sm" className="min-h-10 flex-1 rounded-2xl" onClick={(event) => { event.stopPropagation(); setCancelTarget(row); }}>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Button variant="secondary" size="sm" className="min-h-10 rounded-2xl" onClick={(event) => { event.stopPropagation(); onEdit(row); }}>
+              Sửa
+            </Button>
+            <Button variant="danger" size="sm" className="min-h-10 rounded-2xl" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
+              Xóa
+            </Button>
+            <Button variant="secondary" size="sm" className="min-h-10 rounded-2xl" onClick={(event) => { event.stopPropagation(); setCancelTarget(row); }}>
               Hủy đơn
             </Button>
-            <Button size="sm" className="min-h-10 flex-1 rounded-2xl" onClick={(event) => { event.stopPropagation(); setPaymentTarget(row); }}>
+            <Button size="sm" className="min-h-10 rounded-2xl" onClick={(event) => { event.stopPropagation(); setPaymentTarget(row); }}>
               Hoàn thành
             </Button>
           </div>
-        ) : null}
+        ) : (
+          <div className="mt-4">
+            <Button variant="danger" size="sm" className="min-h-10 w-full rounded-2xl" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
+              Xóa lịch sử
+            </Button>
+          </div>
+        )}
       </div>
     );
   }
@@ -1183,6 +1195,10 @@ function BookingDetailModal({
   onCancel: (booking: BookingItem) => void;
   onComplete: (booking: BookingItem) => void;
 }) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={onClose}>
       <div

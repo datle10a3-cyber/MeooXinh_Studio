@@ -619,7 +619,6 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
     : String(row.customerName ?? row.title ?? row.name ?? "Khách hàng");
   const packageName = invoice.packageName || String(row.packageName ?? row.title ?? "Gói dịch vụ");
   const amount = invoice.amount ?? row.amount ?? row.total ?? 0;
-  const displayNote = cleanSystemNote(row);
 
   function clearLongPress() {
     if (longPressTimer.current) {
@@ -711,14 +710,6 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
           <p className="text-[10px] font-bold text-[#9B746B]">{resource === "projects" ? "Dự án" : "Thanh toán"}</p>
         </div>
       </div>
-
-      {displayNote ? (
-        <div className="mt-3 rounded-[1.25rem] bg-[#FFF8F1] p-3">
-          <p className="line-clamp-2 text-xs font-semibold leading-relaxed text-[#7B554D]">
-            <span className="font-black text-[#EA7188]">Nội dung:</span> {displayNote}
-          </p>
-        </div>
-      ) : null}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <FinancialPackageThumb row={row} resource={resource} onOpenGallery={onOpenGallery} />
@@ -1663,6 +1654,10 @@ function ResourceDetailModal({
   onDelete: (row: Row) => void;
   onOpenGallery: (row: Row, index: number) => void;
 }) {
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = ""; };
+  }, []);
   const printable = printableInvoiceData(row);
   const isFinancial = ["transactions", "invoices", "projects"].includes(resource);
   const isPlainTransaction = resource === "transactions" && !canPrintInvoice(row);
