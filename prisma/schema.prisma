@@ -102,6 +102,7 @@ model User {
   aiActionSuggestions AiActionSuggestion[]
   openedWalletShifts WalletShift[]   @relation("WalletShiftOpenedBy")
   closedWalletShifts WalletShift[]   @relation("WalletShiftClosedBy")
+  pushSubscriptions PushSubscription[]
 
   @@index([studioId])
   @@index([roleId])
@@ -627,6 +628,7 @@ model PushSubscription {
   userAgent String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([studioId])
   @@index([userId])
