@@ -13,11 +13,13 @@
   --shadow-premium: 0 12px 30px rgba(91, 52, 44, 0.04), 0 4px 12px rgba(91, 52, 44, 0.03);
 }
 
+/* ─── Base ─── */
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   touch-action: manipulation;
 }
@@ -30,6 +32,10 @@ body {
   overscroll-behavior-y: none;
 }
 
+html {
+  scroll-behavior: auto;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -39,6 +45,7 @@ body {
   color: #2f2f2f;
 }
 
+/* ─── Focus highlight animation ─── */
 @keyframes studio-focus-pulse {
   0%,
   100% {
@@ -56,6 +63,7 @@ body {
   border-color: #ea7188 !important;
 }
 
+/* ─── Interactive elements ─── */
 button,
 input,
 select,
@@ -95,6 +103,7 @@ textarea {
   user-select: text;
 }
 
+/* ─── PWA Standalone ─── */
 @media (display-mode: standalone) {
   body {
     min-height: 100dvh;
@@ -104,6 +113,7 @@ textarea {
   }
 }
 
+/* ─── Media ─── */
 img,
 video,
 canvas,
@@ -116,21 +126,19 @@ video {
   height: auto;
 }
 
+/* ─── GPU-accelerated scrollable containers ─── */
 .overflow-y-auto,
 .overflow-x-auto,
 [class*="overflow-y-auto"],
 [class*="overflow-x-auto"] {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
-  will-change: scroll-position;
 }
 
-/* GPU-accelerated scrollable containers */
 .studio-ios-scroll {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   scroll-padding-bottom: max(env(safe-area-inset-bottom), 1rem);
-  will-change: scroll-position;
   contain: layout style;
 }
 
@@ -138,29 +146,49 @@ video {
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
 
+/* ─── Mobile-specific performance ─── */
 @media (hover: none), (pointer: coarse) {
+  /* Faster transitions on touch devices for snappy feel */
   * {
-    transition-duration: 120ms !important;
+    transition-duration: 100ms !important;
+  }
+
+  /* Disable scroll-behavior: smooth globally — causes jank on iOS */
+  * {
     scroll-behavior: auto !important;
   }
 
+  /* Kill hover transforms on mobile (cause paint thrash) */
   [class*="hover:-translate"],
   [class*="hover:scale"] {
     transform: none !important;
   }
 
+  /* Lighter shadows = fewer GPU layers */
   [class*="shadow-[0_24px"],
   [class*="shadow-[0_30px"],
   [class*="shadow-[0_22px"] {
-    box-shadow: 0 10px 28px rgba(184, 95, 108, 0.12) !important;
+    box-shadow: 0 8px 20px rgba(184, 95, 108, 0.1) !important;
   }
 
   .studio-focus-highlight {
-    animation-duration: 0.65s;
+    animation-duration: 0.6s;
     animation-iteration-count: 2;
+  }
+
+  /* Reduce backdrop-filter intensity on mobile (very expensive) */
+  [class*="backdrop-blur-xl"] {
+    -webkit-backdrop-filter: blur(8px) !important;
+    backdrop-filter: blur(8px) !important;
+  }
+
+  [class*="backdrop-blur-sm"] {
+    -webkit-backdrop-filter: blur(4px) !important;
+    backdrop-filter: blur(4px) !important;
   }
 }
 
+/* ─── Small screens ─── */
 @media (max-width: 640px) {
   html,
   body {
@@ -168,6 +196,7 @@ video {
     max-width: 100%;
   }
 
+  /* Prevent iOS zoom on input focus */
   input,
   select,
   textarea {
@@ -179,6 +208,7 @@ video {
     touch-action: manipulation;
   }
 
+  /* Apple HIG minimum touch target */
   button,
   [role="button"] {
     min-height: 44px;
@@ -232,22 +262,18 @@ video {
   .shadow-premium {
     box-shadow: var(--shadow-premium);
   }
-
-  /* Global Page Transitions */
-  .page-transition-enter {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  .page-transition-enter-active {
-    opacity: 1;
-    transform: translateY(0);
-    transition: opacity 300ms, transform 300ms;
-  }
 }
 
+/* ─── Promote key layout elements to GPU layer ─── */
+.studio-gpu {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ─── Page fade-in (subtle, GPU-only) ─── */
 @layer base {
   main {
-    animation: fadeIn 0.4s ease-out;
+    animation: fadeIn 0.3s ease-out;
   }
 
   @keyframes fadeIn {

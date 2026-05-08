@@ -326,8 +326,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className={darkMode ? "min-h-dvh bg-[#2B1C1A] text-white" : "min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
       <div className="flex min-h-dvh">
         <Sidebar session={session} />
-        <main className="min-w-0 flex-1 touch-pan-y">
-          <header className="sticky top-0 z-30 border-b border-[#F4C7C4] bg-[#FFF3EC]/95 px-2.5 py-2 backdrop-blur supports-[backdrop-filter]:bg-[#FFF3EC]/86 sm:px-4 lg:py-3 xl:px-8">
+        <main className="min-w-0 flex-1 touch-pan-y" style={{ contain: "layout style" }}>
+          <header className="sticky top-0 z-30 border-b border-[#F4C7C4] bg-[#FFF3EC]/95 px-2.5 py-2 backdrop-blur supports-[backdrop-filter]:bg-[#FFF3EC]/86 sm:px-4 lg:py-3 xl:px-8" style={{ transform: "translateZ(0)" }}>
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <Button
@@ -409,9 +409,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <button className="absolute inset-0 bg-[#2B1C1A]/35 backdrop-blur-[2px]" aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)} />
-          <aside className="absolute left-0 top-0 flex h-dvh w-[88vw] max-w-[360px] flex-col overflow-hidden border-r border-[#F4C7C4] bg-[#FFF7F0] pt-[env(safe-area-inset-top)] shadow-2xl sm:w-[380px] sm:max-w-md">
+        <div className="fixed inset-0 z-50 lg:hidden" style={{ transform: "translateZ(0)" }}>
+          <button className="absolute inset-0 bg-[#2B1C1A]/35" style={{ backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }} aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)} />
+          <aside className="absolute left-0 top-0 flex h-dvh w-[88vw] max-w-[360px] flex-col overflow-hidden border-r border-[#F4C7C4] bg-[#FFF7F0] pt-[env(safe-area-inset-top)] shadow-2xl sm:w-[380px] sm:max-w-md" style={{ transform: "translate3d(0,0,0)", willChange: "transform" }}>
             <div className="flex items-center justify-between border-b border-[#F4C7C4] p-3 sm:p-4">
               <StudioCatMark compact />
               <Button variant="secondary" size="icon" aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)}>
@@ -510,7 +510,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <nav className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-40 mx-auto w-full max-w-sm px-4 pb-4 lg:hidden">
+      <nav className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-40 mx-auto w-full max-w-sm px-4 pb-4 lg:hidden" style={{ transform: "translate3d(0,0,0)" }}>
         <div className="flex w-full justify-between rounded-[2rem] border border-white/20 bg-white/85 px-2 py-1.5 shadow-[0_8px_30px_rgba(184,95,108,0.15)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
           {mobilePrimary.map((item) => {
             const Icon = item.icon;
