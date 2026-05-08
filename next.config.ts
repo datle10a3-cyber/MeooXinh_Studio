@@ -5,17 +5,77 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  cacheStartUrl: false,
+  dynamicStartUrl: false,
+  cacheOnFrontEndNav: false,
+  aggressiveFrontEndNavCaching: false,
   reloadOnOnline: true,
+
   workboxOptions: {
     disableDevLogs: true,
+    cleanupOutdatedCaches: true,
+    clientsClaim: true,
+    skipWaiting: true,
+    navigateFallback: "/",
+    navigateFallbackDenylist: [/^\/api\//, /^\/_next\//],
+    runtimeCaching: [
+      {
+        urlPattern: ({ request }) => request.mode === "navigate",
+        handler: "NetworkOnly",
+        options: {
+          cacheName: "studio-pages",
+        },
+      },
+      {
+        urlPattern: ({ url }) => url.pathname.startsWith("/_next/static/"),
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "next-static",
+          networkTimeoutSeconds: 4,
+          expiration: {
+            maxEntries: 80,
+            maxAgeSeconds: 60 * 60 * 24,
+          },
+        },
+      },
+
+      {
+        urlPattern: ({ request }) => request.destination === "image",
+        handler: "CacheFirst",
+        options: {
+          cacheName: "studio-images",
+        },
+      },
+    ],
   },
 });
 
 const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+      {
+        source: "/:path(workbox-.*\\.js)",
+        headers: [
+          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
+        ],
+      },
+      {
+        source: "/manifest.json",
+        headers: [
+          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
