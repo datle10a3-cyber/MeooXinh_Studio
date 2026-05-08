@@ -356,10 +356,13 @@ export function ReportsView() {
   const [toDate, setToDate] = useState("");
   const [dateFilterOpen, setDateFilterOpen] = useState(false);
   const [health, setHealth] = useState<SystemHealth | null>(null);
+  const [healthLoading, setHealthLoading] = useState(true);
+  const [downloadingReport, setDownloadingReport] = useState<string | null>(null);
   const hasDateFilter = Boolean(fromDate || toDate);
 
   useEffect(() => {
     let mounted = true;
+    setHealthLoading(true);
     fetch("/api/system/health")
       .then((res) => res.json())
       .then((result) => {
@@ -367,6 +370,9 @@ export function ReportsView() {
       })
       .catch(() => {
         if (mounted) setHealth(null);
+      })
+      .finally(() => {
+        if (mounted) setHealthLoading(false);
       });
     return () => {
       mounted = false;
@@ -480,33 +486,36 @@ export function ReportsView() {
               <CardTitle>Sức khỏe hệ thống</CardTitle>
               <p className="mt-2 text-sm font-semibold text-[#9B746B]">Theo dõi nhanh database, số bảng, dữ liệu chính và backup gần nhất.</p>
             </div>
-            <span className="rounded-full bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700">{health?.database ?? "Đang kiểm tra"}</span>
+            <span className={`rounded-full px-3 py-2 text-xs font-black ${healthLoading ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-700"}`}>
+              {healthLoading ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <Loader2 size={13} className="animate-spin" />
+                  Đang kiểm tra
+                </span>
+              ) : (health?.database ?? "Lỗi")}
+            </span>
           </div>
           <div className="mt-4 grid grid-cols-3 gap-2">
-            <div className="min-w-0 rounded-2xl bg-[#FFF3EC] p-2.5 sm:p-3">
-              <p className="flex items-center gap-2 text-xs font-black uppercase text-[#B98278]"><Database size={15} /> Số bảng</p>
-              <p className="mt-1 text-lg font-black leading-6 text-[#5B342C] sm:text-xl">{health?.tableCount ?? "--"}</p>
-            </div>
-            <div className="min-w-0 rounded-2xl bg-[#FFF3EC] p-2.5 sm:p-3">
-              <p className="flex items-center gap-2 text-xs font-black uppercase text-[#B98278]"><CalendarDays size={15} /> Booking</p>
-              <p className="mt-1 text-lg font-black leading-6 text-[#5B342C] sm:text-xl">{health?.counts.bookings ?? "--"}</p>
-            </div>
-            <div className="min-w-0 rounded-2xl bg-[#FFF3EC] p-2.5 sm:p-3">
-              <p className="flex items-center gap-2 text-xs font-black uppercase text-emerald-700"><BadgeDollarSign size={15} /> Thu</p>
-              <p className="mt-1 text-lg font-black leading-6 text-[#5B342C] sm:text-xl">{health?.counts.income ?? "--"}</p>
-            </div>
-            <div className="min-w-0 rounded-2xl bg-[#FFF3EC] p-2.5 sm:p-3">
-              <p className="flex items-center gap-2 text-xs font-black uppercase text-rose-700"><BadgeDollarSign size={15} /> Chi</p>
-              <p className="mt-1 text-lg font-black leading-6 text-[#5B342C] sm:text-xl">{health?.counts.expense ?? "--"}</p>
-            </div>
-            <div className="min-w-0 rounded-2xl bg-[#FFF3EC] p-2.5 sm:p-3">
-              <p className="flex items-center gap-2 text-xs font-black uppercase text-[#B98278]"><FileText size={15} /> Hóa đơn</p>
-              <p className="mt-1 text-lg font-black leading-6 text-[#5B342C] sm:text-xl">{health?.counts.invoices ?? "--"}</p>
-            </div>
-            <div className="min-w-0 rounded-2xl bg-[#FFF3EC] p-2.5 sm:p-3">
-              <p className="text-xs font-black uppercase text-[#B98278]">Khách hàng</p>
-              <p className="mt-1 text-lg font-black leading-6 text-[#5B342C] sm:text-xl">{health?.counts.customers ?? "--"}</p>
-            </div>
+            {[
+              { label: "Số bảng", icon: Database, value: health?.tableCount, color: "text-[#B98278]" },
+              { label: "Booking", icon: CalendarDays, value: health?.counts.bookings, color: "text-[#B98278]" },
+              { label: "Thu", icon: BadgeDollarSign, value: health?.counts.income, color: "text-emerald-700" },
+              { label: "Chi", icon: BadgeDollarSign, value: health?.counts.expense, color: "text-rose-700" },
+              { label: "Hóa đơn", icon: FileText, value: health?.counts.invoices, color: "text-[#B98278]" },
+              { label: "Khách hàng", icon: null, value: health?.counts.customers, color: "text-[#B98278]" },
+            ].map((stat) => (
+              <div key={stat.label} className="min-w-0 rounded-2xl bg-[#FFF3EC] p-2.5 sm:p-3">
+                <p className={`flex items-center gap-2 text-xs font-black uppercase ${stat.color}`}>
+                  {stat.icon ? <stat.icon size={15} /> : null}
+                  {stat.label}
+                </p>
+                {healthLoading ? (
+                  <div className="mt-2 h-5 w-10 animate-pulse rounded-lg bg-[#F4C7C4]/40" />
+                ) : (
+                  <p className="mt-1 text-lg font-black leading-6 text-[#5B342C] sm:text-xl">{stat.value ?? "--"}</p>
+                )}
+              </div>
+            ))}
           </div>
           <div className="mt-3 rounded-2xl border border-[#F4C7C4] bg-white p-3 text-sm font-semibold text-[#7B554D]">
             <div className="flex items-center gap-2 font-black text-[#5B342C]"><HardDrive size={16} /> Backup gần nhất</div>
@@ -536,9 +545,17 @@ export function ReportsView() {
               <a
                 className="mt-5 inline-flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-[#EA7188] px-5 text-sm font-bold text-white shadow-sm transition duration-200 hover:bg-[#DA5E79]"
                 href={reportHref(report.type)}
+                onClick={() => {
+                  setDownloadingReport(report.type);
+                  window.setTimeout(() => setDownloadingReport(null), 8000);
+                }}
               >
-                <Download size={17} />
-                Xuất CSV
+                {downloadingReport === report.type ? (
+                  <Loader2 size={17} className="animate-spin" />
+                ) : (
+                  <Download size={17} />
+                )}
+                {downloadingReport === report.type ? "Đang xuất..." : "Xuất CSV"}
               </a>
             </Card>
           );
