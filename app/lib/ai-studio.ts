@@ -689,6 +689,8 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
       missingImageBookings: [],
       matchedCustomers: [],
       matchedTransactions: [],
+      matchedPackages: [],
+      matchedEquipment: [],
     };
   }
 
