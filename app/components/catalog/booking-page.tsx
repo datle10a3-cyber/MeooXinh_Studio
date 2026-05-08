@@ -1200,7 +1200,7 @@ function BookingDetailModal({
     return () => { document.body.style.overflow = ""; };
   }, []);
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-[#2F1E1A]/75 p-3 backdrop-blur-sm sm:items-center sm:p-4 touch-none" onClick={onClose}>
       <div
         className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-[2rem] border border-[#F4C7C4] bg-white p-5 shadow-[0_24px_80px_rgba(91,52,44,0.28)]"
         onClick={(event) => event.stopPropagation()}
@@ -1260,8 +1260,6 @@ function BookingDetailModal({
             </Button>
           ) : null}
         </div>
-        {/* Thêm khoảng trống ở cuối modal để không bị che bởi menu/nav bar điện thoại */}
-        <div className="h-16 sm:hidden" />
       </div>
     </div>
   );

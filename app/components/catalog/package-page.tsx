@@ -595,7 +595,7 @@ function PackageDetailModal({
   const deliverables = listText(row.deliverables);
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto overscroll-contain bg-[#2F1E1A]/55 p-1.5 backdrop-blur-md sm:p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto overscroll-contain bg-[#2F1E1A]/75 p-1.5 backdrop-blur-md sm:p-4" onClick={onClose}>
       <div
         className="max-h-[95vh] w-[calc(100vw-0.75rem)] max-w-6xl overflow-hidden rounded-[1.5rem] border border-[#F4C7C4] bg-[#FFFDFC] shadow-[0_28px_90px_rgba(91,52,44,0.34)] sm:w-[calc(100vw-2rem)] sm:rounded-[2rem]"
         onClick={(event) => event.stopPropagation()}
@@ -835,8 +835,6 @@ function PackageForm({
         <Button className="w-full" onClick={onSave}>
           {editingId ? "Cập nhật" : "Tạo gói"}
         </Button>
-        {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
-        <div className="h-20 sm:hidden" />
       </div>
     </Card>
   );
