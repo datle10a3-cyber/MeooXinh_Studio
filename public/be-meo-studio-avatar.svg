@@ -35,11 +35,24 @@
     <circle cx="395" cy="215" r="8"/>
     <circle cx="435" cy="215" r="8"/>
   </g>
-  <!-- Face and Left Ear Continuous Path -->
-  <path d="M 386 290 A 130 130 0 1 1 140 220 C 120 110, 160 80, 200 110 C 220 120, 215 160, 205 172 A 130 130 0 0 1 386 290 Z" fill="#FFF6F0" stroke="#4A2511" stroke-width="12" stroke-linejoin="round"/>
+  <!-- BACKGROUND LAYER (Creates continuous outline) -->
+  <g fill="#4A2511" stroke="#4A2511" stroke-linejoin="round">
+    <!-- Left Ear Base -->
+    <path d="M 150 250 Q 120 130 165 100 Q 200 120 220 200 Z" stroke-width="24" />
+    <!-- Face Base -->
+    <circle cx="256" cy="290" r="130" stroke-width="12" />
+  </g>
+
+  <!-- FOREGROUND LAYER (Covers internal strokes) -->
+  <g fill="#FFF6F0" stroke="#FFF6F0" stroke-linejoin="round">
+    <!-- Left Ear Fill -->
+    <path d="M 150 250 Q 120 130 165 100 Q 200 120 220 200 Z" stroke-width="12" />
+    <!-- Face Fill -->
+    <circle cx="256" cy="290" r="130" stroke-width="0" />
+  </g>
   
-  <!-- Left Ear Inner -->
-  <path d="M 160 200 C 145 130, 175 105, 195 120 C 205 130, 205 160, 195 170 Z" fill="#FFB3C6"/>
+  <!-- Left Ear Inner Pink -->
+  <path d="M 155 220 Q 140 140 165 120 Q 185 130 195 180 Z" fill="#FFB3C6"/>
 
   <!-- Right Ear (Folded overlapping) -->
   <path d="M275 160 C 270 120, 310 110, 350 140 C 370 160, 350 230, 295 215 Z" fill="#FF8CA3" stroke="#FFFFFF" stroke-width="14" stroke-linejoin="round" filter="url(#shadow)"/>
