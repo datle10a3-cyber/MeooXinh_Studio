@@ -51,7 +51,19 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: "try{document.querySelectorAll('[fdprocessedid]').forEach(function(node){node.removeAttribute('fdprocessedid')})}catch(e){}",
+            __html: `try{document.querySelectorAll('[fdprocessedid]').forEach(function(n){n.removeAttribute('fdprocessedid')})}catch(e){}
+// Detect in-app browsers (Messenger, Facebook, Zalo, Instagram, Line)
+try{
+  var ua=navigator.userAgent||'';
+  if(/FBAN|FBAV|Instagram|Zalo|Line|Messenger|MicroMessenger/i.test(ua)){
+    var url=location.href;
+    // On iOS, try intent to open Safari
+    if(/iphone|ipad|ipod/i.test(ua)){
+      // x-safari-https scheme opens Safari on iOS
+      location.replace('x-safari-'+url.replace(/^https?/,'https'));
+    }
+  }
+}catch(e){}`,
           }}
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
