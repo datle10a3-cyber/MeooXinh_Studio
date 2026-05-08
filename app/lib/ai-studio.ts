@@ -698,7 +698,7 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
     ...(range ? { startAt: { gte: range.start, lt: range.end } } : {}),
   };
 
-  const [bookingRows, missingImageRows, customerRows, transactionRows] = await Promise.all([
+  const [bookingRows, missingImageRows, customerRows, transactionRows, packageRows, equipmentRows] = await Promise.all([
     wantsBooking || wantsCustomer
       ? prisma.booking.findMany({
           where: bookingWhere,
