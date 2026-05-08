@@ -2,6 +2,7 @@ import { fail, ok, created, serverError } from "@/app/lib/api-response";
 import { canCreate, canUpdate, requireUser, verifyStudioEditPassword } from "@/app/lib/auth";
 import { writeAuditLog } from "@/app/lib/audit";
 import { applyTransactionWalletDelta, recalculateInvoiceDebt, replaceTransactionWalletDelta } from "@/app/lib/finance-workflow";
+import { cacheInvalidate } from "@/app/lib/api-cache";
 import { prisma } from "@/app/lib/prisma";
 import {
   getDelegate,
@@ -86,7 +87,11 @@ export async function getResource(req: Request, resourceName: string) {
       });
     }
 
-    return ok(rows);
+    return ok(rows, {
+      headers: {
+        "Cache-Control": "private, max-age=5, stale-while-revalidate=15",
+      },
+    });
   } catch (error) {
     if ((error as Error).message === "UNAUTHORIZED") return fail("Chưa đăng nhập.", 401);
     return serverError(error);
@@ -130,6 +135,7 @@ export async function createResource(req: Request, resourceName: string) {
     if (resource.key === "transactions") await applyTransactionWalletDelta(row, 1);
     if (resource.key === "invoices") await recalculateInvoiceDebt(String(row.id));
     await writeAuditLog(user, "CREATE", resource.definition.entity, String(row.id), { name: auditName(row) });
+    cacheInvalidate("dashboard:");
 
     return created(row);
   } catch (error) {
@@ -170,6 +176,7 @@ export async function updateResource(req: Request, resourceName: string) {
     if (resource.key === "transactions") await replaceTransactionWalletDelta(current, row);
     if (resource.key === "invoices") await recalculateInvoiceDebt(String(row.id));
     await writeAuditLog(user, "UPDATE", resource.definition.entity, String(row.id), { name: auditName(row) });
+    cacheInvalidate("dashboard:");
 
     return ok(row);
   } catch (error) {

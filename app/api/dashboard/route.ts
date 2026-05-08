@@ -1,4 +1,5 @@
 import { fail, ok, serverError } from "@/app/lib/api-response";
+import { cacheGet, cacheSet, cacheInvalidate } from "@/app/lib/api-cache";
 import { requireUser } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
 
@@ -140,6 +141,15 @@ export async function GET(request: Request) {
     const chartDate = new Date(selectedYear, selectedMonth - 1, 1);
     const chartRange = getChartRange(chartMode, chartDate, fromYear, toYear);
 
+    // Server-side cache check
+    const cacheKey = `dashboard:${user.studioId}:${chartMode}:${selectedYear}:${selectedMonth}:${fromYear}:${toYear}`;
+    const cached = cacheGet<Record<string, unknown>>(cacheKey);
+    if (cached) {
+      return ok(cached, {
+        headers: { "Cache-Control": "private, max-age=15, stale-while-revalidate=30" },
+      });
+    }
+
     const [income, expense, recentTransactions, openInvoices, bookings, wallets, chartTransactions] = await Promise.all([
       prisma.transaction.aggregate({
         where: { studioId: user.studioId, type: "INCOME", deletedAt: null },
@@ -184,7 +194,7 @@ export async function GET(request: Request) {
     const totalExpense = toNumber(expense._sum.amount);
     const revenue = buildRevenue(chartMode, chartTransactions, chartDate, now, fromYear, toYear);
 
-    return ok({
+    const dashboardResult = {
       summary: {
         totalIncome,
         totalExpense,
@@ -197,6 +207,14 @@ export async function GET(request: Request) {
       openInvoices,
       upcomingBookings: bookings,
       wallets,
+    };
+
+    cacheSet(cacheKey, dashboardResult);
+
+    return ok(dashboardResult, {
+      headers: {
+        "Cache-Control": "private, max-age=15, stale-while-revalidate=30",
+      },
     });
   } catch (error) {
     if ((error as Error).message === "UNAUTHORIZED") return fail("Chưa đăng nhập.", 401);

@@ -18,6 +18,7 @@ import {
 import { Button } from "@/app/components/ui/button";
 import { StudioCatMark } from "@/app/components/brand/studio-brand";
 import { Card, CardTitle } from "@/app/components/ui/card";
+import { cachedFetch } from "@/app/lib/cached-fetch";
 import { useUiStore } from "@/app/store/ui-store";
 import type { ApiResult, DashboardData } from "@/app/types/studio";
 import { formatDate, formatMoney } from "@/app/utils/format";
@@ -87,15 +88,11 @@ export function ModuleHome() {
   }
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      fetch("/api/dashboard?chartMode=month")
-        .then((res) => res.json() as Promise<ApiResult<DashboardData>>)
-        .then((result) => {
-          if (result.data) setDashboard(result.data);
-        })
-        .catch(() => undefined);
-    }, 350);
-    return () => window.clearTimeout(timer);
+    let cancelled = false;
+    cachedFetch<DashboardData>("/api/dashboard?chartMode=month", { staleTime: 30_000 })
+      .then((data) => { if (!cancelled) setDashboard(data); })
+      .catch(() => undefined);
+    return () => { cancelled = true; };
   }, []);
 
   useEffect(() => {

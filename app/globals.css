@@ -122,12 +122,16 @@ video {
 [class*="overflow-x-auto"] {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  will-change: scroll-position;
 }
 
+/* GPU-accelerated scrollable containers */
 .studio-ios-scroll {
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
   scroll-padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  will-change: scroll-position;
+  contain: layout style;
 }
 
 .studio-mobile-bottom-safe {

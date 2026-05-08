@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { memo, type ReactNode, useCallback, useEffect, useMemo, useRef, useState, startTransition } from "react";
+import { memo, type ReactNode, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, startTransition } from "react";
 import {
   ArrowDownLeft,
   ArrowRight,
@@ -988,18 +988,22 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     void loadRows();
   }
 
+  const deferredQuery = useDeferredValue(query);
+  const deferredFromDate = useDeferredValue(fromDate);
+  const deferredToDate = useDeferredValue(toDate);
+
   const filteredRows = useMemo(() => {
-    const keyword = query.trim().toLowerCase();
+    const keyword = deferredQuery.trim().toLowerCase();
     const dateFilteredRows = ["transactions", "invoices", "projects"].includes(resource)
       ? rows.filter((row) => dateInRange(
           resource === "transactions" ? row.occurredAt ?? row.createdAt : resource === "projects" ? row.deadlineAt ?? row.createdAt : row.issueDate ?? row.createdAt,
-          fromDate,
-          toDate,
+          deferredFromDate,
+          deferredToDate,
         ))
       : rows;
     if (!keyword) return dateFilteredRows;
     return dateFilteredRows.filter((row) => Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(keyword)));
-  }, [fromDate, query, resource, rows, toDate]);
+  }, [deferredFromDate, deferredQuery, resource, rows, deferredToDate]);
   const transactionType = transactionView === "income" ? "INCOME" : transactionView === "expense" ? "EXPENSE" : null;
   const visibleRows = resource === "transactions" && transactionType ? filteredRows.filter((row) => String(row.type) === transactionType) : filteredRows;
   const walletById = useMemo(() => new Map(walletRows.map((wallet) => [String(wallet.id), wallet])), [walletRows]);
