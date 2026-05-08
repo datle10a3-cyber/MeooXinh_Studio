@@ -731,7 +731,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
 
         {!completedOnly ? (
           <div className="mt-4 grid grid-cols-2 gap-2">
-            <Button variant="secondary" size="sm" className="min-h-10 rounded-2xl" onClick={(event) => { event.stopPropagation(); onEdit(row); }}>
+            <Button variant="secondary" size="sm" className="min-h-10 rounded-2xl" onClick={(event) => { event.stopPropagation(); edit(row); }}>
               Sửa
             </Button>
             <Button variant="danger" size="sm" className="min-h-10 rounded-2xl" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
