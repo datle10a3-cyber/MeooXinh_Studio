@@ -17,67 +17,50 @@ const mobileWebviewSafetyScript = `
     var isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
     var isStandalone = !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (navigator && navigator.standalone === true);
 
-    function clearStudioCaches() {
-      if (window.caches && caches.keys) {
-        return caches.keys().then(function(keys) {
-          return Promise.all(keys.map(function(key) {
-            return caches.delete(key);
-          }));
+    function fullReset() {
+      if ("serviceWorker" in navigator) {
+        return navigator.serviceWorker.getRegistrations().then(function(regs) {
+          return Promise.all(regs.map(function(r) { return r.unregister(); }));
+        }).then(function() {
+          if (window.caches && caches.keys) {
+            return caches.keys().then(function(keys) {
+              return Promise.all(keys.map(function(k) { return caches.delete(k); }));
+            });
+          }
         }).catch(function(){});
       }
       return Promise.resolve();
     }
 
-    function unregisterServiceWorkers() {
-      if (!("serviceWorker" in navigator)) return Promise.resolve();
-      return navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        return Promise.all(registrations.map(function(registration) {
-          return registration.unregister();
-        }));
-      }).catch(function(){});
-    }
-
-    function fullReset() {
-      return unregisterServiceWorkers().then(clearStudioCaches);
-    }
-
     // Xử lý version mismatch
-    var previousVersion = localStorage.getItem("studio-app-version");
-    if (previousVersion && previousVersion !== APP_VERSION) {
+    var prevVer = localStorage.getItem("studio-app-version");
+    if (prevVer && prevVer !== APP_VERSION) {
       localStorage.setItem("studio-app-version", APP_VERSION);
-      fullReset().then(function() {
-        location.reload();
-      });
-    } else {
-      localStorage.setItem("studio-app-version", APP_VERSION);
+      fullReset().then(function() { location.reload(); });
+      return;
     }
+    localStorage.setItem("studio-app-version", APP_VERSION);
 
-    // Ưu tiên stability cho webview: Unregister SW nếu không phải standalone
+    // QUAN TRỌNG: Điều hướng Service Worker
     if (isMobile && isInApp && !isStandalone) {
-      unregisterServiceWorkers().catch(function(){});
+      // Trong Webview (Mess/Zalo/TikTok): Xóa sạch SW để tránh lỗi cache/stale
+      fullReset().catch(function(){});
+    } else if ("serviceWorker" in navigator) {
+      // Trong trình duyệt bình thường hoặc PWA: Register SW thủ công
+      window.addEventListener("load", function() {
+        navigator.serviceWorker.register("/sw.js").catch(function(){});
+      });
     }
 
-    // Lắng nghe ChunkLoadError để reload tự động
+    // Tự động khôi phục khi lỗi Chunk
     window.addEventListener("error", function(e) {
-      var msg = (e && e.message) || "";
-      if (/ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/i.test(msg)) {
-        if (!sessionStorage.getItem("studio-last-chunk-reload")) {
-          sessionStorage.setItem("studio-last-chunk-reload", Date.now());
+      if (/ChunkLoadError|Loading chunk|module script failed/i.test(e.message || "")) {
+        if (!sessionStorage.getItem("studio-chunk-retry")) {
+          sessionStorage.setItem("studio-chunk-retry", "1");
           fullReset().then(function() { location.reload(); });
         }
       }
     }, true);
-
-    window.addEventListener("unhandledrejection", function(e) {
-      var reason = (e && e.reason) || {};
-      var msg = reason.message || reason.stack || String(reason);
-      if (/ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/i.test(msg)) {
-        if (!sessionStorage.getItem("studio-last-chunk-reload")) {
-          sessionStorage.setItem("studio-last-chunk-reload", Date.now());
-          fullReset().then(function() { location.reload(); });
-        }
-      }
-    });
   } catch (err) {}
 })();
 `;

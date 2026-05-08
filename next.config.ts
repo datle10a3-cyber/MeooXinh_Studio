@@ -4,7 +4,7 @@ import withPWAInit from "@ducanh2912/next-pwa";
 const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
-  register: true,
+  register: false,
   cacheStartUrl: false,
   dynamicStartUrl: false,
   cacheOnFrontEndNav: false,
@@ -16,14 +16,13 @@ const withPWA = withPWAInit({
     cleanupOutdatedCaches: true,
     clientsClaim: true,
     skipWaiting: true,
-    navigateFallback: "/",
-    navigateFallbackDenylist: [/^\/_next/, /^\/api/], // Đảm bảo không bao giờ fallback cho chunks
     runtimeCaching: [
       {
         urlPattern: ({ request }) => request.mode === "navigate",
-        handler: "NetworkOnly",
+        handler: "NetworkFirst",
         options: {
           cacheName: "studio-pages",
+          networkTimeoutSeconds: 5,
         },
       },
       {
@@ -32,8 +31,8 @@ const withPWA = withPWAInit({
         options: {
           cacheName: "studio-images",
           expiration: {
-            maxEntries: 40,
-            maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+            maxEntries: 50,
+            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
           },
         },
       },
