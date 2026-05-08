@@ -178,7 +178,7 @@ export const Sidebar = memo(function Sidebar({ session }: { session: CurrentSess
   }
 
   return (
-    <aside className="hidden w-72 shrink-0 border-r border-[#F4C7C4]/50 bg-white/50 backdrop-blur-xl px-4 py-6 lg:block">
+    <aside className="hidden w-64 shrink-0 border-r border-[#F4C7C4]/50 bg-white/50 px-4 py-6 xl:block">
       <div className="mb-6 rounded-[2rem] border-2 border-[#F7AFC0] bg-white p-5 text-[#5B342C] shadow-[0_8px_20px_rgba(184,95,108,0.06)]">
         <StudioCatMark compact />
 

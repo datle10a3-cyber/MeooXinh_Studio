@@ -333,7 +333,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="h-11 w-11 shrink-0 touch-manipulation rounded-2xl border-2 border-[#F4A7B9] bg-white text-[#5B342C] shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] lg:hidden"
+                  className="h-11 w-11 shrink-0 touch-manipulation rounded-2xl border-2 border-[#F4A7B9] bg-white text-[#5B342C] shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] xl:hidden"
                   aria-label="Mở menu"
                   onClick={() => setMobileMenuOpen(true)}
                 >
@@ -343,12 +343,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <p className="line-clamp-1 text-xs font-black leading-4 text-[#E88498] sm:text-sm">
                     Studio: {displayStudioName(session)}
                   </p>
-                  <h2 className="hidden whitespace-normal break-words text-base font-black leading-5 text-[#5B342C] sm:block sm:text-lg">Booking, finance, CRM</h2>
+                  <h2 className="hidden whitespace-nowrap text-base font-black leading-5 text-[#5B342C] sm:block sm:text-lg">Booking, finance, CRM</h2>
                 </div>
               </div>
 
               <div className="flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-2">
-                <div className="hidden items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-2 py-1 shadow-sm lg:flex">
+                <div className="hidden items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-2 py-1 shadow-sm xl:flex">
                   <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/categories">
                     Danh mục
                   </Link>
@@ -360,13 +360,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 </div>
                 {session?.user.role !== "STAFF" ? (
-                  <a className="hidden h-11 items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-4 text-sm font-black text-[#5B342C] shadow-sm hover:bg-[#FFF0F4] lg:flex" href="/api/reports?type=transactions">
+                  <a className="hidden h-11 items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-4 text-sm font-black text-[#5B342C] shadow-sm hover:bg-[#FFF0F4] xl:flex" href="/api/reports?type=transactions">
                     <Download size={16} />
                     CSV
                   </a>
                 ) : null}
                 <button
-                  className="hidden h-11 items-center gap-2 rounded-2xl bg-[#EA7188] px-4 text-white shadow-sm transition hover:bg-[#DA5E79] lg:flex"
+                  className="hidden h-11 items-center gap-2 rounded-2xl bg-[#EA7188] px-4 text-white shadow-sm transition hover:bg-[#DA5E79] xl:flex"
                   onClick={() => goTo({ id: "ai", label: "AI", icon: Bot })}
                 >
                   <Bot size={17} />
@@ -409,7 +409,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
 
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden" style={{ transform: "translateZ(0)" }}>
+        <div className="fixed inset-0 z-50 xl:hidden" style={{ transform: "translateZ(0)" }}>
           <button className="absolute inset-0 bg-[#2B1C1A]/35" style={{ backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }} aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)} />
           <aside className="absolute left-0 top-0 flex h-dvh w-[88vw] max-w-[360px] flex-col overflow-hidden border-r border-[#F4C7C4] bg-[#FFF7F0] pt-[env(safe-area-inset-top)] shadow-2xl sm:w-[380px] sm:max-w-md" style={{ transform: "translate3d(0,0,0)", willChange: "transform" }}>
             <div className="flex items-center justify-between border-b border-[#F4C7C4] p-3 sm:p-4">
@@ -510,7 +510,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <nav className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-40 mx-auto w-full max-w-sm px-4 pb-4 lg:hidden" style={{ transform: "translate3d(0,0,0)" }}>
+      <nav className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-40 mx-auto w-full max-w-sm px-4 pb-4 xl:hidden" style={{ transform: "translate3d(0,0,0)" }}>
         <div className="flex w-full justify-between rounded-[2rem] border border-white/20 bg-white/85 px-2 py-1.5 shadow-[0_8px_30px_rgba(184,95,108,0.15)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
           {mobilePrimary.map((item) => {
             const Icon = item.icon;
