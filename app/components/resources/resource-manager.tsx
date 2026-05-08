@@ -764,11 +764,29 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
 
   const loadRows = useCallback(async (mode: "reset" | "append" = "reset", cursor?: string | null) => {
     if (mode === "append" && !cursor) return;
-    if (mode === "reset") setInitialLoading(true);
     setLoadingMoreRows(mode === "append");
-    const params = new URLSearchParams({ take: "50", cursorMode: "1" });
-    if (mode === "append" && cursor) params.set("cursor", cursor);
-    const res = await fetch(`${endpoint}?${params.toString()}`);
+
+    const url = `${endpoint}?${new URLSearchParams({ take: "50", cursorMode: "1", ...(mode === "append" && cursor ? { cursor } : {}) }).toString()}`;
+
+    // On reset: try to show cached data instantly while fetching fresh
+    if (mode === "reset") {
+      try {
+        const cached = sessionStorage.getItem(`rc:${endpoint}`);
+        if (cached) {
+          const page = JSON.parse(cached) as PaginatedRows;
+          setRows(page.items);
+          setNextCursor(page.nextCursor);
+          setHasMoreRows(page.hasMore);
+          // Don't show spinner if we have cache — just silently refresh
+        } else {
+          setInitialLoading(true);
+        }
+      } catch {
+        setInitialLoading(true);
+      }
+    }
+
+    const res = await fetch(url);
     const payload = await res.json();
     if (payload.data) {
       const page = payload.data as PaginatedRows | Row[];
@@ -778,8 +796,16 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
         const seen = new Set(current.map((row) => String(row.id ?? "")));
         return [...current, ...items.filter((row) => !seen.has(String(row.id ?? "")))];
       });
-      setNextCursor(Array.isArray(page) ? null : page.nextCursor);
-      setHasMoreRows(Array.isArray(page) ? false : page.hasMore);
+      const nextCursorValue = Array.isArray(page) ? null : page.nextCursor;
+      const hasMore = Array.isArray(page) ? false : page.hasMore;
+      setNextCursor(nextCursorValue);
+      setHasMoreRows(hasMore);
+      // Cache the first page for instant display next time
+      if (mode === "reset") {
+        try {
+          sessionStorage.setItem(`rc:${endpoint}`, JSON.stringify({ items, nextCursor: nextCursorValue, hasMore }));
+        } catch { /* storage full — ignore */ }
+      }
     }
     if (payload.error) setMessage(payload.error.message);
     setLoadingMoreRows(false);
@@ -1054,7 +1080,15 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
           >
             <div className="flex items-center justify-between gap-3">
               <div className="grid h-10 w-10 place-items-center rounded-2xl bg-emerald-50 text-xl font-black text-emerald-600 sm:h-14 sm:w-14 sm:text-2xl">+</div>
-              <span className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-700">{incomeCount} mục</span>
+              <span className="rounded-full bg-emerald-50 px-4 py-2 text-sm font-black text-emerald-700">
+                {initialLoading ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" style={{ animationDelay: "150ms" }} />
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" style={{ animationDelay: "300ms" }} />
+                  </span>
+                ) : `${incomeCount} mục`}
+              </span>
             </div>
             <h2 className="mt-5 text-2xl font-black text-[#5B342C]">Khoản thu</h2>
             <p className="mt-2 text-sm font-semibold leading-6 text-[#8C655E]">Xem tiền khách trả, cọc booking, doanh thu dịch vụ và các khoản tiền vào.</p>
@@ -1070,7 +1104,15 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
           >
             <div className="flex items-center justify-between gap-3">
               <div className="grid h-10 w-10 place-items-center rounded-2xl bg-rose-50 text-xl font-black text-rose-600 sm:h-14 sm:w-14 sm:text-2xl">-</div>
-              <span className="rounded-full bg-rose-50 px-4 py-2 text-sm font-black text-rose-700">{expenseCount} mục</span>
+              <span className="rounded-full bg-rose-50 px-4 py-2 text-sm font-black text-rose-700">
+                {initialLoading ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" />
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" style={{ animationDelay: "150ms" }} />
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-rose-400" style={{ animationDelay: "300ms" }} />
+                  </span>
+                ) : `${expenseCount} mục`}
+              </span>
             </div>
             <h2 className="mt-5 text-2xl font-black text-[#5B342C]">Khoản chi</h2>
             <p className="mt-2 text-sm font-semibold leading-6 text-[#8C655E]">Xem chi lương, mua đồ, thuê ekip, vận hành studio và các khoản tiền ra.</p>
