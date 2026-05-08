@@ -648,6 +648,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const selectedDeleteCount = new Set([...selectedIds, ...selectedGroupRows.map((row) => row.id)]).size;
   const progressiveGroups = useProgressiveList(displayGroups, 50);
 
+  function renderBookingRow(row: BookingItem, index: number, total: number) {
     const isDiscounted = Number(row.total ?? row.price) < Number(row.price);
     const displayNote = (row.note ?? "").replace(/Loại booking:\s*Booking nhóm(?:\s*-\s*[^\n.]+)?\.?/i, "").trim();
 
