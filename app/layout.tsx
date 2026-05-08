@@ -3,28 +3,9 @@ import { IosLaunchSplash } from "@/app/components/pwa/ios-launch-splash";
 import { NetworkStatus } from "@/app/components/pwa/network-status";
 import { AppLoader } from "@/app/components/ui/app-loader";
 import NextTopLoader from "nextjs-toploader";
-import { ShellLayout } from "@/app/components/layout/shell-layout";
 import "./globals.css";
 
-const appVersion = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.NEXT_PUBLIC_APP_VERSION ?? "local";
 const pwaAssetVersion = "5";
-
-const mobileWebviewSafetyScript = `
-(function(){
-  try {
-    var ua = navigator.userAgent || "";
-    window.__IS_IN_APP = /FBAN|FBAV|FB_IAB|Messenger|Instagram|Zalo|TikTok|Bytedance|Line|MicroMessenger|WeChat/i.test(ua);
-    var isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
-    
-    // Xóa mọi Service Worker cũ nếu còn tồn tại
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(regs) {
-        regs.forEach(function(r) { r.unregister(); });
-      });
-    }
-  } catch (err) {}
-})();
-`;
 
 export const metadata: Metadata = {
   title: "MÈOO XINHH STUDIO | Make & Photo",
@@ -75,11 +56,6 @@ export default function RootLayout({
             __html: "try{document.querySelectorAll('[fdprocessedid]').forEach(function(n){n.removeAttribute('fdprocessedid')})}catch(e){}",
           }}
         />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: mobileWebviewSafetyScript,
-          }}
-        />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
         <meta name="apple-mobile-web-app-title" content="Mèoo Xinhh Studio" />
@@ -112,7 +88,7 @@ export default function RootLayout({
         <AppLoader />
         <IosLaunchSplash />
         <NetworkStatus />
-        <ShellLayout>{children}</ShellLayout>
+        {children}
       </body>
     </html>
   );
