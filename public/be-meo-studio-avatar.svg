@@ -38,8 +38,8 @@
   </g>
 
   <!-- Left Ear -->
-  <path d="M130 230 C 120 140, 160 110, 200 130 C 230 150, 240 180, 240 200 Z" fill="#FFF6F0" stroke="#4A2511" stroke-width="12" stroke-linejoin="round"/>
-  <path d="M155 200 C 150 150, 175 140, 190 150 C 205 160, 210 180, 210 200 Z" fill="#FFB3C6"/>
+  <path d="M 150 230 C 120 130, 150 90, 190 110 C 220 130, 240 160, 240 190 Z" fill="#FFF6F0" stroke="#4A2511" stroke-width="12" stroke-linejoin="round"/>
+  <path d="M 170 205 C 150 140, 165 120, 190 130 C 210 140, 220 165, 220 190 Z" fill="#FFB3C6"/>
 
   <!-- Face Base -->
   <circle cx="256" cy="290" r="130" fill="#FFF6F0" stroke="#4A2511" stroke-width="12"/>
