@@ -7,13 +7,13 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "MÈOO XINHH STUDIO | Make & Photo",
   description: "Quản lý booking, tài chính, CRM và vận hành MÈOO XINHH STUDIO.",
-  manifest: "/manifest.json",
+  manifest: "/manifest.json?v=3",
   icons: {
     icon: [
-      { url: "/pwa-icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/pwa-icon-512.png", sizes: "512x512", type: "image/png" },
+      { url: "/pwa-icon-192.png?v=3", sizes: "192x192", type: "image/png" },
+      { url: "/pwa-icon-512.png?v=3", sizes: "512x512", type: "image/png" },
     ],
-    apple: "/apple-touch-icon.png",
+    apple: "/apple-touch-icon.png?v=3",
   },
   appleWebApp: {
     capable: true,
