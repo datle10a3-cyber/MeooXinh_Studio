@@ -11,56 +11,16 @@ const pwaAssetVersion = "5";
 const mobileWebviewSafetyScript = `
 (function(){
   try {
-    var APP_VERSION = ${JSON.stringify(appVersion)};
     var ua = navigator.userAgent || "";
-    var isInApp = /FBAN|FBAV|FB_IAB|Messenger|Instagram|Zalo|TikTok|Bytedance|Line|MicroMessenger|WeChat/i.test(ua);
+    window.__IS_IN_APP = /FBAN|FBAV|FB_IAB|Messenger|Instagram|Zalo|TikTok|Bytedance|Line|MicroMessenger|WeChat/i.test(ua);
     var isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
-    var isStandalone = !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (navigator && navigator.standalone === true);
-
-    function fullReset() {
-      if ("serviceWorker" in navigator) {
-        return navigator.serviceWorker.getRegistrations().then(function(regs) {
-          return Promise.all(regs.map(function(r) { return r.unregister(); }));
-        }).then(function() {
-          if (window.caches && caches.keys) {
-            return caches.keys().then(function(keys) {
-              return Promise.all(keys.map(function(k) { return caches.delete(k); }));
-            });
-          }
-        }).catch(function(){});
-      }
-      return Promise.resolve();
-    }
-
-    // Xử lý version mismatch
-    var prevVer = localStorage.getItem("studio-app-version");
-    if (prevVer && prevVer !== APP_VERSION) {
-      localStorage.setItem("studio-app-version", APP_VERSION);
-      fullReset().then(function() { location.reload(); });
-      return;
-    }
-    localStorage.setItem("studio-app-version", APP_VERSION);
-
-    // QUAN TRỌNG: Điều hướng Service Worker
-    if (isMobile && isInApp && !isStandalone) {
-      // Trong Webview (Mess/Zalo/TikTok): Xóa sạch SW để tránh lỗi cache/stale
-      fullReset().catch(function(){});
-    } else if ("serviceWorker" in navigator) {
-      // Trong trình duyệt bình thường hoặc PWA: Register SW thủ công
-      window.addEventListener("load", function() {
-        navigator.serviceWorker.register("/sw.js").catch(function(){});
+    
+    // Xóa mọi Service Worker cũ nếu còn tồn tại
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.unregister(); });
       });
     }
-
-    // Tự động khôi phục khi lỗi Chunk
-    window.addEventListener("error", function(e) {
-      if (/ChunkLoadError|Loading chunk|module script failed/i.test(e.message || "")) {
-        if (!sessionStorage.getItem("studio-chunk-retry")) {
-          sessionStorage.setItem("studio-chunk-retry", "1");
-          fullReset().then(function() { location.reload(); });
-        }
-      }
-    }, true);
   } catch (err) {}
 })();
 `;

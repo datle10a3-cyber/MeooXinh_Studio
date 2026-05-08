@@ -17,7 +17,7 @@ const DashboardView = dynamic(
     import("@/app/components/dashboard/dashboard-view").then(
       (mod) => mod.DashboardView,
     ),
-  { loading: ViewLoading, ssr: false },
+  { loading: ViewLoading },
 );
 
 const ReportsView = dynamic(
@@ -25,7 +25,7 @@ const ReportsView = dynamic(
     import("@/app/components/dashboard/system-overview").then(
       (mod) => mod.ReportsView,
     ),
-  { loading: ViewLoading, ssr: false },
+  { loading: ViewLoading },
 );
 
 const AiAssistantView = dynamic(
@@ -47,7 +47,7 @@ const ResourceManager = dynamic(
 const ModuleHome = dynamic(
   () =>
     import("@/app/components/home/module-home").then((mod) => mod.ModuleHome),
-  { loading: ViewLoading, ssr: false },
+  { loading: ViewLoading },
 );
 
 const TrashView = dynamic(

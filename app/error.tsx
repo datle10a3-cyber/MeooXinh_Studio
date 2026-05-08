@@ -2,63 +2,56 @@
 
 import { useEffect } from "react";
 
-function isChunkLikeError(error: Error) {
-  const message = `${error.name || ""} ${error.message || ""} ${error.stack || ""}`;
-  return /ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed|module script failed/i.test(message);
-}
-
-function recoverFromChunkError() {
-  try {
-    if (sessionStorage.getItem("studio-error-boundary-chunk-reload")) return false;
-    sessionStorage.setItem("studio-error-boundary-chunk-reload", "1");
-    hardRecover();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-function clearCaches() {
-  if (!("caches" in window)) return Promise.resolve();
-  return caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key)))).then(() => undefined);
-}
-
-function unregisterWorkers() {
-  if (!("serviceWorker" in navigator)) return Promise.resolve();
-  return navigator.serviceWorker.getRegistrations().then((registrations) => Promise.all(registrations.map((registration) => registration.unregister()))).then(() => undefined);
-}
-
-function hardRecover() {
-  const reload = () => {
-    const target = `${window.location.origin}/?recovered=${Date.now()}`;
-    window.location.replace(target);
-  };
-  unregisterWorkers().then(clearCaches).then(reload).catch(reload);
-}
-
 export default function Error({
   error,
-  unstable_retry,
+  reset,
 }: {
   error: Error & { digest?: string };
-  unstable_retry: () => void;
+  reset: () => void;
 }) {
   useEffect(() => {
-    // Tự động recover cho MỌI lỗi một lần duy nhất
-    try {
-      if (sessionStorage.getItem("studio-error-auto-recovery")) return;
-      sessionStorage.setItem("studio-error-auto-recovery", "1");
-      hardRecover();
-    } catch {}
+    // Log lỗi để debug nếu cần
+    console.error("App Error Boundary:", error);
   }, [error]);
 
+  const isChunkError = /ChunkLoadError|Loading chunk|module script failed/i.test(error.message || "");
+
   return (
-    <div className="flex min-h-dvh items-center justify-center bg-[#FFF3EC]">
-      <div className="text-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#EA7188] border-t-transparent mx-auto"></div>
-        <p className="mt-4 font-bold text-[#5B342C]">Đang đồng bộ và khởi động lại...</p>
-        <p className="mt-1 text-xs text-[#9B746B]">Vui lòng đợi trong giây lát</p>
+    <main className="min-h-dvh bg-[#FFF3EC] px-4 py-6 text-[#5B342C]">
+      <div className="mx-auto grid min-h-[85dvh] w-full max-w-xl place-items-center">
+        <section className="w-full rounded-[2rem] border border-[#F4C7C4] bg-white/90 p-6 text-center shadow-[0_22px_60px_rgba(184,95,108,0.16)]">
+          <p className="text-sm font-black uppercase tracking-[0.22em] text-[#EA7188]">Mèoo Xinhh Studio</p>
+          <h1 className="mt-3 text-2xl font-black">
+            {isChunkError ? "Ứng dụng cần cập nhật" : "Đã có lỗi xảy ra"}
+          </h1>
+          <p className="mt-2 text-sm font-semibold text-[#9B746B]">
+            {isChunkError 
+              ? "Trình duyệt đang giữ phiên bản cũ. Hãy thử tải lại để đồng bộ." 
+              : "Ứng dụng gặp sự cố tạm thời. Hãy thử làm mới trang."}
+          </p>
+          
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <button 
+              className="rounded-full bg-[#EA7188] px-6 py-3 text-sm font-black text-white shadow-lg active:scale-95 transition-transform"
+              onClick={() => {
+                if (isChunkError) {
+                  window.location.reload();
+                } else {
+                  reset();
+                }
+              }}
+            >
+              Thử lại ngay
+            </button>
+            <button 
+              className="rounded-full border border-[#F4C7C4] px-6 py-3 text-sm font-black text-[#5B342C] active:scale-95 transition-transform"
+              onClick={() => window.location.href = "/"}
+            >
+              Về trang chính
+            </button>
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
