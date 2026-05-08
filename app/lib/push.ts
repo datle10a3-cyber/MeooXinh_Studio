@@ -12,7 +12,18 @@ function configureWebPush() {
 
 export async function sendStudioPush(studioId: string, payload: { title: string; body: string; url?: string; tag?: string }) {
   if (!configureWebPush()) return;
-  const subscriptions = await prisma.pushSubscription.findMany({ where: { studioId } });
+  
+  // Lấy danh sách các subscription của studio này, nhưng lọc theo user đang ở trạng thái ACTIVE và đã bật nhận thông báo
+  const subscriptions = await prisma.pushSubscription.findMany({ 
+    where: { 
+      studioId,
+      user: {
+        status: "ACTIVE",
+        notificationsEnabled: true
+      }
+    } 
+  });
+
   await Promise.all(subscriptions.map(async (item) => {
     try {
       await webpush.sendNotification({

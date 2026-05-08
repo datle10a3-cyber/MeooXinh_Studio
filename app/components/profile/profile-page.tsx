@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import {
@@ -131,6 +131,7 @@ export function ProfilePage() {
   const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [notifyEnabled, setNotifyEnabled] = useState(true);
+  const [isTogglingNotify, setIsTogglingNotify] = useState(false);
   const [loginSessions, setLoginSessions] = useState<LoginSession[]>([]);
   const [showAllLoginSessions, setShowAllLoginSessions] = useState(false);
   const [loggingOutAll, setLoggingOutAll] = useState(false);
@@ -173,9 +174,11 @@ export function ProfilePage() {
   }
 
   const refreshPushState = useCallback(async function refreshPushState() {
-    const subscription = await currentPushSubscription().catch(() => null);
-    setNotifyEnabled(Boolean(subscription));
-  }, []);
+    // Không chỉ kiểm tra subscription cục bộ mà ưu tiên setting trong DB
+    if (summary?.user) {
+      setNotifyEnabled(summary.user.notificationsEnabled ?? false);
+    }
+  }, [summary?.user]);
 
   async function enablePushNotifications() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {
@@ -226,11 +229,35 @@ export function ProfilePage() {
   }
 
   async function toggleNotifications() {
-    if (notifyEnabled) {
-      await disablePushNotifications();
-    } else {
-      await enablePushNotifications();
+    if (!summary || isTogglingNotify) return;
+    const nextValue = !notifyEnabled;
+    
+    setIsTogglingNotify(true);
+    setNotifyEnabled(nextValue); // Optimistic update
+
+    // 1. Lưu vào DB (chỉ gửi field cần thiết)
+    const result = await fetch("/api/profile/summary", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user: { notificationsEnabled: nextValue } }),
+    }).then((res) => res.json()).catch(() => null);
+
+    if (result?.data) {
+      setSummary((curr) => curr ? { ...curr, user: result.data.user } : null);
+      window.dispatchEvent(new CustomEvent("studio-session-updated", { detail: { user: result.data.user, studio: result.data.studio } }));
+      setMessage(nextValue ? "Đã bật nhận thông báo hệ thống." : "Đã tắt nhận thông báo hệ thống.");
+    } else if (result?.error) {
+      setNotifyEnabled(!nextValue); // Revert on error
+      setMessage(result.error.message);
     }
+
+    // 2. Xử lý subscription thiết bị
+    if (nextValue) {
+      await enablePushNotifications();
+    } else {
+      await disablePushNotifications();
+    }
+    setIsTogglingNotify(false);
   }
 
   useEffect(() => {
@@ -711,7 +738,7 @@ export function ProfilePage() {
 
           <Panel className="order-3" title="Cài đặt nhanh" icon={Bell}>
             <ToggleRow icon={Moon} label="Dark mode" checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
-            <ToggleRow icon={Bell} label="Thông báo" checked={notifyEnabled} onChange={() => void toggleNotifications()} />
+            <ToggleRow icon={Bell} label="Thông báo" checked={notifyEnabled} loading={isTogglingNotify} onChange={() => void toggleNotifications()} />
           </Panel>
         </div>
 
@@ -917,12 +944,12 @@ function InfoRow({ label, value, icon: Icon }: { label: string; value: string; i
   );
 }
 
-function ToggleRow({ icon: Icon, label, checked, onChange }: { icon: LucideIcon; label: string; checked: boolean; onChange: () => void }) {
+function ToggleRow({ icon: Icon, label, checked, loading, onChange }: { icon: LucideIcon; label: string; checked: boolean; loading?: boolean; onChange: () => void }) {
   return (
-    <button type="button" onClick={onChange} className="flex w-full items-center justify-between rounded-2xl px-2 py-2 transition hover:bg-[#FFF3EC]">
+    <button type="button" onClick={onChange} disabled={loading} className="flex w-full items-center justify-between rounded-2xl px-2 py-2 transition hover:bg-[#FFF3EC] disabled:opacity-70">
       <span className="inline-flex items-center gap-3 text-sm font-bold text-[#5B342C]">
         <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#FFF3EC] text-[#9B746B]">
-          <Icon size={16} />
+          {loading ? <Loader2 className="animate-spin" size={16} /> : <Icon size={16} />}
         </span>
         {label}
       </span>

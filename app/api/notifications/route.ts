@@ -30,6 +30,8 @@ function notificationType(type: string) {
   return "notification";
 }
 
+const studioGenerationLock = new Map<string, number>();
+
 export async function GET() {
   try {
     const user = await requireUser();
@@ -82,102 +84,123 @@ export async function GET() {
       bookingGroups.set(key, [...(bookingGroups.get(key) ?? []), booking]);
     }
 
-    await Promise.all([
-      ...Array.from(bookingGroups.values()).map(async (group) => {
-        const booking = group[0];
-        const label = bookingGroupLabel(booking.note);
-        const isGroup = group.length > 1 || Boolean(label);
-        const nearNow = booking.startAt <= inTwoHours;
-        const windowText = nearNow ? "trong 2 giờ tới" : "trong 24 giờ tới";
-        const title = isGroup ? `Nhắc booking nhóm ${windowText}` : `Nhắc lịch chụp ${windowText}`;
-        const customerText = isGroup
-          ? `${label ?? "Booking nhóm"} có ${group.length} khách: ${group.map((item) => item.customerName || item.title).join(", ")}`
-          : `Lịch ${booking.customerName || booking.title}`;
-        const message = `${customerText} bắt đầu ${windowText}.${isGroup ? bookingPackageSummary(group) : ""}`;
-        const existed = await prisma.notification.findFirst({
-          where: {
-            studioId: user.studioId,
-            deletedAt: null,
-            type: "BOOKING",
-            title,
-            message,
-            dueAt: booking.startAt,
-          },
-          select: { id: true },
-        });
-        if (existed) return;
-        const created = await prisma.notification.create({
-          data: {
-            studioId: user.studioId,
-            userId: user.id,
-            type: "BOOKING",
-            title,
-            message,
-            dueAt: booking.startAt,
-          },
-        });
-        await sendStudioPush(user.studioId, { title: created.title, body: created.message, url: "/booking", tag: created.id });
-      }),
-      ...invoices.map(async (invoice) => {
-        const title = "Công nợ gần hạn";
-        const message = `${invoice.customer?.name || "Khách hàng"} còn nợ ${money(invoice.due)}.`;
-        const existed = await prisma.notification.findFirst({
-          where: {
-            studioId: user.studioId,
-            deletedAt: null,
-            type: "PAYMENT",
-            title,
-            message,
-            dueAt: invoice.dueDate ?? undefined,
-          },
-          select: { id: true },
-        });
-        if (existed) return;
-        const created = await prisma.notification.create({
-          data: {
-            studioId: user.studioId,
-            userId: user.id,
-            type: "PAYMENT",
-            title,
-            message,
-            dueAt: invoice.dueDate,
-          },
-        });
-        await sendStudioPush(user.studioId, { title: created.title, body: created.message, url: "/", tag: created.id });
-      }),
-      ...projects.map(async (project) => {
-        const title = "Dự án sắp tới deadline";
-        const message = `${project.name} cần được xử lý trước hạn.`;
-        const existed = await prisma.notification.findFirst({
-          where: {
-            studioId: user.studioId,
-            deletedAt: null,
-            type: "SYSTEM",
-            title,
-            message,
-            dueAt: project.deadlineAt ?? undefined,
-          },
-          select: { id: true },
-        });
-        if (existed) return;
-        const created = await prisma.notification.create({
-          data: {
-            studioId: user.studioId,
-            userId: user.id,
-            type: "SYSTEM",
-            title,
-            message,
-            dueAt: project.deadlineAt,
-          },
-        });
-        await sendStudioPush(user.studioId, { title: created.title, body: created.message, url: "/", tag: created.id });
-      }),
-    ]);
+    // Khóa chống lặp: Nếu studio vừa quét thông báo trong 10 giây qua thì không quét lại để tránh gửi trùng push
+    const nowTime = Date.now();
+    const lastCheck = studioGenerationLock.get(user.studioId) ?? 0;
+    
+    if (nowTime - lastCheck > 10000) {
+      studioGenerationLock.set(user.studioId, nowTime);
+      
+      await Promise.all([
+        ...Array.from(bookingGroups.values()).map(async (group) => {
+          const booking = group[0];
+          // Chỉ thông báo cho lịch tương lai
+          if (booking.startAt <= now) return;
+
+          const label = bookingGroupLabel(booking.note);
+          const isGroup = group.length > 1 || Boolean(label);
+          const nearNow = booking.startAt <= inTwoHours;
+          const windowText = nearNow ? "trong 2 giờ tới" : "trong 24 giờ tới";
+          const title = isGroup ? `Nhắc booking nhóm ${windowText}` : `Nhắc lịch chụp ${windowText}`;
+          const customerText = isGroup
+            ? `${label ?? "Booking nhóm"} có ${group.length} khách: ${group.map((item) => item.customerName || item.title).join(", ")}`
+            : `Lịch ${booking.customerName || booking.title}`;
+          const message = `${customerText} bắt đầu ${windowText}.${isGroup ? bookingPackageSummary(group) : ""}`;
+          
+          const existed = await prisma.notification.findFirst({
+            where: {
+              studioId: user.studioId,
+              deletedAt: null,
+              type: "BOOKING",
+              title,
+              message,
+              dueAt: booking.startAt,
+            },
+            select: { id: true },
+          });
+          if (existed) return;
+          const created = await prisma.notification.create({
+            data: {
+              studioId: user.studioId,
+              userId: user.id,
+              type: "BOOKING",
+              title,
+              message,
+              dueAt: booking.startAt,
+            },
+          });
+          await sendStudioPush(user.studioId, { title: created.title, body: created.message, url: "/booking", tag: created.id });
+        }),
+        ...invoices.map(async (invoice) => {
+          if (!invoice.dueDate || invoice.dueDate <= now) return;
+
+          const title = "Công nợ gần hạn";
+          const message = `${invoice.customer?.name || "Khách hàng"} còn nợ ${money(invoice.due)}.`;
+          const existed = await prisma.notification.findFirst({
+            where: {
+              studioId: user.studioId,
+              deletedAt: null,
+              type: "PAYMENT",
+              title,
+              message,
+              dueAt: invoice.dueDate ?? undefined,
+            },
+            select: { id: true },
+          });
+          if (existed) return;
+          const created = await prisma.notification.create({
+            data: {
+              studioId: user.studioId,
+              userId: user.id,
+              type: "PAYMENT",
+              title,
+              message,
+              dueAt: invoice.dueDate,
+            },
+          });
+          await sendStudioPush(user.studioId, { title: created.title, body: created.message, url: "/", tag: created.id });
+        }),
+        ...projects.map(async (project) => {
+          if (!project.deadlineAt || project.deadlineAt <= now) return;
+
+          const title = "Dự án sắp tới deadline";
+          const message = `${project.name} cần được xử lý trước hạn.`;
+          const existed = await prisma.notification.findFirst({
+            where: {
+              studioId: user.studioId,
+              deletedAt: null,
+              type: "SYSTEM",
+              title,
+              message,
+              dueAt: project.deadlineAt ?? undefined,
+            },
+            select: { id: true },
+          });
+          if (existed) return;
+          const created = await prisma.notification.create({
+            data: {
+              studioId: user.studioId,
+              userId: user.id,
+              type: "SYSTEM",
+              title,
+              message,
+              dueAt: project.deadlineAt,
+            },
+          });
+          await sendStudioPush(user.studioId, { title: created.title, body: created.message, url: "/", tag: created.id });
+        }),
+      ]);
+    }
 
     const persistedNotifications = await prisma.notification.findMany({
       where: {
         studioId: user.studioId,
         deletedAt: null,
+        // Chỉ hiện thông báo chưa tới hạn (hoặc thông báo hệ thống không có ngày hẹn)
+        OR: [
+          { dueAt: null },
+          { dueAt: { gte: now } }
+        ]
       },
       orderBy: { createdAt: "desc" },
       take: 12,

@@ -7,6 +7,7 @@ export type CurrentSession = {
     email: string;
     phone?: string | null;
     avatarUrl?: string | null;
+    notificationsEnabled?: boolean;
   };
   studio: {
     id: string;

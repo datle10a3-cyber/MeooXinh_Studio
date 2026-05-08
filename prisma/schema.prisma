@@ -90,6 +90,7 @@ model User {
   updatedAt          DateTime        @updatedAt
   studio             Studio          @relation(fields: [studioId], references: [id], onDelete: Cascade)
   role               Role?           @relation(fields: [roleId], references: [id])
+  notificationsEnabled Boolean         @default(true)
   refreshTokens      RefreshToken[]
   auditLogs          AuditLog[]
   assignedBookings   BookingStaff[]

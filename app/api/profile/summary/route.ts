@@ -73,6 +73,7 @@ export async function GET() {
             email: user.email,
             phone: user.phone,
             avatarUrl: user.avatarUrl,
+            notificationsEnabled: (user as any).notificationsEnabled,
           }
         : session,
       studio,
@@ -117,14 +118,30 @@ export async function PATCH(req: Request) {
       const name = cleanText(userInput.name, 80);
       const email = cleanText(userInput.email, 120);
       const phone = cleanText(userInput.phone, 32);
-      if (!name || !email) return fail("Tên và email không được để trống.", 422);
+      const notificationsEnabled = userInput.notificationsEnabled !== undefined 
+        ? (userInput.notificationsEnabled === true || userInput.notificationsEnabled === "true")
+        : undefined;
 
-      updates.push(
-        prisma.user.update({
-          where: { id: session.id },
-          data: { name, email, phone },
-        }),
-      );
+      const data: any = {};
+      if (name !== undefined) {
+        if (!name) return fail("Tên không được để trống.", 422);
+        data.name = name;
+      }
+      if (email !== undefined) {
+        if (!email) return fail("Email không được để trống.", 422);
+        data.email = email;
+      }
+      if (phone !== undefined) data.phone = phone;
+      if (notificationsEnabled !== undefined) data.notificationsEnabled = notificationsEnabled;
+
+      if (Object.keys(data).length > 0) {
+        updates.push(
+          prisma.user.update({
+            where: { id: session.id },
+            data,
+          }),
+        );
+      }
     }
 
     if (studioInput) {
@@ -164,6 +181,7 @@ export async function PATCH(req: Request) {
             email: freshUser.email,
             phone: freshUser.phone,
             avatarUrl: freshUser.avatarUrl,
+            notificationsEnabled: (freshUser as any).notificationsEnabled,
           }
         : session,
       studio,

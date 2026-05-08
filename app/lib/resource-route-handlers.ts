@@ -4,6 +4,7 @@ import { writeAuditLog } from "@/app/lib/audit";
 import { applyTransactionWalletDelta, recalculateInvoiceDebt, replaceTransactionWalletDelta } from "@/app/lib/finance-workflow";
 import { cacheInvalidate } from "@/app/lib/api-cache";
 import { prisma } from "@/app/lib/prisma";
+import { sendStudioPush } from "@/app/lib/push";
 import {
   getDelegate,
   getResourceDefinition,
@@ -137,6 +138,13 @@ export async function createResource(req: Request, resourceName: string) {
     await writeAuditLog(user, "CREATE", resource.definition.entity, String(row.id), { name: auditName(row) });
     cacheInvalidate("dashboard:");
 
+    if (resource.key === "notifications") {
+      const notification = row as any;
+      if (notification.dueAt && new Date(notification.dueAt) > new Date() && !notification.isRead) {
+        await sendStudioPush(user.studioId, { title: notification.title, body: notification.message, url: "/", tag: notification.id });
+      }
+    }
+
     return created(row);
   } catch (error) {
     if ((error as Error).message === "UNAUTHORIZED") return fail("Chưa đăng nhập.", 401);
@@ -177,6 +185,13 @@ export async function updateResource(req: Request, resourceName: string) {
     if (resource.key === "invoices") await recalculateInvoiceDebt(String(row.id));
     await writeAuditLog(user, "UPDATE", resource.definition.entity, String(row.id), { name: auditName(row) });
     cacheInvalidate("dashboard:");
+
+    if (resource.key === "notifications") {
+      const notification = row as any;
+      if (notification.dueAt && new Date(notification.dueAt) > new Date() && !notification.isRead) {
+        await sendStudioPush(user.studioId, { title: notification.title, body: notification.message, url: "/", tag: notification.id });
+      }
+    }
 
     return ok(row);
   } catch (error) {

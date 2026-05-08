@@ -173,6 +173,25 @@ export function NotificationBell() {
       if (result?.data) {
         const next = result.data as NotificationItem[];
         setItems(next);
+        
+        // Đồng bộ lại danh sách 'đã đọc' cục bộ với DB
+        // Nếu DB bảo là chưa đọc (isRead: false) thì phải xóa khỏi Set 'read' để nó hiện lại lên chuông
+        setRead((current) => {
+          const nextRead = new Set(current);
+          let changed = false;
+          next.forEach(item => {
+            if (!item.isRead && nextRead.has(item.id)) {
+              nextRead.delete(item.id);
+              changed = true;
+            }
+          });
+          if (changed) {
+            saveReadIds(nextRead);
+            return nextRead;
+          }
+          return current;
+        });
+
         const urgent = next.find((item) => item.type === "booking" && !item.isRead && !read.has(item.id));
         if (urgent) {
           showToast(urgent.title);
