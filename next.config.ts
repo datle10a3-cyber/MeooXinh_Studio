@@ -64,12 +64,6 @@ const nextConfig: NextConfig = {
         ],
       },
       {
-        source: "/workbox-:path*",
-        headers: [
-          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
-        ],
-      },
-      {
         source: "/manifest.json",
         headers: [
           { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
