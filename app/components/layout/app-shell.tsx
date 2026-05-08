@@ -507,7 +507,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC]/60 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg supports-[backdrop-filter]:bg-[#FFF3EC]/40 xl:hidden" style={{ transform: "translateZ(0)" }}>
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC]/60 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg supports-[backdrop-filter]:bg-[#FFF3EC]/40 transition-all duration-300 ease-in-out xl:hidden" style={{ transform: "translateZ(0)" }}>
         <div className="mx-auto flex h-14 w-full max-w-md items-center justify-around px-8">
           {mobilePrimary.map((item) => {
             const Icon = item.icon;

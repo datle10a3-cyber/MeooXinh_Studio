@@ -217,18 +217,25 @@ video {
   .studio-mobile-form-sheet {
     position: fixed !important;
     inset: auto 0 0 0 !important;
-    z-index: 70 !important;
-    max-height: min(calc(100dvh - 4.5rem - env(safe-area-inset-top)), 760px) !important;
+    z-index: 100 !important;
+    max-height: min(calc(100dvh - 3rem - env(safe-area-inset-top)), 850px) !important;
     overflow-y: auto !important;
     border-bottom-left-radius: 0 !important;
     border-bottom-right-radius: 0 !important;
     border-left: 0 !important;
     border-right: 0 !important;
-    box-shadow: 0 -20px 55px rgba(47, 30, 26, 0.22) !important;
-    padding-bottom: max(env(safe-area-inset-bottom), 0.75rem) !important;
+    box-shadow: 0 -20px 55px rgba(47, 30, 26, 0.25) !important;
+    padding-bottom: calc(2rem + env(safe-area-inset-bottom)) !important;
     transform: translate3d(0, 0, 0);
     will-change: transform;
     -webkit-overflow-scrolling: touch;
+  }
+
+  /* Ẩn thanh điều hướng dưới khi đang mở form để không bị vướng */
+  body:has(.studio-mobile-form-sheet) nav.fixed.bottom-0 {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(100%);
   }
 
   .studio-mobile-form-backdrop {
