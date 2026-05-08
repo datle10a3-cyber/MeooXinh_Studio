@@ -10,16 +10,20 @@ const mobileWebviewSafetyScript = `
   try {
     var ua = navigator.userAgent || "";
     var isInApp = /FBAN|FBAV|FB_IAB|Messenger|Instagram|Zalo|TikTok|Bytedance|Line|MicroMessenger/i.test(ua);
+    var isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
     var isStandalone = false;
     try {
       isStandalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
     } catch (_) {}
-    if (isInApp && !isStandalone && "serviceWorker" in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        registrations.forEach(function(registration) {
-          registration.unregister();
-        });
-      }).catch(function(){});
+    var nav = navigator;
+    if (nav && nav.standalone === true) isStandalone = true;
+    function storageGet(key) {
+      try { return sessionStorage.getItem(key); } catch (_) { return null; }
+    }
+    function storageSet(key, value) {
+      try { sessionStorage.setItem(key, value); } catch (_) {}
+    }
+    function clearStudioCaches() {
       if (window.caches && caches.keys) {
         caches.keys().then(function(keys) {
           keys.forEach(function(key) {
@@ -28,19 +32,33 @@ const mobileWebviewSafetyScript = `
         }).catch(function(){});
       }
     }
+    if (!isStandalone && (isInApp || isMobile) && "serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        registrations.forEach(function(registration) {
+          registration.unregister();
+        });
+      }).catch(function(){});
+      clearStudioCaches();
+    } else if (isStandalone && "serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        registrations.forEach(function(registration) {
+          registration.update();
+        });
+      }).catch(function(){});
+    }
     window.addEventListener("error", function(event) {
       var target = event && event.target;
       var src = target && (target.src || target.href);
-      if (src && /\\/_next\\//.test(src) && !sessionStorage.getItem("studio-reloaded-after-chunk-error")) {
-        sessionStorage.setItem("studio-reloaded-after-chunk-error", "1");
+      if (src && /\\/_next\\//.test(src) && !storageGet("studio-reloaded-after-chunk-error")) {
+        storageSet("studio-reloaded-after-chunk-error", "1");
         window.location.reload();
       }
     }, true);
     window.addEventListener("unhandledrejection", function(event) {
       var reason = event && event.reason;
       var message = String((reason && (reason.message || reason.stack)) || reason || "");
-      if (/ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/i.test(message) && !sessionStorage.getItem("studio-reloaded-after-import-error")) {
-        sessionStorage.setItem("studio-reloaded-after-import-error", "1");
+      if (/ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/i.test(message) && !storageGet("studio-reloaded-after-import-error")) {
+        storageSet("studio-reloaded-after-import-error", "1");
         window.location.reload();
       }
     });

@@ -5,24 +5,24 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
+  cacheStartUrl: false,
+  dynamicStartUrl: false,
   cacheOnFrontEndNav: false,
   aggressiveFrontEndNavCaching: false,
   reloadOnOnline: true,
   workboxOptions: {
     disableDevLogs: true,
+    cleanupOutdatedCaches: true,
+    clientsClaim: true,
+    skipWaiting: true,
     navigateFallback: "/",
     navigateFallbackDenylist: [/^\/api\//, /^\/_next\//],
     runtimeCaching: [
       {
         urlPattern: ({ request }) => request.mode === "navigate",
-        handler: "NetworkFirst",
+        handler: "NetworkOnly",
         options: {
           cacheName: "studio-pages",
-          networkTimeoutSeconds: 8,
-          expiration: {
-            maxEntries: 12,
-            maxAgeSeconds: 60 * 60,
-          },
         },
       },
       {
@@ -54,6 +54,35 @@ const withPWA = withPWAInit({
 const nextConfig: NextConfig = {
   compress: true,
   poweredByHeader: false,
+  async headers() {
+    return [
+      {
+        source: "/sw.js",
+        headers: [
+          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
+          { key: "Service-Worker-Allowed", value: "/" },
+        ],
+      },
+      {
+        source: "/workbox-:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
+        ],
+      },
+      {
+        source: "/manifest.json",
+        headers: [
+          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
+        ],
+      },
+      {
+        source: "/",
+        headers: [
+          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
+        ],
+      },
+    ];
+  },
   images: {
     remotePatterns: [
       {
