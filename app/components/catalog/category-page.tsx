@@ -11,6 +11,7 @@ import { ProgressiveListSentinel, useProgressiveList } from "@/app/components/ui
 import type { ApiResult, CategoryItem } from "@/app/components/catalog/types";
 import { formatDate } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
+import { PageSpinner } from "@/app/components/ui/skeleton";
 
 const emptyForm = { name: "", description: "" };
 
@@ -33,11 +34,13 @@ export function CategoryPage() {
   const focusedItemId = useUiStore((state) => state.focusedItemId);
   const role = useUiStore((state) => state.session?.user.role ?? null);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   async function loadRows() {
     const result = await fetch("/api/categories").then((res) => res.json() as Promise<ApiResult<CategoryItem[]>>);
     if (result.data) setRows(result.data);
     if (result.error) setMessage(result.error.message);
+    setInitialLoading(false);
   }
 
   useEffect(() => {
@@ -379,7 +382,11 @@ export function CategoryPage() {
           </button>
         ))}
         <ProgressiveListSentinel refTarget={progressiveRows.sentinelRef} hasMore={progressiveRows.hasMore} />
-        {filteredRows.length === 0 ? <Card className="py-12 text-center font-bold text-[#9B746B]">{query ? "Không tìm thấy danh mục" : "Chưa có danh mục"}</Card> : null}
+        {initialLoading && filteredRows.length === 0 ? (
+          <PageSpinner label="Đang tải danh mục…" />
+        ) : filteredRows.length === 0 ? (
+          <Card className="py-12 text-center font-bold text-[#9B746B]">{query ? "Không tìm thấy danh mục" : "Chưa có danh mục"}</Card>
+        ) : null}
       </div>
 
       {detail ? (

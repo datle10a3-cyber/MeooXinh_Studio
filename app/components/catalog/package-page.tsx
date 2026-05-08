@@ -27,6 +27,7 @@ import { ImagePreview } from "@/app/components/media/image-preview";
 import type { ApiResult, CategoryItem, PackageItem } from "@/app/components/catalog/types";
 import { formatMoney } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
+import { PageSpinner } from "@/app/components/ui/skeleton";
 
 const emptyForm = {
   name: "",
@@ -88,6 +89,7 @@ export function PackagePage() {
   const role = useUiStore((state) => state.session?.user.role ?? null);
   const focusedItemId = useUiStore((state) => state.focusedItemId);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   function clearLongPress() {
     if (longPressTimer.current) {
@@ -148,6 +150,7 @@ export function PackagePage() {
     if (packageResult.data) setRows(packageResult.data);
     if (categoryResult.error) setMessage(categoryResult.error.message);
     if (packageResult.error) setMessage(packageResult.error.message);
+    setInitialLoading(false);
   }
 
   useEffect(() => {
@@ -388,7 +391,9 @@ export function PackagePage() {
           ))}
           <ProgressiveListSentinel refTarget={progressiveRows.sentinelRef} hasMore={progressiveRows.hasMore} />
 
-          {filteredRows.length === 0 ? (
+          {initialLoading && filteredRows.length === 0 ? (
+            <PageSpinner label="Đang tải gói dịch vụ…" />
+          ) : filteredRows.length === 0 ? (
             <Card className="py-14 text-center">
               <h2 className="text-lg font-bold text-[#5B342C]">
                 {query ? "Không tìm thấy gói" : "Chưa có gói dịch vụ"}
