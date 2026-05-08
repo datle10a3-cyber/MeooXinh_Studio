@@ -665,6 +665,8 @@ export function getMinimalStudioAIContext(user: SessionUser, reason = "khong tai
       missingImageBookings: [],
       matchedCustomers: [],
       matchedTransactions: [],
+      matchedPackages: [],
+      matchedEquipment: [],
     },
   } satisfies StudioAIContext;
 }
@@ -673,11 +675,13 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
   const normalizedQuestion = normalizeText(question);
   const wantsBooking = includesAny(normalizedQuestion, ["booking", "lich", "chup", "khach"]);
   const wantsMissingImage = includesAny(normalizedQuestion, ["chua co anh", "thieu anh", "khong co anh", "booking nao chua co anh", "chưa có ảnh"]);
-  const wantsCustomer = includesAny(normalizedQuestion, ["khach", "nguyen", "sdt", "so dien thoai"]);
+  const wantsCustomer = includesAny(normalizedQuestion, ["khách", "nguyen", "sdt", "số điện thoại", "so dien thoai"]);
+  const wantsPackage = includesAny(normalizedQuestion, ["gói", "concept", "dịch vụ", "giá bao nhiêu", "báo giá"]);
+  const wantsEquipment = includesAny(normalizedQuestion, ["thiết bị", "máy ảnh", "đèn", "lens", "phụ kiện", "đồ"]);
   const range = questionDateRange(question);
   const tokens = searchTokens(question);
 
-  if (!question.trim() || (!wantsBooking && !wantsMissingImage && !wantsCustomer && !isFinanceQuestion(question))) {
+  if (!question.trim() || (!wantsBooking && !wantsMissingImage && !wantsCustomer && !wantsPackage && !wantsEquipment && !isFinanceQuestion(question))) {
     return {
       reason: "Không cần tìm sâu cho câu hỏi này.",
       tokens,
@@ -730,6 +734,21 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
           take: 60,
         })
       : Promise.resolve([]),
+    wantsPackage
+      ? prisma.package.findMany({
+          where: { studioId: user.studioId, deletedAt: null },
+          include: { category: true },
+          orderBy: { updatedAt: "desc" },
+          take: 40,
+        })
+      : Promise.resolve([]),
+    wantsEquipment
+      ? prisma.equipment.findMany({
+          where: { studioId: user.studioId, deletedAt: null },
+          orderBy: { updatedAt: "desc" },
+          take: 40,
+        })
+      : Promise.resolve([]),
   ]);
 
   const matchesTokens = (text: string) => !tokens.length || tokens.some((token) => normalizeText(text).includes(token));
@@ -748,18 +767,30 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
   const matchedTransactions = transactionRows
     .filter((item) => matchesTokens([item.title, item.note, item.customer?.name, item.project?.name, item.wallet?.name].filter(Boolean).join(" ")))
     .slice(0, 30);
+  const matchedPackages = (packageRows as any[])
+    .filter((item) => matchesTokens([item.name, item.category?.name, item.description, item.note].filter(Boolean).join(" ")))
+    .slice(0, 20);
+  const matchedEquipment = (equipmentRows as any[])
+    .filter((item) => matchesTokens([item.name, item.type, item.serial, item.note].filter(Boolean).join(" ")))
+    .slice(0, 20);
 
   return {
     reason: range
       ? `Tìm sâu theo khoảng ${dateText(range.start)} đến ${dateText(range.end)}.`
       : wantsMissingImage
         ? "Tìm sâu các booking thiếu ảnh."
-        : "Tìm sâu theo từ khóa trong dữ liệu studio.",
+        : wantsPackage
+          ? "Tìm sâu thông tin gói dịch vụ."
+          : wantsEquipment
+            ? "Tìm sâu thông tin thiết bị."
+            : "Tìm sâu theo từ khóa trong dữ liệu studio.",
     tokens,
     matchedBookings,
     missingImageBookings: missingImageRows.filter((item) => !hasMedia(item)).slice(0, 40),
     matchedCustomers,
     matchedTransactions,
+    matchedPackages,
+    matchedEquipment,
   };
 }
 
@@ -772,6 +803,7 @@ export function summarizeAIContext(context: StudioAIContext) {
     `Booking khớp tìm sâu: ${context.deepSearch.matchedBookings.length}`,
     `Booking chưa có ảnh: ${context.deepSearch.missingImageBookings.length}`,
     `Khách khớp tìm sâu: ${context.deepSearch.matchedCustomers.length}`,
+    `Gói/Thiết bị tìm sâu: ${context.deepSearch.matchedPackages.length}/${context.deepSearch.matchedEquipment.length}`,
     context.canViewFinance ? `Thu chi khớp tìm sâu: ${context.deepSearch.matchedTransactions.length}` : "Thu chi tìm sâu: ẩn theo quyền",
     `Nhật ký hoạt động đưa vào context: ${context.auditLogs.length}`,
   ].join(" | ");
@@ -944,32 +976,38 @@ async function getStudioCounts(studioId: string, today: { start: Date; end: Date
 
 export function buildStudioAIMessages(messages: AIChatMessage[], context: StudioAIContext): AIProviderMessage[] {
   const roleNotice = context.canViewFinance
-    ? "Người dùng hiện tại được xem dữ liệu tài chính."
-    : "Người dùng hiện tại là nhân viên. Tuyệt đối không tiết lộ doanh thu, lợi nhuận, thu chi, ví, ca ví, số dư, công nợ, hóa đơn, thanh toán, lương hoặc bất kỳ số liệu tiền bạc nào. Nếu bị hỏi tài chính, hoặc ảnh gửi lên là hóa đơn/phiếu thu/QR/chứng từ tiền bạc, hãy từ chối ngắn gọn và nói phần này chỉ dành cho Quản trị viên hoặc Quản lý.";
-  const recentMessages = messages.slice(-6);
+    ? "BẠN CÓ QUYỀN TRUY CẬP TÀI CHÍNH: Bạn có thể xem và phân tích toàn bộ doanh thu, thu chi, ví, công nợ và lương."
+    : "BẠN KHÔNG CÓ QUYỀN TÀI CHÍNH: Người dùng hiện tại là nhân viên. Tuyệt đối không tiết lộ bất kỳ con số nào liên quan đến tiền bạc (doanh thu, lợi nhuận, thu chi, ví, số dư, công nợ, hóa đơn, thanh toán, lương). Nếu bị hỏi, hãy từ chối khéo léo và nói rằng tính năng này dành cho Quản lý.";
+
+  const recentMessages = messages.slice(-8);
   const lastImageMessageIndex = lastMessageIndexWithImage(recentMessages);
 
+  const systemInstruction = `
+BẠN LÀ "BỘ NÃO" VẬN HÀNH CỦA MÈOO XINHH STUDIO - MỘT STUDIO CHỤP ẢNH CAO CẤP TẠI VIỆT NAM.
+Nhiệm vụ của bạn không chỉ là trả lời, mà là PHÂN TÍCH, CẢNH BÁO và ĐỀ XUẤT như một Giám đốc vận hành (COO).
+
+1. PHONG CÁCH GIAO TIẾP:
+- Ngôn ngữ: Tiếng Việt tự nhiên, chuyên nghiệp, ấm áp ("Mình", "Bạn").
+- Cấu trúc: Luôn đi thẳng vào vấn đề (Bottom-line up front). Sử dụng bullet points để liệt kê dữ liệu.
+- Emoji: Kết thúc mỗi câu trả lời bằng ĐÚNG 1 emoji phù hợp (ví dụ: 😎 khi nói về doanh thu tốt, ⚠️ khi cảnh báo rủi ro, 😊 khi chào hỏi).
+
+2. KHẢ NĂNG TƯ DUY:
+- KẾT NỐI DỮ LIỆU: Nếu khách hỏi về một booking, hãy kiểm tra xem họ đã thanh toán hóa đơn chưa, dự án đã bàn giao chưa.
+- PHÂN TÍCH XU HƯỚNG: Thay vì chỉ đưa con số, hãy nhận xét (ví dụ: "Doanh thu tuần này đang tăng trưởng tốt...").
+- PHÁT HIỆN RỦI RO: Cảnh báo nếu có booking sắp diễn ra nhưng chưa có ảnh hoặc chưa cọc, hoặc thiết bị đang bảo trì.
+- TRÍ NHỚ: Tôn trọng tuyệt đối các "Bộ nhớ AI" mà người dùng đã dạy bạn về quy tắc vận hành hoặc sở thích giao tiếp.
+
+3. QUY TẮC DỮ LIỆU:
+- Chỉ tin vào "DỮ LIỆU STUDIO ĐÃ ĐỒNG BỘ" bên dưới. Tuyệt đối không bịa đặt thông tin.
+- Nếu không thấy dữ liệu trong hệ thống, hãy nói: "Hệ thống chưa ghi nhận thông tin này, bạn có muốn mình tạo mới không?".
+- Tiền bạc: Luôn ghi đơn vị "đ" hoặc "VND" (ví dụ: 1.500.000 đ).
+
+4. XỬ LÝ HÌNH ẢNH:
+- Khi có ảnh, hãy đóng vai trò là một chuyên gia kiểm soát chứng từ. Phân tích nội dung ảnh (hóa đơn, QR, thiết bị...) và đối chiếu với dữ liệu studio để xác thực.
+`.trim();
+
   return [
-    {
-      role: "system",
-      content:
-        "Bạn là trợ lý AI vận hành cho studio chụp ảnh tại Việt Nam. Giọng trả lời dễ thương, ấm áp, chuyên nghiệp và đáng tin: mềm mại như trợ lý thân thiết, nhưng số liệu và hướng dẫn phải rõ ràng. Luôn trả lời bằng tiếng Việt có dấu, tự nhiên, đầy đủ vừa đủ và đúng trọng tâm. Không dùng tiếng Anh trong tiêu đề hoặc nhãn. Trả lời theo cấu trúc dễ đọc: kết luận nhanh trước, sau đó các ý quan trọng, số liệu liên quan, và việc nên làm tiếp theo nếu cần. Nếu câu hỏi đơn giản thì trả lời ngắn gọn, không dài dòng. Cuối mỗi câu trả lời thêm đúng 1 emoji mặt cảm xúc phù hợp ngữ cảnh, ví dụ: 🙂, 😊, 😄, 🥰, 😌, 🤔, 😅, 😎, 🙏. Không chọn ngẫu nhiên, không dùng ký hiệu trang trí, không dùng quá nhiều emoji.",
-    },
-    {
-      role: "system",
-      content:
-        "Dữ liệu studio bên dưới là ảnh chụp đã đồng bộ từ PostgreSQL ở thời điểm hiện tại. Chỉ dựa trên dữ liệu này; không bịa số liệu, tên khách, lịch, tiền, số điện thoại hoặc trạng thái. Nếu thiếu dữ liệu thì nói rõ là chưa có dữ liệu trong hệ thống. Khi nói về tiền phải ghi đơn vị đồng.",
-    },
-    {
-      role: "system",
-      content:
-        "Ưu tiên cách trả lời như một quản lý studio: tra cứu nhanh, tóm tắt rủi ro, nhắc việc cần làm, và hướng dẫn thao tác trong app. Với câu hỏi phân tích, nêu 1-3 nhận xét chính và việc nên làm. Với câu hỏi tra cứu, trả lời bằng danh sách ngắn, có ngày giờ nếu liên quan.",
-    },
-    {
-      role: "system",
-      content:
-        "Nếu người dùng gửi ảnh, hãy phân tích nội dung ảnh trước rồi liên hệ với dữ liệu studio nếu phù hợp. Có thể hỗ trợ đọc hóa đơn, phiếu thu, ảnh QR, ảnh khách, ảnh thiết bị, ảnh lỗi giao diện hoặc ảnh chứng từ. Nếu ảnh mờ hoặc thiếu thông tin thì nói nhẹ nhàng là cần ảnh rõ hơn, không đoán bừa.",
-    },
+    { role: "system", content: systemInstruction },
     {
       role: "system",
       content:
@@ -1129,6 +1167,10 @@ ${listOrEmpty(context.deepSearch.missingImageBookings, (item, index) => `${index
 Khách khớp câu hỏi:
 ${listOrEmpty(context.deepSearch.matchedCustomers, (item, index) => `${index + 1}. ${item.name} - SĐT ${item.phone ?? "chưa có"} - email ${item.email ?? "chưa có"} - ghi chú ${item.note ?? "không có"}`, 10)}
 ${context.canViewFinance ? `Thu chi khớp câu hỏi:\n${listOrEmpty(context.deepSearch.matchedTransactions, (item, index) => `${index + 1}. ${item.title} - ${item.type === "INCOME" ? "khoản thu" : "khoản chi"} - ${money(item.amount)} - ${dateText(item.occurredAt)} - ví ${item.wallet?.name ?? "chưa gắn ví"}`, 10)}` : "Thu chi khớp câu hỏi: đã ẩn theo quyền."}
+Gói chụp khớp câu hỏi:
+${listOrEmpty(context.deepSearch.matchedPackages, (item, index) => `${index + 1}. ${item.name} - giá ${money(item.price)} - danh mục ${item.category?.name ?? "chưa có"}`, 10)}
+Thiết bị khớp câu hỏi:
+${listOrEmpty(context.deepSearch.matchedEquipment, (item, index) => `${index + 1}. ${item.name} - ${item.type} - trạng thái ${statusLabel(item.status)}`, 10)}
 
 ${financeText}
 

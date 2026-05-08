@@ -131,10 +131,10 @@ export async function POST(req: Request) {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: imageCount > 0 ? groqVisionModel : groqModel,
-        temperature: 0.2,
-        top_p: 0.85,
-        max_completion_tokens: 900,
+        model: imageCount > 0 ? groqVisionModel : "llama-3.3-70b-versatile",
+        temperature: 0.1,
+        top_p: 0.9,
+        max_completion_tokens: 1500,
         messages: buildStudioAIMessages(messages, context),
       }),
     }, GROQ_TIMEOUT_MS);
