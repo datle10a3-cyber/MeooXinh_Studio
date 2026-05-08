@@ -44,8 +44,22 @@ export default function Error({
   unstable_retry: () => void;
 }) {
   useEffect(() => {
-    if (isChunkLikeError(error)) recoverFromChunkError();
+    if (isChunkLikeError(error)) {
+      const recovered = recoverFromChunkError();
+      if (recovered) return;
+    }
   }, [error]);
+
+  if (isChunkLikeError(error)) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-[#FFF3EC]">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#EA7188] border-t-transparent mx-auto"></div>
+          <p className="mt-4 font-bold text-[#5B342C]">Đang đồng bộ phiên bản mới...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <main className="min-h-dvh bg-[#FFF3EC] px-4 py-6 text-[#5B342C]">

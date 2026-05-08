@@ -15,39 +15,19 @@ const mobileWebviewSafetyScript = `
     var ua = navigator.userAgent || "";
     var isInApp = /FBAN|FBAV|FB_IAB|Messenger|Instagram|Zalo|TikTok|Bytedance|Line|MicroMessenger|WeChat/i.test(ua);
     var isMobile = /Android|iPhone|iPad|iPod/i.test(ua);
-    var isStandalone = false;
-    try {
-      isStandalone = !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
-    } catch (_) {}
-    try {
-      if (navigator && navigator.standalone === true) isStandalone = true;
-    } catch (_) {}
-    function versionKey(key) {
-      return key + ":" + APP_VERSION;
-    }
-    function storageGet(key) {
-      try { return sessionStorage.getItem(versionKey(key)); } catch (_) { return null; }
-    }
-    function storageSet(key, value) {
-      try { sessionStorage.setItem(versionKey(key), value); } catch (_) {}
-    }
-    function localGet(key) {
-      try { return localStorage.getItem(key); } catch (_) { return null; }
-    }
-    function localSet(key, value) {
-      try { localStorage.setItem(key, value); } catch (_) {}
-    }
+    var isStandalone = !!(window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || (navigator && navigator.standalone === true);
+
     function clearStudioCaches() {
       if (window.caches && caches.keys) {
         return caches.keys().then(function(keys) {
           return Promise.all(keys.map(function(key) {
-            if (/studio-|next-|workbox|precache/i.test(key)) return caches.delete(key);
-            return Promise.resolve(false);
+            return caches.delete(key);
           }));
         }).catch(function(){});
       }
       return Promise.resolve();
     }
+
     function unregisterServiceWorkers() {
       if (!("serviceWorker" in navigator)) return Promise.resolve();
       return navigator.serviceWorker.getRegistrations().then(function(registrations) {
@@ -56,59 +36,49 @@ const mobileWebviewSafetyScript = `
         }));
       }).catch(function(){});
     }
-    function safeReload(key, toRoot) {
-      if (storageGet(key)) return;
-      storageSet(key, "1");
-      var reload = function() {
-        if (toRoot && location.pathname !== "/") {
-          location.replace("/");
-          return;
-        }
-        location.reload();
-      };
-      if (isInApp || isMobile) {
-        unregisterServiceWorkers().then(clearStudioCaches).then(reload).catch(reload);
-      } else {
-        clearStudioCaches().then(reload).catch(reload);
-      }
+
+    function fullReset() {
+      return unregisterServiceWorkers().then(clearStudioCaches);
     }
-    var previousVersion = localGet("studio-app-version");
+
+    // Xử lý version mismatch
+    var previousVersion = localStorage.getItem("studio-app-version");
     if (previousVersion && previousVersion !== APP_VERSION) {
-      localSet("studio-app-version", APP_VERSION);
-      unregisterServiceWorkers().then(clearStudioCaches).then(function() {
-        if (!storageGet("studio-reloaded-after-version-change")) {
-          storageSet("studio-reloaded-after-version-change", "1");
-          location.reload();
+      localStorage.setItem("studio-app-version", APP_VERSION);
+      fullReset().then(function() {
+        location.reload();
+      });
+    } else {
+      localStorage.setItem("studio-app-version", APP_VERSION);
+    }
+
+    // Ưu tiên stability cho webview: Unregister SW nếu không phải standalone
+    if (isMobile && isInApp && !isStandalone) {
+      unregisterServiceWorkers().catch(function(){});
+    }
+
+    // Lắng nghe ChunkLoadError để reload tự động
+    window.addEventListener("error", function(e) {
+      var msg = (e && e.message) || "";
+      if (/ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/i.test(msg)) {
+        if (!sessionStorage.getItem("studio-last-chunk-reload")) {
+          sessionStorage.setItem("studio-last-chunk-reload", Date.now());
+          fullReset().then(function() { location.reload(); });
         }
-      }).catch(function(){});
-    } else if (!previousVersion) {
-      localSet("studio-app-version", APP_VERSION);
-    }
-    if (!isStandalone && (isInApp || isMobile)) {
-      unregisterServiceWorkers().then(clearStudioCaches).catch(function(){});
-    } else if (isStandalone && "serviceWorker" in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        registrations.forEach(function(registration) {
-          registration.update();
-        });
-      }).catch(function(){});
-    }
-    window.addEventListener("error", function(event) {
-      var target = event && event.target;
-      var src = target && (target.src || target.href);
-      var message = String((event && event.message) || "");
-      if ((src && /\\/_next\\//.test(src)) || /ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed|module script failed/i.test(message)) {
-        safeReload("studio-reloaded-after-chunk-error", true);
       }
     }, true);
-    window.addEventListener("unhandledrejection", function(event) {
-      var reason = event && event.reason;
-      var message = String((reason && (reason.message || reason.stack)) || reason || "");
-      if (/ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed|module script failed/i.test(message)) {
-        safeReload("studio-reloaded-after-import-error", true);
+
+    window.addEventListener("unhandledrejection", function(e) {
+      var reason = (e && e.reason) || {};
+      var msg = reason.message || reason.stack || String(reason);
+      if (/ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/i.test(msg)) {
+        if (!sessionStorage.getItem("studio-last-chunk-reload")) {
+          sessionStorage.setItem("studio-last-chunk-reload", Date.now());
+          fullReset().then(function() { location.reload(); });
+        }
       }
     });
-  } catch (_) {}
+  } catch (err) {}
 })();
 `;
 

@@ -41,6 +41,22 @@ export default function GlobalError({
     } catch {}
   }, [error]);
 
+  if (isChunkLikeError(error)) {
+    return (
+      <html lang="vi">
+        <body>
+          <main style={{ minHeight: "100dvh", background: "#FFF3EC", display: "grid", placeItems: "center" }}>
+            <div style={{ textAlign: "center" }}>
+              <div style={{ height: 32, width: 32, borderRadius: "50%", border: "4px solid #EA7188", borderTopColor: "transparent", animation: "spin 1s linear infinite", margin: "0 auto" }}></div>
+              <p style={{ marginTop: 16, fontWeight: "bold", color: "#5B342C", fontFamily: "sans-serif" }}>Đang cập nhật phiên bản mới...</p>
+              <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            </div>
+          </main>
+        </body>
+      </html>
+    );
+  }
+
   return (
     <html lang="vi">
       <body>

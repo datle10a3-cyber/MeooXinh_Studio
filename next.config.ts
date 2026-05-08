@@ -9,7 +9,7 @@ const withPWA = withPWAInit({
   dynamicStartUrl: false,
   cacheOnFrontEndNav: false,
   aggressiveFrontEndNavCaching: false,
-  reloadOnOnline: true,
+  reloadOnOnline: false,
 
   workboxOptions: {
     disableDevLogs: true,
@@ -17,7 +17,7 @@ const withPWA = withPWAInit({
     clientsClaim: true,
     skipWaiting: true,
     navigateFallback: "/",
-    navigateFallbackDenylist: [/^\/api\//, /^\/_next\//],
+    navigateFallbackDenylist: [/^\/_next/, /^\/api/], // Đảm bảo không bao giờ fallback cho chunks
     runtimeCaching: [
       {
         urlPattern: ({ request }) => request.mode === "navigate",
@@ -27,23 +27,14 @@ const withPWA = withPWAInit({
         },
       },
       {
-        urlPattern: ({ url }) => url.pathname.startsWith("/_next/static/"),
-        handler: "NetworkFirst",
-        options: {
-          cacheName: "next-static",
-          networkTimeoutSeconds: 4,
-          expiration: {
-            maxEntries: 80,
-            maxAgeSeconds: 60 * 60 * 24,
-          },
-        },
-      },
-
-      {
         urlPattern: ({ request }) => request.destination === "image",
         handler: "CacheFirst",
         options: {
           cacheName: "studio-images",
+          expiration: {
+            maxEntries: 40,
+            maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
+          },
         },
       },
     ],
