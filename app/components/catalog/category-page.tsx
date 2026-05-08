@@ -278,6 +278,8 @@ export function CategoryPage() {
             <Textarea placeholder="Mô tả" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} />
             <Button className="min-h-11" onClick={save}>{editingId ? "Cập nhật" : "Lưu"}</Button>
           </div>
+          {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
+          <div className="h-20 sm:hidden" />
         </Card>
         </div>
       ) : null}

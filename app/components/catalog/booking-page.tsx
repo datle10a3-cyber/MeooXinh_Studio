@@ -1079,16 +1079,18 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
               ))}
             </select>
             <Textarea placeholder="Ghi chú" value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} />
-            <div className="studio-sticky-actions grid gap-2 sm:grid-cols-2">
+            <div className="studio-sticky-actions grid grid-cols-2 gap-2">
               {editingId ? (
                 <Button variant="secondary" className="min-h-11" onClick={resetForm}>
                   Hủy sửa
                 </Button>
               ) : null}
-              <Button className="min-h-11 sm:col-span-1" onClick={save}>
+              <Button className={`min-h-11 ${!editingId ? 'col-span-2' : ''}`} onClick={save}>
                 {editingId ? "Cập nhật" : "Lưu booking"}
               </Button>
             </div>
+            {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
+            <div className="h-20 sm:hidden" />
           </div>
         </Card>
         </div>
@@ -1200,7 +1202,7 @@ function BookingDetailModal({
           <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-[#5B342C]">{booking.note || "Không có ghi chú."}</p>
         </div>
 
-        <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+        <div className="mt-6 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
           {!completedOnly ? (
             <>
               <Button variant="secondary" className="min-h-11" onClick={() => onEdit(booking)}>
@@ -1224,6 +1226,8 @@ function BookingDetailModal({
             </Button>
           ) : null}
         </div>
+        {/* Thêm khoảng trống ở cuối modal để dễ cuộn trên mobile */}
+        <div className="h-6 sm:hidden" />
       </div>
     </div>
   );

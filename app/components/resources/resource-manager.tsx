@@ -1433,6 +1433,8 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
               {submitting ? "Đang lưu..." : "Lưu dữ liệu"}
             </Button>
           </div>
+          {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
+          <div className="h-20 sm:hidden" />
         </Card>
         </div>
       ) : null}

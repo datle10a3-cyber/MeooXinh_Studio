@@ -835,6 +835,8 @@ function PackageForm({
         <Button className="w-full" onClick={onSave}>
           {editingId ? "Cập nhật" : "Tạo gói"}
         </Button>
+        {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
+        <div className="h-20 sm:hidden" />
       </div>
     </Card>
   );
