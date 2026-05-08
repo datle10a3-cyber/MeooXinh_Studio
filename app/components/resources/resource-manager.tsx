@@ -756,6 +756,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const [longPressTimer, setLongPressTimer] = useState<number | null>(null);
   const [longPressActivated, setLongPressActivated] = useState(false);
   const [editStudioPassword, setEditStudioPassword] = useState("");
+  const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -933,43 +934,40 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   }, [showForm, resource]);
 
   async function save() {
-    const payload: Row = { ...form, ...(editingId ? { id: editingId } : {}) };
-    if (editingId && session?.user.role === "STAFF") payload.studioPassword = editStudioPassword;
-    if (resource === "transactions" && !payload.walletId) {
-      setMessage("Vui lòng chọn ví để biết tiền đi vào hoặc đi ra từ đâu.");
-      return;
+    setSubmitting(true);
+    try {
+      const payload: Row = { ...form, ...(editingId ? { id: editingId } : {}) };
+      if (editingId && session?.user.role === "STAFF") payload.studioPassword = editStudioPassword;
+      if (resource === "transactions" && !payload.walletId) {
+        setMessage("Vui lòng chọn ví để biết tiền đi vào hoặc đi ra từ đâu.");
+        setSubmitting(false);
+        return;
+      }
+      const res = await fetch(endpoint, {
+        method: editingId ? "PUT" : "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const result = await res.json();
+      if (result.error) {
+        setMessage(result.error.message);
+        setSubmitting(false);
+        return;
+      }
+      setMessage(editingId ? "Đã cập nhật dữ liệu." : "Đã tạo dữ liệu mới.");
+      setForm(emptyForm(config.fields));
+      setEditingId(null);
+      setEditStudioPassword("");
+      setShowForm(false);
+      void loadRows();
+    } finally {
+      setSubmitting(false);
     }
-    const res = await fetch(endpoint, {
-      method: editingId ? "PUT" : "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-    const result = await res.json();
-    if (result.error) return setMessage(result.error.message);
-    setMessage(editingId ? "Đã cập nhật dữ liệu." : "Đã tạo dữ liệu mới.");
-    setForm(emptyForm(config.fields));
-    setEditingId(null);
-    setEditStudioPassword("");
-    setShowForm(false);
-    void loadRows();
   }
 
   async function remove(row: Row, mode: "trash" | "hard") {
-    const res = await fetch(endpoint, {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: row.id, mode }),
-    });
-    const result = await res.json();
-    if (result.error) return setMessage(result.error.message);
-    setDeleteTarget(null);
-    setSelectedIds((current) => current.filter((id) => id !== String(row.id ?? "")));
-    setMessage(mode === "hard" ? "Đã xóa vĩnh viễn dữ liệu." : "Đã chuyển dữ liệu vào thùng rác.");
-    void loadRows();
-  }
-
-  async function removeMany(rowsToDelete: Row[], mode: "trash" | "hard") {
-    for (const row of rowsToDelete) {
+    setSubmitting(true);
+    try {
       const res = await fetch(endpoint, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
@@ -978,14 +976,42 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       const result = await res.json();
       if (result.error) {
         setMessage(result.error.message);
-        setBulkDeleteMode(null);
+        setSubmitting(false);
         return;
       }
+      setDeleteTarget(null);
+      setSelectedIds((current) => current.filter((id) => id !== String(row.id ?? "")));
+      setMessage(mode === "hard" ? "Đã xóa vĩnh viễn dữ liệu." : "Đã chuyển dữ liệu vào thùng rác.");
+      void loadRows();
+    } finally {
+      setSubmitting(false);
     }
-    setMessage(mode === "hard" ? `Đã xóa ${rowsToDelete.length} mục.` : `Đã chuyển ${rowsToDelete.length} mục vào thùng rác.`);
-    setSelectedIds([]);
-    setBulkDeleteMode(null);
-    void loadRows();
+  }
+
+  async function removeMany(rowsToDelete: Row[], mode: "trash" | "hard") {
+    setSubmitting(true);
+    try {
+      for (const row of rowsToDelete) {
+        const res = await fetch(endpoint, {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: row.id, mode }),
+        });
+        const result = await res.json();
+        if (result.error) {
+          setMessage(result.error.message);
+          setBulkDeleteMode(null);
+          setSubmitting(false);
+          return;
+        }
+      }
+      setMessage(mode === "hard" ? `Đã xóa ${rowsToDelete.length} mục.` : `Đã chuyển ${rowsToDelete.length} mục vào thùng rác.`);
+      setSelectedIds([]);
+      setBulkDeleteMode(null);
+      void loadRows();
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   function edit(row: Row) {
@@ -1402,9 +1428,9 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
           ) : null}
 
           <div className="studio-sticky-actions mt-5 flex justify-end">
-            <Button className="w-full sm:w-auto" onClick={save}>
-              <Save size={17} />
-              Lưu dữ liệu
+            <Button className="w-full sm:w-auto" onClick={save} disabled={submitting}>
+              {submitting ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
+              {submitting ? "Đang lưu..." : "Lưu dữ liệu"}
             </Button>
           </div>
         </Card>
@@ -1529,13 +1555,15 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
             <CardTitle>Vui lòng lựa chọn</CardTitle>
             <p className="mt-2 text-sm font-semibold text-[#9B746B]">Bạn muốn xử lý dữ liệu này như thế nào?</p>
             <div className="mt-6 grid gap-3">
-              <Button variant="danger" onClick={() => void remove(deleteTarget, "hard")}>
-                Xóa
+              <Button variant="danger" disabled={submitting} onClick={() => void remove(deleteTarget, "hard")}>
+                {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                {submitting ? "Đang xóa..." : "Xóa"}
               </Button>
-              <Button variant="secondary" onClick={() => void remove(deleteTarget, "trash")}>
-                Chuyển vào thùng rác
+              <Button variant="secondary" disabled={submitting} onClick={() => void remove(deleteTarget, "trash")}>
+                {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                {submitting ? "Đang chuyển..." : "Chuyển vào thùng rác"}
               </Button>
-              <Button variant="ghost" onClick={() => setDeleteTarget(null)}>
+              <Button variant="ghost" disabled={submitting} onClick={() => setDeleteTarget(null)}>
                 Không xóa
               </Button>
             </div>
@@ -1550,13 +1578,15 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
               {bulkDeleteMode === "all" ? `Bạn có chắc chắn muốn xóa tất cả ${visibleRows.length} mục đang hiển thị?` : `Bạn có chắc chắn muốn xóa ${selectedIds.length} mục đã chọn?`}
             </p>
             <div className="mt-6 grid gap-3">
-              <Button variant="danger" onClick={() => void removeMany(bulkRows, "hard")}>
-                Xóa
+              <Button variant="danger" disabled={submitting} onClick={() => void removeMany(bulkRows, "hard")}>
+                {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                {submitting ? "Đang xóa..." : "Xóa"}
               </Button>
-              <Button variant="secondary" onClick={() => void removeMany(bulkRows, "trash")}>
-                Chuyển vào thùng rác
+              <Button variant="secondary" disabled={submitting} onClick={() => void removeMany(bulkRows, "trash")}>
+                {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                {submitting ? "Đang chuyển..." : "Chuyển vào thùng rác"}
               </Button>
-              <Button variant="ghost" onClick={() => setBulkDeleteMode(null)}>
+              <Button variant="ghost" disabled={submitting} onClick={() => setBulkDeleteMode(null)}>
                 Không xóa
               </Button>
             </div>
@@ -2786,8 +2816,9 @@ function WalletAppView({
                     <span className="mb-2 block text-sm font-black text-[#5B342C]">Ghi chú mở ca</span>
                     <Input value={openingNote} placeholder="Ví dụ: ca sáng / ca tối" onChange={(event) => setOpeningNote(event.target.value)} />
                   </label>
-                  <Button className="h-12 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => void openShiftNow()}>
-                    Xác nhận
+                  <Button className="h-12 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => void openShiftNow()} disabled={isOpening}>
+                    {isOpening ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
+                    {isOpening ? "Đang xử lý..." : "Xác nhận"}
                   </Button>
                 </div>
               </Card>
@@ -2815,8 +2846,9 @@ function WalletAppView({
                 <div className={cn("mt-3 rounded-2xl px-4 py-3 text-sm font-black", closingDifference === 0 ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-orange-700")}>
                   Chênh lệch: {formatMoney(closingDifference)}
                 </div>
-                <Button className="mt-4 h-12 w-full rounded-2xl bg-rose-600 text-base font-black text-white hover:bg-rose-700" onClick={() => void closeShiftNow()}>
-                  Xác nhận
+                <Button className="mt-4 h-12 w-full rounded-2xl bg-rose-600 text-base font-black text-white hover:bg-rose-700" onClick={() => void closeShiftNow()} disabled={isClosing}>
+                  {isClosing ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
+                  {isClosing ? "Đang xử lý..." : "Xác nhận"}
                 </Button>
               </Card>
             </div>
@@ -2839,8 +2871,9 @@ function WalletAppView({
                   <Input type="password" inputMode="numeric" value={deleteShiftPassword} placeholder="000000" onChange={(event) => setDeleteShiftPassword(event.target.value.replace(/\D/g, "").slice(0, 6))} />
                 </label>
                 {deleteShiftMessage ? <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{deleteShiftMessage}</p> : null}
-                <Button variant="danger" className="mt-4 h-12 w-full rounded-2xl text-base font-black" onClick={() => void deleteShiftNow()}>
-                  Xác nhận xóa
+                <Button variant="danger" className="mt-4 h-12 w-full rounded-2xl text-base font-black" onClick={() => void deleteShiftNow()} disabled={isDeleting}>
+                  {isDeleting ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
+                  {isDeleting ? "Đang xóa..." : "Xác nhận xóa"}
                 </Button>
               </Card>
             </div>
