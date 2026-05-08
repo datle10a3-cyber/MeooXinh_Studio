@@ -61,31 +61,31 @@ export function AppLoader() {
           <div className="relative mb-5">
             {/* Glow behind logo */}
             <div
-              className="absolute inset-[-20px] rounded-full"
+              className="absolute inset-[-40px] rounded-full blur-[40px]"
               style={{
-                background: "radial-gradient(circle, rgba(234,113,136,0.12) 0%, rgba(234,113,136,0.04) 50%, transparent 70%)",
+                background: "radial-gradient(circle, rgba(234,113,136,0.25) 0%, rgba(234,113,136,0.08) 50%, transparent 80%)",
                 opacity: isVisible || isExit ? 1 : 0,
-                transition: "opacity 1s ease-out 0.3s",
+                transition: "opacity 1.2s ease-out 0.2s",
               }}
             />
 
             {/* Pulse ring */}
             <div
-              className="absolute inset-[-6px] rounded-[2rem]"
+              className="absolute inset-[-8px] rounded-[2.2rem]"
               style={{
-                border: "2px solid rgba(234,113,136,0.15)",
+                border: "2px solid rgba(234,113,136,0.18)",
                 opacity: isVisible || isExit ? 1 : 0,
-                animation: isVisible ? "loaderPulse 2s cubic-bezier(0.4,0,0.6,1) infinite" : "none",
-                transition: "opacity 0.5s ease-out 0.4s",
+                animation: isVisible ? "loaderPulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite" : "none",
+                transition: "opacity 0.6s ease-out 0.4s",
               }}
             />
 
             {/* Logo container */}
-            <div className="relative grid h-20 w-20 place-items-center overflow-hidden rounded-[1.6rem] bg-white shadow-[0_8px_30px_rgba(234,113,136,0.12),0_2px_8px_rgba(91,52,44,0.04)] sm:h-24 sm:w-24 sm:rounded-[1.8rem]">
+            <div className="relative grid h-24 w-24 place-items-center overflow-hidden rounded-[2rem] bg-white shadow-[0_12px_40px_rgba(234,113,136,0.15),0_4px_12px_rgba(91,52,44,0.06)] sm:h-28 sm:w-28 sm:rounded-[2.2rem]">
               <img
                 src={STUDIO_AVATAR_URL}
                 alt="Mèoo Xinhh"
-                className="h-[72%] w-[72%] rounded-full object-cover"
+                className="h-[75%] w-[75%] rounded-full object-cover"
                 draggable={false}
               />
             </div>
@@ -93,11 +93,11 @@ export function AppLoader() {
 
           {/* Text */}
           <h1
-            className="mb-2.5 text-center text-lg font-black tracking-tight text-[#5B342C] sm:text-xl"
+            className="mb-3 text-center text-xl font-black tracking-tight text-[#5B342C] sm:text-2xl"
             style={{
               opacity: isVisible || isExit ? 1 : 0,
-              transform: isVisible || isExit ? "translateY(0)" : "translateY(8px)",
-              transition: "opacity 500ms ease-out 200ms, transform 500ms ease-out 200ms",
+              transform: isVisible || isExit ? "translateY(0)" : "translateY(10px)",
+              transition: "opacity 600ms ease-out 250ms, transform 600ms ease-out 250ms",
             }}
           >
             MÈOO XINHH STUDIO
@@ -105,18 +105,18 @@ export function AppLoader() {
 
           {/* Loading dots */}
           <div
-            className="flex items-center gap-[5px]"
+            className="flex items-center gap-[6px]"
             style={{
               opacity: isVisible || isExit ? 1 : 0,
-              transition: "opacity 500ms ease-out 350ms",
+              transition: "opacity 500ms ease-out 400ms",
             }}
           >
             {[0, 1, 2].map((i) => (
               <div
                 key={i}
-                className="h-[5px] w-[5px] rounded-full bg-[#EA7188]"
+                className="h-[6px] w-[6px] rounded-full bg-[#EA7188]"
                 style={{
-                  animation: isVisible ? `loaderDot 1.2s cubic-bezier(0.4,0,0.6,1) ${i * 160}ms infinite` : "none",
+                  animation: isVisible ? `loaderDot 1.4s cubic-bezier(0.4, 0, 0.6, 1) ${i * 200}ms infinite` : "none",
                 }}
               />
             ))}
@@ -125,25 +125,25 @@ export function AppLoader() {
 
         {/* Footer tagline */}
         <p
-          className="absolute bottom-0 w-full pb-[max(env(safe-area-inset-bottom),2rem)] text-center text-[10px] font-bold uppercase tracking-[0.25em] text-[#C9A096]/60"
+          className="absolute bottom-10 w-full px-6 text-center text-[10px] font-bold uppercase tracking-[0.3em] text-[#C9A096]/60 sm:bottom-12"
           style={{
             opacity: isVisible || isExit ? 1 : 0,
-            transition: "opacity 600ms ease-out 500ms",
+            transition: "opacity 800ms ease-out 600ms",
           }}
         >
-          Make &amp; Photo
+          Premium Studio Management
         </p>
       </div>
 
       {/* Keyframes */}
       <style>{`
         @keyframes loaderPulse {
-          0%, 100% { transform: scale(1); opacity: 0.6; }
-          50% { transform: scale(1.08); opacity: 0.2; }
+          0%, 100% { transform: scale(1); opacity: 0.5; border-width: 2px; }
+          50% { transform: scale(1.15); opacity: 0.1; border-width: 1px; }
         }
         @keyframes loaderDot {
-          0%, 80%, 100% { transform: scale(0.6); opacity: 0.3; }
-          40% { transform: scale(1); opacity: 1; }
+          0%, 80%, 100% { transform: scale(0.7); opacity: 0.35; }
+          40% { transform: scale(1.1); opacity: 1; }
         }
       `}</style>
     </div>

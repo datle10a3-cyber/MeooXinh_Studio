@@ -99,7 +99,14 @@ export function AiAssistantView() {
   }, []);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+    if (scrollRef.current) {
+      const target = scrollRef.current;
+      // Use a small timeout to ensure DOM is updated
+      const timer = window.setTimeout(() => {
+        target.scrollTo({ top: target.scrollHeight, behavior: "smooth" });
+      }, 100);
+      return () => window.clearTimeout(timer);
+    }
   }, [messages]);
 
   async function fileToDataUrl(file: File) {
@@ -254,7 +261,14 @@ export function AiAssistantView() {
       />
 
       <div className="grid gap-5">
-        <Card className="flex flex-col overflow-hidden p-0" style={{ height: "calc(100dvh - 13rem)", minHeight: "420px", maxHeight: "calc(100dvh - 8rem)" }}>
+        <Card 
+          className="flex flex-col overflow-hidden p-0 shadow-premium" 
+          style={{ 
+            height: "calc(100dvh - 11rem)", 
+            minHeight: "380px", 
+            maxHeight: "calc(100dvh - 6.5rem)" 
+          }}
+        >
           <div className="border-b border-[#F4C7C4] bg-white p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">

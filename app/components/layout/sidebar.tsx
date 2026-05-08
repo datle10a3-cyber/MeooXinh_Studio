@@ -249,6 +249,13 @@ export const Sidebar = memo(function Sidebar({ session }: { session: CurrentSess
                       key={item.id}
                       type="button"
                       onClick={() => goTo(item)}
+                      onMouseEnter={() => {
+                        if (item.href) {
+                          router.prefetch(item.href);
+                        } else {
+                          router.prefetch(`/?view=${item.id}`);
+                        }
+                      }}
                       className={classes(active)}
                     >
                       <Icon size={18} />

@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { memo, type ReactNode, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState, startTransition } from "react";
+import dynamic from "next/dynamic";
 import {
   ArrowDownLeft,
   ArrowRight,
@@ -24,9 +25,10 @@ import {
 import { Button } from "@/app/components/ui/button";
 import { Card, CardTitle } from "@/app/components/ui/card";
 import { DateTimeInput, Input, Textarea } from "@/app/components/ui/input";
-import { MediaGalleryPicker, MediaPicker } from "@/app/components/media/media-picker";
+const MediaGalleryPicker = dynamic(() => import("@/app/components/media/media-picker").then((m) => m.MediaGalleryPicker), { ssr: false });
+const MediaPicker = dynamic(() => import("@/app/components/media/media-picker").then((m) => m.MediaPicker), { ssr: false });
 import { ImagePreview } from "@/app/components/media/image-preview";
-import { BookingCalendar } from "@/app/components/bookings/booking-calendar";
+const BookingCalendar = dynamic(() => import("@/app/components/bookings/booking-calendar").then((m) => m.BookingCalendar), { ssr: false });
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 import { RESOURCE_CONFIG, type FieldConfig, type ResourceKey } from "@/app/lib/studio-config";
@@ -36,6 +38,7 @@ import { formatDate, formatMoney } from "@/app/utils/format";
 import { cn } from "@/app/utils/cn";
 import { useUiStore } from "@/app/store/ui-store";
 import { navigateStudioView } from "@/app/utils/studio-navigation";
+import { useProgressiveList, ProgressiveListSentinel } from "@/app/components/ui/progressive-list";
 
 type Row = Record<string, unknown>;
 type TransactionView = "income" | "expense" | null;
@@ -1409,7 +1412,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
             <p className="mt-2 text-sm font-semibold text-[#9B746B]">Tạo bản ghi đầu tiên bằng form phía trên.</p>
           </Card>
         ) : resource === "transactions" ? (
-          <TransactionDateList
+          <TransactionDateListWithProgressive
             groups={transactionDayGroups}
             walletById={walletById}
             canEdit={canMutate(session)}
@@ -1441,155 +1444,24 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
             onOpenDetail={setDetailRow}
           />
         ) : (
-          rowGroups.map((group) => (
-            <div key={group.title || "all"} className="space-y-3">
-              {group.title ? (
-                <div className={`w-fit rounded-2xl border px-4 py-2 text-sm font-black ${group.tone}`}>
-                  {group.title} · {group.rows.length}
-                </div>
-              ) : null}
-              {group.rows.map((row, index) => {
-            const primary = String(row[config.primaryField] ?? "Chưa đặt tên");
-            const secondary = config.secondaryField ? renderValue(config, config.secondaryField, row[config.secondaryField]) : "";
-            const statusField = config.tableFields.find((field) => ["status", "approvalStatus", "type", "isActive"].includes(field));
-            const thumbs = rowGallery(row);
-            const compact = ["invoices", "projects"].includes(resource);
-            const richInfoCard = ["customers", "equipment"].includes(resource);
-            if (compact) {
-              return (
-                <FinancialCompactCard
-                  key={String(row.id ?? index)}
-                  row={row}
-                  resource={resource}
-                  indexLabel={group.rows.length - index}
-                  selected={selectedIds.includes(String(row.id ?? ""))}
-                  selectionMode={selectedIds.length > 0}
-                  canEdit={canMutate(session)}
-                  canRemove={canDelete(session)}
-                  onToggleSelect={(id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])}
-                  onEdit={edit}
-                  onDelete={setDeleteTarget}
-                  onOpenDetail={setDetailRow}
-                  onOpenGallery={openRowGallery}
-                  focused={focusedItemId === String(row.id ?? "")}
-                />
-              );
-            }
-            const invoice = printableInvoiceData(row);
-            const displayPrimary = compact ? invoice.customerName : primary;
-            const compactImages = rowImages(row, config.imageField);
-            const compactImage = compactImages[0];
-            const displaySecondary = compact ? `Gói chụp: ${invoice.packageName}` : secondary;
-            return (
-              <Card
-                key={String(row.id ?? index)}
-                data-row-id={String(row.id ?? "")}
-                onClick={() => {
-                  if (longPressActivated) {
-                    setLongPressActivated(false);
-                    return;
-                  }
-                  if (compact) setDetailRow(row);
-                }}
-                onPointerDown={(event) => startRowLongPress(event, row)}
-                onPointerUp={clearLongPress}
-                onPointerCancel={clearLongPress}
-                onPointerLeave={clearLongPress}
-                className={cn(
-                  "h-fit rounded-[1.25rem] p-2.5 transition hover:shadow-md sm:rounded-[1.5rem] sm:p-3",
-                  compact ? "cursor-pointer" : "",
-                  richInfoCard
-                    ? "border-[#F4C7C4] bg-[linear-gradient(135deg,#FFFFFF_0%,#FFF8F1_48%,#FFF0F4_100%)] hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(184,95,108,0.16)]"
-                    : "border-[#F4C7C4] bg-white hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(184,95,108,0.16)]",
-                  focusedItemId === String(row.id ?? "") ? "ring-2 ring-[#EA7188]" : "",
-                )}
-              >
-                <div className={cn("grid grid-cols-[auto_1fr_auto] items-start gap-2 sm:flex sm:flex-row md:flex-nowrap", richInfoCard ? "sm:gap-3" : "sm:gap-4")}>
-                  <OrderBadge value={group.rows.length - index} />
-                  {canDelete(session) && (selectedIds.length > 0 || selectedIds.includes(String(row.id ?? ""))) ? (
-                    <button
-                      type="button"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        const id = String(row.id ?? "");
-                        setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
-                      }}
-                      className={cn(
-                        "grid h-7 w-7 shrink-0 place-items-center rounded-lg border text-[11px] font-black transition",
-                        selectedIds.includes(String(row.id ?? "")) ? "border-[#EA7188] bg-[#EA7188] text-white shadow-[0_0_0_4px_rgba(234,113,136,0.18)] scale-105" : "border-[#F4C7C4] bg-white text-[#EA7188]",
-                      )}
-                      aria-label="Chọn mục"
-                    >
-                      {selectedIds.includes(String(row.id ?? "")) ? "✓" : ""}
-                    </button>
-                  ) : null}
-                  {compact ? (
-                    compactImage ? (
-                      <button
-                        type="button"
-                        onClick={(event) => { event.stopPropagation(); openRowGallery(row, 0); }}
-                        className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#F4C7C4] bg-white p-1 shadow-sm sm:h-20 sm:w-20"
-                      >
-                        <img src={compactImage} alt="" className="max-h-full max-w-full object-contain" />
-                        <span className="absolute bottom-1 left-1 right-1 rounded-full bg-white/95 px-1 py-0.5 text-[9px] font-black text-[#A84E61] shadow-sm">
-                          {evidenceImageLabel(row, resource, 0)}
-                        </span>
-                      </button>
-                    ) : null
-                  ) : (
-                    <button type="button" onClick={(event) => { event.stopPropagation(); openRowGallery(row, 0); }}>
-                      <RowImage row={row} field={config.imageField} index={index} />
-                    </button>
-                  )}
-                  <div className="col-span-2 min-w-0 flex-1 sm:col-span-1">
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h2 className={cn("whitespace-normal break-words font-black leading-6 text-[#5B342C]", richInfoCard ? "text-base sm:text-lg" : "text-lg")}>{displayPrimary}</h2>
-                        {displaySecondary ? <p className={cn("mt-0.5 whitespace-normal break-words text-sm font-semibold", richInfoCard ? "text-[#A06F65]" : "text-[#9B746B]")}>{displaySecondary}</p> : null}
-                        {compact ? <p className="mt-2 text-lg font-black text-emerald-700">+{formatMoney(invoice.amount as string | number | null | undefined)}</p> : null}
-                      </div>
-                      {statusField ? (
-                        <span className={cn("rounded-full px-3 py-1 text-xs font-bold ring-1", statusTone(row[statusField]))}>
-                          {viOption(row[statusField])}
-                        </span>
-                      ) : null}
-                    </div>
-                    {!compact ? <div className={cn("mt-3 grid grid-cols-2 gap-2 sm:gap-2.5", richInfoCard ? "xl:grid-cols-4" : "sm:mt-4 sm:gap-3 xl:grid-cols-3")}>
-                      {detailFields(config)
-                        .filter((field) => !richInfoCard || field !== config.primaryField)
-                        .slice(0, richInfoCard ? 8 : 4)
-                        .map((field) => {
-                          const noteLike = ["note", "message"].includes(field);
-                          return (
-                            <div key={field} className={cn("min-w-0 rounded-2xl border border-[#F8D8D4] bg-white/78 px-2.5 py-2 shadow-sm sm:px-3", richInfoCard && noteLike ? "col-span-2 xl:col-span-2" : "")}>
-                              <p className="text-[11px] font-black uppercase tracking-wide text-[#C87888]">{fieldLabel(config, field)}</p>
-                              <p className={cn("mt-1 whitespace-normal break-words text-sm font-bold leading-5 text-[#5B342C]", richInfoCard && noteLike ? "max-h-16 overflow-hidden" : "")}>{renderValue(config, field, row[field])}</p>
-                            </div>
-                          );
-                        })}
-                    </div> : null}
-                    {thumbs.length && !compact ? (
-                      <div className="mt-3 hidden w-fit gap-2 rounded-2xl border border-[#F4C7C4] bg-[#FFF3EC] p-2 sm:flex">
-                        {thumbs.map((url, index) => (
-                          <button
-                            key={`${url}-${index}`}
-                            type="button"
-                            onClick={() => openRowGallery(row, thumbIndex(row, url, config.imageField))}
-                            className="relative flex min-h-20 w-24 items-center justify-center rounded-xl border border-[#F4C7C4] bg-white p-1 transition hover:scale-[1.02] hover:shadow-sm"
-                          >
-                            <img src={url} alt="" className="max-h-32 max-w-full object-contain" />
-                            <span className="absolute bottom-1 left-1 right-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[10px] font-black text-[#A84E61] shadow-sm">
-                              {imageBadgeLabel(resource, thumbIndex(row, url, config.imageField))}
-                            </span>
-                          </button>
-                        ))}
-                      </div>
-                    ) : null}
-                  </div>
-                  {canMutate(session) ? (
-                    <div className="col-span-3 flex shrink-0 flex-row justify-end gap-2 sm:col-span-1 md:flex-col">
-                      {["invoices", "transactions"].includes(resource) ? <PrintInvoiceMenu row={row} /> : null}
-                      <Button variant="secondary" size="sm" onClick={(event) => { event.stopPropagation(); edit(row); }}>
+          <ResourceListWithProgressive
+            resource={resource}
+            visibleRows={visibleRows}
+            config={config}
+            session={session}
+            selectedIds={selectedIds}
+            setSelectedIds={setSelectedIds}
+            focusedItemId={focusedItemId}
+            longPressActivated={longPressActivated}
+            setLongPressActivated={setLongPressActivated}
+            setDetailRow={setDetailRow}
+            startRowLongPress={startRowLongPress}
+            clearLongPress={clearLongPress}
+            edit={edit}
+            setDeleteTarget={setDeleteTarget}
+            openRowGallery={openRowGallery}
+          />
+        )}t.stopPropagation(); edit(row); }}>
                         Sửa
                       </Button>
                       {canDelete(session) ? (
@@ -1816,6 +1688,244 @@ function ResourceDetailModal({
         </div>
       </Card>
     </div>
+  );
+}
+
+function TransactionDateListWithProgressive({
+  groups,
+  ...props
+}: {
+  groups: Array<{ date: string; rows: Row[] }>;
+  walletById: Map<string, Row>;
+  canEdit: boolean;
+  canRemove: boolean;
+  selectedIds: string[];
+  onToggleSelect: (id: string) => void;
+  onEdit: (row: Row) => void;
+  onDelete: (row: Row) => void;
+  onOpenDetail: (row: Row) => void;
+  onOpenGallery: (row: Row, index: number) => void;
+}) {
+  const { visibleItems, sentinelRef, hasMore } = useProgressiveList(groups, 8); // Load 8 groups (days) at a time
+
+  return (
+    <>
+      <TransactionDateList {...props} groups={visibleItems} />
+      <ProgressiveListSentinel refTarget={sentinelRef} hasMore={hasMore} label="Đang tải thêm ngày..." />
+    </>
+  );
+}
+
+function ResourceListWithProgressive({
+  resource,
+  visibleRows,
+  config,
+  session,
+  selectedIds,
+  setSelectedIds,
+  focusedItemId,
+  longPressActivated,
+  setLongPressActivated,
+  setDetailRow,
+  startRowLongPress,
+  clearLongPress,
+  edit,
+  setDeleteTarget,
+  openRowGallery,
+}: {
+  resource: string;
+  visibleRows: Row[];
+  config: any;
+  session: any;
+  selectedIds: string[];
+  setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
+  focusedItemId: string | null;
+  longPressActivated: boolean;
+  setLongPressActivated: React.Dispatch<React.SetStateAction<boolean>>;
+  setDetailRow: (row: Row | null) => void;
+  startRowLongPress: (event: React.PointerEvent, row: Row) => void;
+  clearLongPress: () => void;
+  edit: (row: Row) => void;
+  setDeleteTarget: (row: Row | null) => void;
+  openRowGallery: (row: Row, index: number) => void;
+}) {
+  const { visibleItems, sentinelRef, hasMore } = useProgressiveList(visibleRows, 50);
+
+  const rowGroups = resource === "transactions" ? [] : [{ title: "", tone: "", rows: visibleItems }];
+
+  return (
+    <>
+      {rowGroups.map((group) => (
+        <div key={group.title || "all"} className="space-y-3">
+          {group.title ? (
+            <div className={`w-fit rounded-2xl border px-4 py-2 text-sm font-black ${group.tone}`}>
+              {group.title} · {group.rows.length}
+            </div>
+          ) : null}
+          {group.rows.map((row, index) => {
+            const primary = String(row[config.primaryField] ?? "Chưa đặt tên");
+            const secondary = config.secondaryField ? renderValue(config, config.secondaryField, row[config.secondaryField]) : "";
+            const statusField = config.tableFields.find((field: string) => ["status", "approvalStatus", "type", "isActive"].includes(field));
+            const thumbs = rowGallery(row);
+            const compact = ["invoices", "projects"].includes(resource);
+            const richInfoCard = ["customers", "equipment"].includes(resource);
+
+            if (compact) {
+              return (
+                <FinancialCompactCard
+                  key={String(row.id ?? index)}
+                  row={row}
+                  resource={resource}
+                  indexLabel={visibleRows.length - index}
+                  selected={selectedIds.includes(String(row.id ?? ""))}
+                  selectionMode={selectedIds.length > 0}
+                  canEdit={canMutate(session)}
+                  canRemove={canDelete(session)}
+                  onToggleSelect={(id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])}
+                  onEdit={edit}
+                  onDelete={setDeleteTarget}
+                  onOpenDetail={setDetailRow}
+                  onOpenGallery={openRowGallery}
+                  focused={focusedItemId === String(row.id ?? "")}
+                />
+              );
+            }
+
+            const invoice = printableInvoiceData(row);
+            const displayPrimary = compact ? invoice.customerName : primary;
+            const compactImages = rowImages(row, config.imageField);
+            const compactImage = compactImages[0];
+            const displaySecondary = compact ? `Gói chụp: ${invoice.packageName}` : secondary;
+
+            return (
+              <Card
+                key={String(row.id ?? index)}
+                data-row-id={String(row.id ?? "")}
+                onClick={() => {
+                  if (longPressActivated) {
+                    setLongPressActivated(false);
+                    return;
+                  }
+                  if (compact) setDetailRow(row);
+                }}
+                onPointerDown={(event) => startRowLongPress(event, row)}
+                onPointerUp={clearLongPress}
+                onPointerCancel={clearLongPress}
+                onPointerLeave={clearLongPress}
+                className={cn(
+                  "h-fit rounded-[1.25rem] p-2.5 transition hover:shadow-md sm:rounded-[1.5rem] sm:p-3",
+                  compact ? "cursor-pointer" : "",
+                  richInfoCard
+                    ? "border-[#F4C7C4] bg-[linear-gradient(135deg,#FFFFFF_0%,#FFF8F1_48%,#FFF0F4_100%)] hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(184,95,108,0.16)]"
+                    : "border-[#F4C7C4] bg-white hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(184,95,108,0.16)]",
+                  focusedItemId === String(row.id ?? "") ? "ring-2 ring-[#EA7188]" : "",
+                )}
+              >
+                <div className={cn("grid grid-cols-[auto_1fr_auto] items-start gap-2 sm:flex sm:flex-row md:flex-nowrap", richInfoCard ? "sm:gap-3" : "sm:gap-4")}>
+                  <OrderBadge value={visibleRows.length - index} />
+                  {canDelete(session) && (selectedIds.length > 0 || selectedIds.includes(String(row.id ?? ""))) ? (
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        const id = String(row.id ?? "");
+                        setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id]);
+                      }}
+                      className={cn(
+                        "grid h-7 w-7 shrink-0 place-items-center rounded-lg border text-[11px] font-black transition",
+                        selectedIds.includes(String(row.id ?? "")) ? "border-[#EA7188] bg-[#EA7188] text-white shadow-[0_0_0_4px_rgba(234,113,136,0.18)] scale-105" : "border-[#F4C7C4] bg-white text-[#EA7188]",
+                      )}
+                      aria-label="Chọn mục"
+                    >
+                      {selectedIds.includes(String(row.id ?? "")) ? "✓" : ""}
+                    </button>
+                  ) : null}
+                  {compact ? (
+                    compactImage ? (
+                      <button
+                        type="button"
+                        onClick={(event) => { event.stopPropagation(); openRowGallery(row, 0); }}
+                        className="relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#F4C7C4] bg-white p-1 shadow-sm sm:h-20 sm:w-20"
+                      >
+                        <img src={compactImage} alt="" className="max-h-full max-w-full object-contain" />
+                        <span className="absolute bottom-1 left-1 right-1 rounded-full bg-white/95 px-1 py-0.5 text-[9px] font-black text-[#A84E61] shadow-sm">
+                          {evidenceImageLabel(row, resource, 0)}
+                        </span>
+                      </button>
+                    ) : null
+                  ) : (
+                    <button type="button" onClick={(event) => { event.stopPropagation(); openRowGallery(row, 0); }}>
+                      <RowImage row={row} field={config.imageField} index={index} />
+                    </button>
+                  )}
+                  <div className="col-span-2 min-w-0 flex-1 sm:col-span-1">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h2 className={cn("whitespace-normal break-words font-black leading-6 text-[#5B342C]", richInfoCard ? "text-base sm:text-lg" : "text-lg")}>{displayPrimary}</h2>
+                        {displaySecondary ? <p className={cn("mt-0.5 whitespace-normal break-words text-sm font-semibold", richInfoCard ? "text-[#A06F65]" : "text-[#9B746B]")}>{displaySecondary}</p> : null}
+                        {compact ? <p className="mt-2 text-lg font-black text-emerald-700">+{formatMoney(invoice.amount as string | number | null | undefined)}</p> : null}
+                      </div>
+                      {statusField ? (
+                        <span className={cn("rounded-full px-3 py-1 text-xs font-bold ring-1", statusTone(row[statusField]))}>
+                          {viOption(row[statusField])}
+                        </span>
+                      ) : null}
+                    </div>
+                    {!compact ? (
+                      <div className={cn("mt-3 grid grid-cols-2 gap-2 sm:gap-2.5", richInfoCard ? "xl:grid-cols-4" : "sm:mt-4 sm:gap-3 xl:grid-cols-3")}>
+                        {detailFields(config)
+                          .filter((field) => !richInfoCard || field !== config.primaryField)
+                          .slice(0, richInfoCard ? 8 : 4)
+                          .map((field) => {
+                            const noteLike = ["note", "message"].includes(field);
+                            return (
+                              <div key={field} className={cn("min-w-0 rounded-2xl border border-[#F8D8D4] bg-white/78 px-2.5 py-2 shadow-sm sm:px-3", richInfoCard && noteLike ? "col-span-2 xl:col-span-2" : "")}>
+                                <p className="text-[11px] font-black uppercase tracking-wide text-[#C87888]">{fieldLabel(config, field)}</p>
+                                <p className={cn("mt-1 whitespace-normal break-words text-sm font-bold leading-5 text-[#5B342C]", richInfoCard && noteLike ? "max-h-16 overflow-hidden" : "")}>{renderValue(config, field, row[field])}</p>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    ) : null}
+                    {thumbs.length && !compact ? (
+                      <div className="mt-3 hidden w-fit gap-2 rounded-2xl border border-[#F4C7C4] bg-[#FFF3EC] p-2 sm:flex">
+                        {thumbs.map((url, index) => (
+                          <button
+                            key={`${url}-${index}`}
+                            type="button"
+                            onClick={() => openRowGallery(row, thumbIndex(row, url, config.imageField))}
+                            className="relative flex min-h-20 w-24 items-center justify-center rounded-xl border border-[#F4C7C4] bg-white p-1 transition hover:scale-[1.02] hover:shadow-sm"
+                          >
+                            <img src={url} alt="" className="max-h-32 max-w-full object-contain" />
+                            <span className="absolute bottom-1 left-1 right-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[10px] font-black text-[#A84E61] shadow-sm">
+                              {imageBadgeLabel(resource, thumbIndex(row, url, config.imageField))}
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    ) : null}
+                  </div>
+                  {canMutate(session) ? (
+                    <div className="col-span-3 flex shrink-0 flex-row justify-end gap-2 sm:col-span-1 md:flex-col">
+                      {["invoices", "transactions"].includes(resource) ? <PrintInvoiceMenu row={row} /> : null}
+                      <Button variant="secondary" size="sm" onClick={(event) => { event.stopPropagation(); edit(row); }}>
+                        Sửa
+                      </Button>
+                      {canDelete(session) ? (
+                        <Button variant="danger" size="icon" aria-label="Xóa dữ liệu" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
+                          <Trash2 size={16} />
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : null}
+                </div>
+              </Card>
+            );
+          })}
+        </div>
+      ))}
+      <ProgressiveListSentinel refTarget={sentinelRef} hasMore={hasMore} />
+    </>
   );
 }
 

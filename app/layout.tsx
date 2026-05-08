@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { IosLaunchSplash } from "@/app/components/pwa/ios-launch-splash";
-import { PwaInstaller } from "@/app/components/pwa/pwa-installer";
 import { NetworkStatus } from "@/app/components/pwa/network-status";
 import { AppLoader } from "@/app/components/ui/app-loader";
 import NextTopLoader from "nextjs-toploader";
@@ -51,19 +50,7 @@ export default function RootLayout({
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `try{document.querySelectorAll('[fdprocessedid]').forEach(function(n){n.removeAttribute('fdprocessedid')})}catch(e){}
-// Detect in-app browsers (Messenger, Facebook, Zalo, Instagram, Line)
-try{
-  var ua=navigator.userAgent||'';
-  if(/FBAN|FBAV|Instagram|Zalo|Line|Messenger|MicroMessenger/i.test(ua)){
-    var url=location.href;
-    // On iOS, try intent to open Safari
-    if(/iphone|ipad|ipod/i.test(ua)){
-      // x-safari-https scheme opens Safari on iOS
-      location.replace('x-safari-'+url.replace(/^https?/,'https'));
-    }
-  }
-}catch(e){}`,
+            __html: "try{document.querySelectorAll('[fdprocessedid]').forEach(function(n){n.removeAttribute('fdprocessedid')})}catch(e){}",
           }}
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -95,7 +82,6 @@ try{
         <NextTopLoader color="#EA7188" height={3} showSpinner={false} shadow="0 0 10px #EA7188,0 0 5px #EA7188" zIndex={1600} />
         <AppLoader />
         <IosLaunchSplash />
-        <PwaInstaller />
         <NetworkStatus />
         {children}
       </body>
