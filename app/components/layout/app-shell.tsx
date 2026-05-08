@@ -60,7 +60,7 @@ type NavItem = {
   id: string;
   label: string;
   href?: string;
-  icon: React.ComponentType<{ size?: number; className?: string }>;
+  icon: React.ComponentType<{ size?: number; className?: string; strokeWidth?: number }>;
 };
 
 type SearchResult = {
@@ -511,21 +511,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4] bg-white/96 px-1.5 pb-[max(env(safe-area-inset-bottom),0.45rem)] pt-1.5 shadow-[0_-10px_26px_rgba(184,95,108,0.12)] backdrop-blur supports-[backdrop-filter]:bg-white/88 lg:hidden">
-        <div className="grid grid-cols-6 gap-1 sm:mx-auto sm:max-w-2xl">
+      <nav className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-40 mx-auto w-full max-w-sm px-4 pb-4 lg:hidden">
+        <div className="flex w-full justify-between rounded-[2rem] border border-white/20 bg-white/85 px-2 py-1.5 shadow-[0_8px_30px_rgba(184,95,108,0.15)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
           {mobilePrimary.map((item) => {
             const Icon = item.icon;
             const active = isActive(item);
             return (
               <button
                 key={item.id}
-                className={`flex min-h-[3.1rem] touch-manipulation flex-col items-center justify-center gap-1 rounded-xl text-[10px] font-black transition active:scale-95 sm:min-h-14 sm:rounded-2xl sm:text-[11px] ${
-                  active ? "bg-[#EA7188] text-white shadow-sm" : "text-[#9B746B] hover:bg-[#FFF0F4] hover:text-[#5B342C]"
+                className={`group flex min-h-12 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-2xl transition-all duration-300 active:scale-90 ${
+                  active ? "scale-105" : "hover:bg-[#FFF0F4]/50"
                 }`}
                 onClick={() => goTo(item)}
               >
-                <Icon size={19} />
-                <span className="leading-none">{item.label}</span>
+                <div className={`grid h-8 w-8 place-items-center rounded-xl transition-colors ${active ? "bg-[#EA7188] text-white shadow-sm" : "text-[#9B746B] group-hover:text-[#5B342C]"}`}>
+                  <Icon size={18} strokeWidth={active ? 2.5 : 2} />
+                </div>
+                <span className={`text-[10px] font-black transition-colors ${active ? "text-[#5B342C]" : "text-[#9B746B]"}`}>{item.label}</span>
               </button>
             );
           })}

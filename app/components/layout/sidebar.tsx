@@ -181,16 +181,16 @@ export const Sidebar = memo(function Sidebar({ session }: { session: CurrentSess
 
   function classes(active: boolean) {
     return cn(
-      "flex h-11 w-full items-center gap-3 rounded-2xl px-3 text-left text-sm font-bold transition duration-200",
+      "flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition-all duration-200",
       active
-        ? "bg-white text-[#5B342C] shadow-sm ring-1 ring-[#F4C7C4]"
-        : "text-[#9B746B] hover:bg-white/75 hover:text-[#5B342C]",
+        ? "bg-white text-[#5B342C] shadow-[0_4px_12px_rgba(184,95,108,0.08)] ring-1 ring-[#F4C7C4]/50"
+        : "text-[#9B746B] hover:bg-white/40 hover:text-[#5B342C]",
     );
   }
 
   return (
-    <aside className="hidden w-72 shrink-0 border-r border-[#F4C7C4] bg-[#FFE8E8]/70 px-4 py-5 lg:block">
-      <div className="mb-5 rounded-[1.8rem] border-4 border-[#F7AFC0] bg-[#FFF9EF] p-4 text-[#5B342C] shadow-sm">
+    <aside className="hidden w-72 shrink-0 border-r border-[#F4C7C4]/50 bg-white/50 backdrop-blur-xl px-4 py-6 lg:block">
+      <div className="mb-6 rounded-[2rem] border-2 border-[#F7AFC0] bg-white p-5 text-[#5B342C] shadow-[0_8px_20px_rgba(184,95,108,0.06)]">
         <StudioCatMark compact />
 
         <p className="mt-3 rounded-full bg-white px-3 py-2 text-center text-xs font-black text-[#74443A]">

@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { IosLaunchSplash } from "@/app/components/pwa/ios-launch-splash";
-import { ServiceWorkerRegister } from "@/app/components/pwa/service-worker-register";
+import { PwaInstaller } from "@/app/components/pwa/pwa-installer";
+import { NetworkStatus } from "@/app/components/pwa/network-status";
+import { AppLoader } from "@/app/components/ui/app-loader";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
@@ -77,10 +79,12 @@ export default function RootLayout({
           media="screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
         />
       </head>
-      <body suppressHydrationWarning>
+      <body suppressHydrationWarning className="antialiased">
         <NextTopLoader color="#EA7188" height={3} showSpinner={false} shadow="0 0 10px #EA7188,0 0 5px #EA7188" zIndex={1600} />
-        <ServiceWorkerRegister />
+        <AppLoader />
         <IosLaunchSplash />
+        <PwaInstaller />
+        <NetworkStatus />
         {children}
       </body>
     </html>
