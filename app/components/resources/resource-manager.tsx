@@ -619,6 +619,7 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
     : String(row.customerName ?? row.title ?? row.name ?? "Khách hàng");
   const packageName = invoice.packageName || String(row.packageName ?? row.title ?? "Gói dịch vụ");
   const amount = invoice.amount ?? row.amount ?? row.total ?? 0;
+  const displayNote = cleanSystemNote(row);
 
   function clearLongPress() {
     if (longPressTimer.current) {
@@ -653,11 +654,27 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
       onPointerCancel={clearLongPress}
       onPointerLeave={clearLongPress}
       className={cn(
-        "cursor-pointer rounded-[1.5rem] border-[#F4C7C4] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]",
+        "relative mt-6 cursor-pointer rounded-[1.75rem] border-[#F4C7C4] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]",
         focused ? "ring-2 ring-[#EA7188]" : "",
       )}
     >
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      <div className="absolute -top-3 left-5 flex gap-1.5">
+        <span className="rounded-full border border-[#F4C7C4] bg-[#FFF0F4] px-3 py-1 text-[11px] font-black text-[#C14F69] shadow-sm">
+          {formatDateTimeLabel(row.occurredAt ?? row.issueDate ?? row.deadlineAt ?? row.createdAt)}
+        </span>
+        {isTransaction ? (
+          <span className={cn("rounded-full border px-3 py-1 text-[11px] font-black shadow-sm", isIncome ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700")}>
+            {isIncome ? "Khoản thu" : "Khoản chi"}
+          </span>
+        ) : (
+          <>
+            {resource === "projects" && <span className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-[11px] font-black text-violet-700 shadow-sm">Dự án</span>}
+            {resource === "invoices" && <span className="rounded-full border border-[#F4C7C4] bg-[#FFF3EC] px-3 py-1 text-[11px] font-black text-[#A84E61] shadow-sm">Hóa đơn</span>}
+          </>
+        )}
+      </div>
+
+      <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
           {canRemove && (selectionMode || selected) ? (
             <button
@@ -667,7 +684,7 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
                 onToggleSelect(id);
               }}
               className={cn(
-                "grid h-8 w-8 shrink-0 place-items-center rounded-xl border text-[12px] font-black transition",
+                "grid h-9 w-9 shrink-0 place-items-center rounded-xl border text-[12px] font-black transition",
                 selected ? "border-[#EA7188] bg-[#EA7188] text-white shadow-[0_0_0_4px_rgba(234,113,136,0.18)] scale-105" : "border-[#F4C7C4] bg-white text-[#EA7188]",
               )}
               aria-label="Chọn mục"
@@ -677,40 +694,43 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
           ) : (
             <OrderBadge value={indexLabel} />
           )}
-      <FinancialCustomerAvatar row={row} resource={resource} />
+          <FinancialCustomerAvatar row={row} resource={resource} />
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              {isTransaction ? (
-                <span className={cn("rounded-full px-2.5 py-1 text-[11px] font-black", isIncome ? "bg-emerald-50 text-emerald-700" : "bg-rose-50 text-rose-700")}>
-                  {isIncome ? "Khoản thu" : "Khoản chi"}
-                </span>
-              ) : null}
-              {resource === "projects" ? <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-black text-violet-700">Dự án</span> : null}
-              {resource === "invoices" ? <span className="rounded-full bg-[#FFF3EC] px-2.5 py-1 text-[11px] font-black text-[#A84E61]">Hóa đơn</span> : null}
+            <h2 className="whitespace-normal break-words text-lg font-black leading-tight text-[#5B342C]">{title}</h2>
+            <div className="mt-1 flex items-center gap-1.5">
+              <div className={cn("h-1.5 w-1.5 shrink-0 rounded-full", isIncome ? "bg-emerald-500" : "bg-rose-500")} />
+              <p className="truncate text-sm font-bold text-[#9B746B]">{packageName}</p>
             </div>
-            <h2 className="mt-1 whitespace-normal break-words text-lg font-black leading-6 text-[#5B342C]">{title}</h2>
-            <p className="mt-1 whitespace-normal break-words text-sm font-semibold leading-5 text-[#9B746B]">Gói: {packageName}</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <FinancialPackageThumb row={row} resource={resource} onOpenGallery={onOpenGallery} />
-          <div className="min-w-[9rem] text-left sm:text-right">
-            <p className={cn("text-sm font-black", financialMoneyTone(resource, row))}>
-              {resource === "projects" ? "Giá trị: " : "Giá: "}
-              {financialAmountPrefix(row)}
-              {formatMoney(amount as string | number | null | undefined)}
-            </p>
-            <p className="text-xs font-bold text-[#9B746B]">{formatDateTimeLabel(row.occurredAt ?? row.issueDate ?? row.deadlineAt ?? row.createdAt)}</p>
-          </div>
+        <div className="shrink-0 text-right">
+          <p className={cn("text-base font-black", financialMoneyTone(resource, row))}>
+            {financialAmountPrefix(row)}{formatMoney(amount as string | number | null | undefined)}
+          </p>
+          <p className="text-[10px] font-bold text-[#9B746B]">{resource === "projects" ? "Dự án" : "Thanh toán"}</p>
+        </div>
+      </div>
+
+      {displayNote ? (
+        <div className="mt-3 rounded-[1.25rem] bg-[#FFF8F1] p-3">
+          <p className="line-clamp-2 text-xs font-semibold leading-relaxed text-[#7B554D]">
+            <span className="font-black text-[#EA7188]">Nội dung:</span> {displayNote}
+          </p>
+        </div>
+      ) : null}
+
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <FinancialPackageThumb row={row} resource={resource} onOpenGallery={onOpenGallery} />
+        <div className="flex flex-1 gap-2">
           {["invoices", "transactions"].includes(resource) ? <PrintInvoiceMenu row={row} /> : null}
           {canEdit ? (
-            <Button variant="secondary" size="sm" onClick={(event) => { event.stopPropagation(); onEdit(row); }}>
+            <Button variant="secondary" size="sm" className="min-h-10 flex-1 rounded-2xl" onClick={(event) => { event.stopPropagation(); onEdit(row); }}>
               Sửa
             </Button>
           ) : null}
           {canRemove ? (
-            <Button variant="danger" size="icon" aria-label="Xóa dữ liệu" onClick={(event) => { event.stopPropagation(); onDelete(row); }}>
+            <Button variant="danger" size="icon" className="h-10 w-10 shrink-0 rounded-2xl" aria-label="Xóa dữ liệu" onClick={(event) => { event.stopPropagation(); onDelete(row); }}>
               <Trash2 size={16} />
             </Button>
           ) : null}
