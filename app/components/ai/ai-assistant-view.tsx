@@ -253,7 +253,7 @@ export function AiAssistantView() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <StudioBrandPanel
         eyebrow="Trợ lý AI"
         title="AI studio"
@@ -340,8 +340,8 @@ export function AiAssistantView() {
                 <div
                   className={
                     message.role === "user"
-                      ? "flex max-w-[92%] gap-3 rounded-[1.25rem] bg-[#EA7188] px-4 py-3 text-white shadow-sm sm:max-w-[78%]"
-                      : "flex max-w-[92%] gap-3 rounded-[1.25rem] bg-white px-4 py-3 text-[#5B342C] shadow-sm ring-1 ring-[#F4C7C4] sm:max-w-[78%]"
+                      ? "flex max-w-[95%] gap-3 rounded-[1.25rem] bg-[#EA7188] px-4 py-3 text-white shadow-sm sm:max-w-[85%]"
+                      : "flex max-w-[95%] gap-3 rounded-[1.25rem] bg-white px-4 py-3 text-[#5B342C] shadow-sm ring-1 ring-[#F4C7C4] sm:max-w-[85%]"
                   }
                 >
                   <div
