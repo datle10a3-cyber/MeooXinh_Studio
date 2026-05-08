@@ -1244,8 +1244,8 @@ function BookingDetailModal({
             </Button>
           ) : null}
         </div>
-        {/* Thêm khoảng trống ở cuối modal để dễ cuộn trên mobile */}
-        <div className="h-6 sm:hidden" />
+        {/* Thêm khoảng trống ở cuối modal để không bị che bởi menu/nav bar điện thoại */}
+        <div className="h-16 sm:hidden" />
       </div>
     </div>
   );

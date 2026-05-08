@@ -1757,6 +1757,8 @@ function ResourceDetailModal({
             </Button>
           ) : null}
         </div>
+        {/* Thêm khoảng trống ở cuối modal để không bị che bởi menu/nav bar điện thoại */}
+        <div className="h-16 sm:hidden" />
       </Card>
     </div>
   );
