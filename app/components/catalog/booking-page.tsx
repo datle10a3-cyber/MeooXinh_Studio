@@ -109,11 +109,16 @@ function renameBookingGroupNote(note: string | null | undefined, nextName: strin
 function bookingDateBadge(value: unknown) {
   const date = new Date(String(value ?? ""));
   if (Number.isNaN(date.getTime())) return "Chưa có ngày";
-  return new Intl.DateTimeFormat("vi-VN", {
+  const dateStr = new Intl.DateTimeFormat("vi-VN", {
     day: "2-digit",
     month: "2-digit",
     year: "numeric",
   }).format(date);
+  const timeStr = new Intl.DateTimeFormat("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+  return `${dateStr} | ${timeStr}`;
 }
 
 function customerListFromData(data?: CustomerItem[] | CustomerPage) {
@@ -643,7 +648,9 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const selectedDeleteCount = new Set([...selectedIds, ...selectedGroupRows.map((row) => row.id)]).size;
   const progressiveGroups = useProgressiveList(displayGroups, 50);
 
-  function renderBookingRow(row: BookingItem, index: number, total: number) {
+    const isDiscounted = Number(row.total ?? row.price) < Number(row.price);
+    const displayNote = (row.note ?? "").replace(/Loại booking:\s*Booking nhóm(?:\s*-\s*[^\n.]+)?\.?/i, "").trim();
+
     return (
       <div
         key={row.id}
@@ -674,12 +681,13 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         onTouchMove={moveTouchLongPress}
         onTouchEnd={endTouchLongPress}
         onTouchCancel={endTouchLongPress}
-        className="relative mt-3 w-full cursor-pointer rounded-[1.5rem] border border-[#F4C7C4] bg-white p-4 pt-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]"
+        className="relative mt-6 w-full cursor-pointer rounded-[1.75rem] border border-[#F4C7C4] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]"
       >
         <span className="absolute -top-3 left-5 rounded-full border border-[#F4C7C4] bg-[#FFF0F4] px-3 py-1 text-[11px] font-black text-[#C14F69] shadow-sm">
           {bookingDateBadge(row.startTime)}
         </span>
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+        <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             {selectedIds.length > 0 || selectedIds.includes(row.id) ? (
               <span
@@ -690,7 +698,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                   event.stopPropagation();
                   setSelectedIds((current) => current.includes(row.id) ? current.filter((id) => id !== row.id) : [...current, row.id]);
                 }}
-                className={`grid h-8 w-8 shrink-0 place-items-center rounded-xl border text-[12px] font-black transition ${selectedIds.includes(row.id) ? "border-[#EA7188] bg-[#EA7188] text-white shadow-[0_0_0_4px_rgba(234,113,136,0.18)] scale-105" : "border-[#F4C7C4] bg-white text-[#EA7188]"}`}
+                className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl border text-[12px] font-black transition ${selectedIds.includes(row.id) ? "border-[#EA7188] bg-[#EA7188] text-white shadow-[0_0_0_4px_rgba(234,113,136,0.18)] scale-105" : "border-[#F4C7C4] bg-white text-[#EA7188]"}`}
               >
                 {selectedIds.includes(row.id) ? "✓" : ""}
               </span>
@@ -699,28 +707,37 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
             )}
             <CustomerAvatar booking={row} />
             <div className="min-w-0">
-              <h2 className="whitespace-normal break-words text-lg font-black leading-6 text-[#5B342C]">{row.customerName || "Khách chưa đặt tên"}</h2>
-              <p className="mt-1 whitespace-normal break-words text-sm font-semibold leading-5 text-[#9B746B]">Gói: {row.packageName || "Chưa có gói"}</p>
+              <h2 className="whitespace-normal break-words text-lg font-black leading-tight text-[#5B342C]">{row.customerName || "Khách chưa đặt tên"}</h2>
+              <div className="mt-1 flex items-center gap-1.5">
+                <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#EA7188]" />
+                <p className="truncate text-sm font-bold text-[#9B746B]">{row.packageName || "Chưa có gói"}</p>
+              </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-            <PackageThumb booking={row} />
-            <div className="min-w-[9rem] text-left sm:text-right">
-              <p className="text-sm font-black text-[#5B342C]">Giá: {formatMoney(row.total ?? row.price)}</p>
-              {Number(row.total ?? row.price) < Number(row.price) ? <p className="text-xs font-black text-emerald-700">Đã giảm từ {formatMoney(row.price)}</p> : null}
-            </div>
-            {!completedOnly ? (
-              <>
-                <Button variant="secondary" size="sm" onClick={(event) => { event.stopPropagation(); setCancelTarget(row); }}>
-                  Hủy
-                </Button>
-                <Button size="sm" onClick={(event) => { event.stopPropagation(); setPaymentTarget(row); }}>
-                  Hoàn thành
-                </Button>
-              </>
-            ) : null}
+          <div className="shrink-0 text-right">
+            <p className="text-base font-black text-[#EA7188]">{formatMoney(row.total ?? row.price)}</p>
+            {isDiscounted ? <p className="text-[10px] font-bold text-emerald-600">Đã giảm giá</p> : null}
           </div>
         </div>
+
+        {displayNote ? (
+          <div className="mt-3 rounded-[1.25rem] bg-[#FFF8F1] p-3">
+            <p className="line-clamp-2 text-xs font-semibold leading-relaxed text-[#7B554D]">
+              <span className="font-black text-[#EA7188]">Ghi chú:</span> {displayNote}
+            </p>
+          </div>
+        ) : null}
+
+        {!completedOnly ? (
+          <div className="mt-4 flex gap-2">
+            <Button variant="secondary" size="sm" className="min-h-10 flex-1 rounded-2xl" onClick={(event) => { event.stopPropagation(); setCancelTarget(row); }}>
+              Hủy đơn
+            </Button>
+            <Button size="sm" className="min-h-10 flex-1 rounded-2xl" onClick={(event) => { event.stopPropagation(); setPaymentTarget(row); }}>
+              Hoàn thành
+            </Button>
+          </div>
+        ) : null}
       </div>
     );
   }
