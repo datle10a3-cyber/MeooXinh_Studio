@@ -496,7 +496,16 @@ function splitFields(fields: FieldConfig[]) {
   };
 }
 
-function detailFields(config: ReturnType<typeof getConfig>) {
+function detailFields(config: ReturnType<typeof getConfig>, resource: ResourceKey) {
+  if (resource === "bookings") {
+    return ["title", "studioRoom", "startAt", "endAt", "status", "deposit", "total"];
+  }
+  if (resource === "projects") {
+    return ["code", "name", "status", "amount", "dueAmount", "deadlineAt"];
+  }
+  if (resource === "invoices") {
+    return ["code", "status", "issueDate", "dueDate", "total", "paid", "due"];
+  }
   return config.fields.filter((field) => !["image", "gallery", "textarea"].includes(field.type)).map((field) => field.key);
 }
 
@@ -1685,7 +1694,7 @@ function ResourceDetailModal({
         ? renderValue(config, config.secondaryField, row[config.secondaryField])
         : config.label;
   const images = rowImages(row, config.imageField);
-  const fields = detailFields(config);
+  const fields = detailFields(config, resource);
   const displayDetailValue = (field: string) => {
     if (resource === "transactions" && field === "walletId") {
       const wallet = walletById?.get(String(row.walletId ?? ""));
@@ -1960,7 +1969,7 @@ function ResourceListWithProgressive({
                     </div>
                     {!compact ? (
                       <div className={cn("mt-3 grid grid-cols-2 gap-2 sm:gap-2.5", richInfoCard ? "xl:grid-cols-4" : "sm:mt-4 sm:gap-3 xl:grid-cols-3")}>
-                        {detailFields(config)
+                        {detailFields(config, resource)
                           .filter((field) => !richInfoCard || field !== config.primaryField)
                           .slice(0, richInfoCard ? 8 : 4)
                           .map((field) => {
