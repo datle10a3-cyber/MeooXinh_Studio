@@ -33,16 +33,13 @@
     
     <circle cx="415" cy="235" r="14"/>
     <circle cx="395" cy="215" r="8"/>
-    <circle cx="415" cy="205" r="8"/>
     <circle cx="435" cy="215" r="8"/>
   </g>
-
-  <!-- Left Ear -->
-  <path d="M 150 230 C 120 130, 150 90, 190 110 C 220 130, 240 160, 240 190 Z" fill="#FFF6F0" stroke="#4A2511" stroke-width="12" stroke-linejoin="round"/>
-  <path d="M 170 205 C 150 140, 165 120, 190 130 C 210 140, 220 165, 220 190 Z" fill="#FFB3C6"/>
-
-  <!-- Face Base -->
-  <circle cx="256" cy="290" r="130" fill="#FFF6F0" stroke="#4A2511" stroke-width="12"/>
+  <!-- Face and Left Ear Continuous Path -->
+  <path d="M 386 290 A 130 130 0 1 1 140 220 C 120 110, 160 80, 200 110 C 220 120, 215 160, 205 172 A 130 130 0 0 1 386 290 Z" fill="#FFF6F0" stroke="#4A2511" stroke-width="12" stroke-linejoin="round"/>
+  
+  <!-- Left Ear Inner -->
+  <path d="M 160 200 C 145 130, 175 105, 195 120 C 205 130, 205 160, 195 170 Z" fill="#FFB3C6"/>
 
   <!-- Right Ear (Folded overlapping) -->
   <path d="M275 160 C 270 120, 310 110, 350 140 C 370 160, 350 230, 295 215 Z" fill="#FF8CA3" stroke="#FFFFFF" stroke-width="14" stroke-linejoin="round" filter="url(#shadow)"/>
