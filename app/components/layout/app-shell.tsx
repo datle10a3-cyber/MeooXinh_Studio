@@ -94,12 +94,8 @@ const devSession: CurrentSession = {
 };
 
 const mobilePrimary: NavItem[] = [
-  { id: "home", label: "Home", href: "/", icon: Home },
-  { id: "booking", label: "Booking", href: "/booking", icon: CalendarDays },
-  { id: "transactions", label: "Thu chi", href: "/transactions", icon: BadgeDollarSign },
-  { id: "wallets", label: "Ví", href: "/wallets", icon: WalletCards },
-  { id: "customers", label: "Khách", href: "/customers", icon: Users },
-  { id: "ai", label: "AI", href: "/ai", icon: Bot },
+  { id: "home", label: "Trang chủ", href: "/", icon: Home },
+  { id: "wallets", label: "Ví tiền", href: "/wallets", icon: WalletCards },
 ];
 
 const mobileGroups: { title: string; items: NavItem[] }[] = [
@@ -511,23 +507,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <nav className="fixed inset-x-0 bottom-[env(safe-area-inset-bottom)] z-40 mx-auto w-full max-w-sm px-4 pb-4 xl:hidden" style={{ transform: "translate3d(0,0,0)" }}>
-        <div className="flex w-full justify-between rounded-[2rem] border border-white/20 bg-white/85 px-2 py-1.5 shadow-[0_8px_30px_rgba(184,95,108,0.15)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/70">
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC]/60 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg supports-[backdrop-filter]:bg-[#FFF3EC]/40 xl:hidden" style={{ transform: "translateZ(0)" }}>
+        <div className="mx-auto flex h-14 w-full max-w-md items-center justify-around px-8">
           {mobilePrimary.map((item) => {
             const Icon = item.icon;
             const active = isActive(item);
             return (
               <button
                 key={item.id}
-                className={`group flex min-h-12 flex-1 touch-manipulation flex-col items-center justify-center gap-1 rounded-2xl transition-all duration-300 active:scale-90 ${
-                  active ? "scale-105" : "hover:bg-[#FFF0F4]/50"
-                }`}
+                className={`group relative flex h-full flex-1 flex-col items-center justify-center transition-all active:scale-95`}
                 onClick={() => goTo(item)}
               >
-                <div className={`grid h-8 w-8 place-items-center rounded-xl transition-colors ${active ? "bg-[#EA7188] text-white shadow-sm" : "text-[#9B746B] group-hover:text-[#5B342C]"}`}>
-                  <Icon size={18} strokeWidth={active ? 2.5 : 2} />
+                <div className={`flex flex-col items-center gap-0.5 transition-colors ${active ? "text-[#EA7188]" : "text-[#9B746B] group-hover:text-[#5B342C]"}`}>
+                  <Icon size={20} strokeWidth={active ? 2.8 : 2} />
+                  <span className="text-[10px] font-black uppercase tracking-tighter">{item.label}</span>
                 </div>
-                <span className={`text-[10px] font-black transition-colors ${active ? "text-[#5B342C]" : "text-[#9B746B]"}`}>{item.label}</span>
+                {active && (
+                  <div className="absolute -bottom-[2px] h-1 w-6 rounded-full bg-[#EA7188] shadow-[0_0_8px_rgba(234,113,136,0.5)]" />
+                )}
               </button>
             );
           })}
