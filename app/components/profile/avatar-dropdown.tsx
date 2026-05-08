@@ -40,7 +40,7 @@ export function AvatarDropdown({ session, onLogout }: { session: CurrentSession;
   function go(resource: string) {
     setOpen(false);
     setActiveResource(resource);
-    navigateStudioView(router, resource);
+    navigateStudioView(router, pathname, resource);
   }
 
   return (

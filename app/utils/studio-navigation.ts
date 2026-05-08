@@ -28,6 +28,7 @@ export function studioViewPath(view: string, options: { tab?: string | null } = 
  */
 export function navigateStudioView(
   router: RouterLike,
+  _pathname: string | null,
   view: string,
   options: { tab?: string | null } = {},
 ) {
@@ -36,7 +37,7 @@ export function navigateStudioView(
   return target;
 }
 
-export function navigateStudioPath(router: RouterLike, targetPath: string) {
+export function navigateStudioPath(router: RouterLike, _pathname: string | null, targetPath: string) {
   router.push(targetPath, { scroll: false });
   return targetPath;
 }
