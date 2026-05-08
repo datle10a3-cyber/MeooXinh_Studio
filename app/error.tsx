@@ -44,40 +44,21 @@ export default function Error({
   unstable_retry: () => void;
 }) {
   useEffect(() => {
-    if (isChunkLikeError(error)) {
-      const recovered = recoverFromChunkError();
-      if (recovered) return;
-    }
+    // Tự động recover cho MỌI lỗi một lần duy nhất
+    try {
+      if (sessionStorage.getItem("studio-error-auto-recovery")) return;
+      sessionStorage.setItem("studio-error-auto-recovery", "1");
+      hardRecover();
+    } catch {}
   }, [error]);
 
-  if (isChunkLikeError(error)) {
-    return (
-      <div className="flex min-h-dvh items-center justify-center bg-[#FFF3EC]">
-        <div className="text-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#EA7188] border-t-transparent mx-auto"></div>
-          <p className="mt-4 font-bold text-[#5B342C]">Đang đồng bộ phiên bản mới...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <main className="min-h-dvh bg-[#FFF3EC] px-4 py-6 text-[#5B342C]">
-      <div className="mx-auto grid min-h-[85dvh] w-full max-w-xl place-items-center">
-        <section className="w-full rounded-[2rem] border border-[#F4C7C4] bg-white/90 p-6 text-center shadow-[0_22px_60px_rgba(184,95,108,0.16)]">
-          <p className="text-sm font-black uppercase tracking-[0.22em] text-[#EA7188]">Mèoo Xinhh Studio</p>
-          <h1 className="mt-3 text-2xl font-black">Ứng dụng cần tải lại</h1>
-          <p className="mt-2 text-sm font-semibold text-[#9B746B]">Trình duyệt có thể đang giữ bundle cũ. Hãy thử tải lại để đồng bộ phiên bản mới.</p>
-          <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <button className="rounded-full bg-[#EA7188] px-5 py-3 text-sm font-black text-white" onClick={hardRecover} type="button">
-              Thử lại
-            </button>
-            <button className="rounded-full border border-[#F4C7C4] px-5 py-3 text-sm font-black text-[#5B342C]" onClick={hardRecover} type="button">
-              Về trang chính
-            </button>
-          </div>
-        </section>
+    <div className="flex min-h-dvh items-center justify-center bg-[#FFF3EC]">
+      <div className="text-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#EA7188] border-t-transparent mx-auto"></div>
+        <p className="mt-4 font-bold text-[#5B342C]">Đang đồng bộ và khởi động lại...</p>
+        <p className="mt-1 text-xs text-[#9B746B]">Vui lòng đợi trong giây lát</p>
       </div>
-    </main>
+    </div>
   );
 }

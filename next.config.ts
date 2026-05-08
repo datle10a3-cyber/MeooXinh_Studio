@@ -1,44 +1,7 @@
 import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
 
-const withPWA = withPWAInit({
-  dest: "public",
-  disable: process.env.NODE_ENV === "development",
-  register: false,
-  cacheStartUrl: false,
-  dynamicStartUrl: false,
-  cacheOnFrontEndNav: false,
-  aggressiveFrontEndNavCaching: false,
-  reloadOnOnline: false,
-
-  workboxOptions: {
-    disableDevLogs: true,
-    cleanupOutdatedCaches: true,
-    clientsClaim: true,
-    skipWaiting: true,
-    runtimeCaching: [
-      {
-        urlPattern: ({ request }) => request.mode === "navigate",
-        handler: "NetworkFirst",
-        options: {
-          cacheName: "studio-pages",
-          networkTimeoutSeconds: 5,
-        },
-      },
-      {
-        urlPattern: ({ request }) => request.destination === "image",
-        handler: "CacheFirst",
-        options: {
-          cacheName: "studio-images",
-          expiration: {
-            maxEntries: 50,
-            maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
-          },
-        },
-      },
-    ],
-  },
-});
+const withPWA = (config: any) => config;
 
 const nextConfig: NextConfig = {
   compress: true,
