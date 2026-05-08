@@ -254,7 +254,7 @@ export function AiAssistantView() {
       />
 
       <div className="grid gap-5">
-        <Card className="flex min-h-[78vh] flex-col overflow-hidden p-0">
+        <Card className="flex flex-col overflow-hidden p-0" style={{ height: "calc(100dvh - 13rem)", minHeight: "420px", maxHeight: "calc(100dvh - 8rem)" }}>
           <div className="border-b border-[#F4C7C4] bg-white p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
@@ -316,7 +316,11 @@ export function AiAssistantView() {
             ))}
             </div>
           </div>
-          <div ref={scrollRef} className="flex-1 space-y-4 overflow-y-auto bg-[#FFF3EC]/70 p-4 sm:p-6">
+          <div
+            ref={scrollRef}
+            className="flex-1 space-y-4 overflow-y-auto bg-[#FFF3EC]/70 p-4 sm:p-6"
+            style={{ touchAction: "pan-y", WebkitOverflowScrolling: "touch", overscrollBehavior: "contain", userSelect: "text" }}
+          >
             {messages.map((message, index) => (
               <div key={`${message.role}-${index}`} className={message.role === "user" ? "flex justify-end" : "flex justify-start"}>
                 <div
