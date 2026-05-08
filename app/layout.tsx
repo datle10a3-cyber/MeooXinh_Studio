@@ -3,6 +3,7 @@ import { IosLaunchSplash } from "@/app/components/pwa/ios-launch-splash";
 import { NetworkStatus } from "@/app/components/pwa/network-status";
 import { AppLoader } from "@/app/components/ui/app-loader";
 import NextTopLoader from "nextjs-toploader";
+import { ShellLayout } from "@/app/components/layout/shell-layout";
 import "./globals.css";
 
 const appVersion = process.env.VERCEL_GIT_COMMIT_SHA ?? process.env.NEXT_PUBLIC_APP_VERSION ?? "local";
@@ -111,7 +112,7 @@ export default function RootLayout({
         <AppLoader />
         <IosLaunchSplash />
         <NetworkStatus />
-        {children}
+        <ShellLayout>{children}</ShellLayout>
       </body>
     </html>
   );

@@ -1,7 +1,8 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import type React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, startTransition } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -28,6 +29,11 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
+import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/components/brand/studio-brand";
+import { useUiStore } from "@/app/store/ui-store";
+import type { CurrentSession } from "@/app/types/auth";
+import { studioViewPath } from "@/app/utils/studio-navigation";
+
 const Sidebar = dynamic(
   () =>
     import("@/app/components/layout/sidebar").then(
@@ -35,6 +41,7 @@ const Sidebar = dynamic(
     ),
   { ssr: false },
 );
+
 const UserMenu = dynamic(
   () =>
     import("@/app/components/layout/user-menu").then(
@@ -42,7 +49,6 @@ const UserMenu = dynamic(
     ),
   { ssr: false },
 );
-import dynamic from "next/dynamic";
 
 const NotificationBell = dynamic(
   () =>
@@ -51,10 +57,6 @@ const NotificationBell = dynamic(
     ),
   { ssr: false },
 );
-import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/components/brand/studio-brand";
-import { useUiStore } from "@/app/store/ui-store";
-import type { CurrentSession } from "@/app/types/auth";
-import { studioViewPath } from "@/app/utils/studio-navigation";
 
 type NavItem = {
   id: string;
@@ -185,8 +187,6 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
   }
 }
 
-import { startTransition } from "react";
-
 export function AppShell({ children }: { children: React.ReactNode }) {
   const activeResource = useUiStore((state) => state.activeResource);
   const setActiveResource = useUiStore((state) => state.setActiveResource);
@@ -235,6 +235,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Sync activeResource với pathname thực tế
   useEffect(() => {
+    if (!pathname) return;
     const segments = pathname.split("/").filter(Boolean);
     const view = segments[0] || "home";
     setActiveResource(view);
