@@ -253,22 +253,14 @@ export function AiAssistantView() {
   }
 
   return (
-    <div className="space-y-5">
-      <StudioBrandPanel
-        eyebrow="Trợ lý AI"
-        title="AI studio"
-        description="Chat tự nhiên, đọc dữ liệu studio, phân tích ảnh và hỗ trợ hỏi về booking, khách hàng, tài chính, ví, ca làm và vận hành."
-      />
-
-      <div className="grid gap-5">
-        <Card 
-          className="flex flex-col overflow-hidden p-0 shadow-premium" 
-          style={{ 
-            height: "calc(100dvh - 11rem)", 
-            minHeight: "380px", 
-            maxHeight: "calc(100dvh - 6.5rem)" 
-          }}
-        >
+    <div className="-mx-2.5 -my-3 sm:-mx-4 sm:-my-5 xl:-mx-8 xl:-my-6">
+      <Card 
+        className="flex flex-col overflow-hidden rounded-none border-0 p-0 shadow-none" 
+        style={{ 
+          height: "calc(100dvh - 3.5rem)",
+          minHeight: "400px",
+        }}
+      >
           <div className="border-b border-[#F4C7C4] bg-white p-4 sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div className="min-w-0">
@@ -466,7 +458,6 @@ export function AiAssistantView() {
             </div>
           </div>
         </Card>
-      </div>
     </div>
   );
 }
