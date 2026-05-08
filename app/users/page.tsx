@@ -1,10 +1,10 @@
 import { AppShell } from "@/app/components/layout/app-shell";
-import { BookingPage } from "@/app/components/catalog/booking-page";
+import { UserManagement } from "@/app/components/users/user-management";
 
 export default function Page() {
   return (
     <AppShell>
-      <BookingPage />
+      <UserManagement />
     </AppShell>
   );
 }

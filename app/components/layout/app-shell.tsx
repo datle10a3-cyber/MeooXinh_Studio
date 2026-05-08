@@ -94,10 +94,10 @@ const devSession: CurrentSession = {
 const mobilePrimary: NavItem[] = [
   { id: "home", label: "Home", href: "/", icon: Home },
   { id: "booking", label: "Booking", href: "/booking", icon: CalendarDays },
-  { id: "transactions", label: "Thu chi", icon: BadgeDollarSign },
-  { id: "wallets", label: "Ví", icon: WalletCards },
-  { id: "customers", label: "Khách", icon: Users },
-  { id: "ai", label: "AI", icon: Bot },
+  { id: "transactions", label: "Thu chi", href: "/transactions", icon: BadgeDollarSign },
+  { id: "wallets", label: "Ví", href: "/wallets", icon: WalletCards },
+  { id: "customers", label: "Khách", href: "/customers", icon: Users },
+  { id: "ai", label: "AI", href: "/ai", icon: Bot },
 ];
 
 const mobileGroups: { title: string; items: NavItem[] }[] = [
@@ -105,8 +105,8 @@ const mobileGroups: { title: string; items: NavItem[] }[] = [
     title: "Chính",
     items: [
       { id: "home", label: "Home", href: "/", icon: Home },
-      { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-      { id: "ai", label: "AI", icon: Bot },
+      { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
+      { id: "ai", label: "AI", href: "/ai", icon: Bot },
     ],
   },
   {
@@ -115,27 +115,27 @@ const mobileGroups: { title: string; items: NavItem[] }[] = [
       { id: "categories", label: "Danh mục", href: "/categories", icon: FolderOpen },
       { id: "packages", label: "Gói", href: "/packages", icon: Package },
       { id: "booking", label: "Booking", href: "/booking", icon: CalendarDays },
-      { id: "projects", label: "Dự án", icon: BriefcaseBusiness },
+      { id: "projects", label: "Dự án", href: "/projects", icon: BriefcaseBusiness },
     ],
   },
   {
     title: "Tài chính",
     items: [
-      { id: "transactions", label: "Thu chi", icon: BadgeDollarSign },
-      { id: "wallets", label: "Ví", icon: WalletCards },
-      { id: "invoices", label: "Hóa đơn", icon: FileText },
-      { id: "reports", label: "Báo cáo", icon: Download },
+      { id: "transactions", label: "Thu chi", href: "/transactions", icon: BadgeDollarSign },
+      { id: "wallets", label: "Ví", href: "/wallets", icon: WalletCards },
+      { id: "invoices", label: "Hóa đơn", href: "/invoices", icon: FileText },
+      { id: "reports", label: "Báo cáo", href: "/reports", icon: Download },
     ],
   },
   {
     title: "Quản lý",
     items: [
-      { id: "customers", label: "Khách", icon: Users },
-      { id: "users", label: "Nhân sự", icon: Users },
+      { id: "customers", label: "Khách", href: "/customers", icon: Users },
+      { id: "users", label: "Nhân sự", href: "/users", icon: Users },
       { id: "completed-bookings", label: "Booking hoàn tất", href: "/completed-bookings", icon: CalendarCheck2 },
-      { id: "equipment", label: "Thiết bị", icon: Wrench },
-      { id: "notifications", label: "Thông báo", icon: Settings },
-      { id: "trash", label: "Thùng rác", icon: Trash2 },
+      { id: "equipment", label: "Thiết bị", href: "/equipment", icon: Wrench },
+      { id: "notifications", label: "Thông báo", href: "/notifications", icon: Settings },
+      { id: "trash", label: "Thùng rác", href: "/trash", icon: Trash2 },
     ],
   },
 ];
@@ -237,11 +237,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     startTransition(() => {
       setActiveResource(item.id);
       setMobileMenuOpen(false);
-      if (item.href && item.href !== "/") {
-        router.push(item.href, { scroll: false });
-        return;
-      }
-      navigateStudioView(router, pathname, item.id);
+      const target = item.href || studioViewPath(item.id);
+      router.push(target, { scroll: false });
     });
   }
 
@@ -256,16 +253,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setFocusedItemId(item.id);
     setSearchOpen(false);
     setSearchQuery("");
-    const targetPath = item.targetPath === "/"
-      ? studioViewPath(item.targetResource, { tab: item.transactionView })
-      : item.targetPath;
-    navigateStudioPath(router, pathname, targetPath);
+    
+    // Luôn ưu tiên targetPath nếu có, không dùng query params cho / nữa
+    router.push(item.targetPath, { scroll: false });
   }
 
   function isActive(item: NavItem) {
-    if (pathname === "/") return activeResource === item.id;
-    if (item.href && pathname === item.href) return true;
-    return !item.href && activeResource === item.id;
+    const target = item.href || studioViewPath(item.id);
+    return pathname === target;
   }
 
   useEffect(() => {

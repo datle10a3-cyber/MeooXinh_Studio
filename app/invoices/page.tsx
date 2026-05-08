@@ -1,10 +1,10 @@
 import { AppShell } from "@/app/components/layout/app-shell";
-import { BookingPage } from "@/app/components/catalog/booking-page";
+import { ResourceManager } from "@/app/components/resources/resource-manager";
 
 export default function Page() {
   return (
     <AppShell>
-      <BookingPage />
+      <ResourceManager resource="invoices" />
     </AppShell>
   );
 }

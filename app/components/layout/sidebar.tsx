@@ -34,7 +34,7 @@ import {
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { cn } from "@/app/utils/cn";
-import { navigateStudioView } from "@/app/utils/studio-navigation";
+import { navigateStudioView, studioViewPath } from "@/app/utils/studio-navigation";
 
 type NavItem = {
   id: string;
@@ -239,22 +239,16 @@ export const Sidebar = memo(function Sidebar({ session }: { session: CurrentSess
                 )
                 .map((item) => {
                   const Icon = item.icon;
-
-                  const active = item.href
-                    ? pathname === item.href
-                    : activeResource === item.id && pathname === "/";
+                  const targetHref = item.href || studioViewPath(item.id);
+                  const active = pathname === targetHref;
 
                   return (
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => goTo(item)}
-                      onMouseEnter={() => {
-                        if (item.href) {
-                          router.prefetch(item.href);
-                        } else {
-                          router.prefetch(`/?view=${item.id}`);
-                        }
+                      onClick={() => {
+                        setActiveResource(item.id);
+                        router.push(targetHref, { scroll: false });
                       }}
                       className={classes(active)}
                     >
