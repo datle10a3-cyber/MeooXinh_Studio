@@ -232,7 +232,7 @@ video {
   }
 
   /* Ẩn thanh điều hướng dưới khi đang mở form để không bị vướng */
-  body:has(.studio-mobile-form-sheet) nav.fixed.bottom-0 {
+  body.studio-modal-open nav.fixed.bottom-0 {
     opacity: 0;
     pointer-events: none;
     transform: translateY(100%);

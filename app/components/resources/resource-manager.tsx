@@ -115,12 +115,37 @@ function FieldInput({ field, value, onChange }: { field: FieldConfig; value: unk
     );
   }
   if (field.type === "datetime" || field.type === "date") {
+    // Chuyển đổi từ ISO (UTC) sang định dạng local YYYY-MM-DDTHH:mm cho input
+    let localValue = String(inputValue);
+    if (localValue && (localValue.includes("T") || localValue.includes("Z"))) {
+      const date = new Date(localValue);
+      if (!isNaN(date.getTime())) {
+        const pad = (n: number) => String(n).padStart(2, "0");
+        const y = date.getFullYear();
+        const m = pad(date.getMonth() + 1);
+        const d = pad(date.getDate());
+        const h = pad(date.getHours());
+        const min = pad(date.getMinutes());
+        localValue = field.type === "datetime" ? `${y}-${m}-${d}T${h}:${min}` : `${y}-${m}-${d}`;
+      }
+    }
+
     return (
       <DateTimeInput
         type={field.type === "datetime" ? "datetime-local" : field.type}
         label={field.label}
-        value={inputValue}
-        onChange={(event) => onChange(event.target.value)}
+        value={localValue}
+        onChange={(event) => {
+          const val = event.target.value;
+          if (!val) {
+            onChange("");
+            return;
+          }
+          // Khi lưu, trình duyệt tự hiểu chuỗi datetime-local là giờ địa phương
+          // Chuyển nó thành ISO UTC để lưu vào DB chuẩn xác
+          const date = new Date(val);
+          onChange(isNaN(date.getTime()) ? "" : date.toISOString());
+        }}
       />
     );
   }
@@ -732,6 +757,15 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const [longPressActivated, setLongPressActivated] = useState(false);
   const [editStudioPassword, setEditStudioPassword] = useState("");
   const formRef = useRef<HTMLDivElement>(null);
+  
+  useEffect(() => {
+    if (showForm || !!detailRow) {
+      document.body.classList.add("studio-modal-open");
+    } else {
+      document.body.classList.remove("studio-modal-open");
+    }
+    return () => document.body.classList.remove("studio-modal-open");
+  }, [showForm, detailRow]);
 
   const endpoint = `/api/resources/${resource}`;
   const title = useMemo(() => (editingId ? `Cập nhật ${config.shortLabel}` : `Thêm ${config.shortLabel}`), [config.shortLabel, editingId]);
