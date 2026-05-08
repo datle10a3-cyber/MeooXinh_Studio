@@ -6,6 +6,7 @@ import { Button } from "@/app/components/ui/button";
 import { Card, CardTitle } from "@/app/components/ui/card";
 import { DeleteConfirmation } from "@/app/components/ui/delete-confirmation";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
+import { PageSpinner } from "@/app/components/ui/skeleton";
 import { Input, Textarea } from "@/app/components/ui/input";
 import { MediaGalleryPicker } from "@/app/components/media/media-picker";
 import { ImagePreview } from "@/app/components/media/image-preview";
@@ -82,11 +83,13 @@ export function UserManagement() {
   const [longPressTimer, setLongPressTimer] = useState<number | null>(null);
   const formRef = useRef<HTMLDivElement>(null);
   const editing = Boolean(form.id);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   async function loadRows() {
     const result = await fetch("/api/users").then((res) => res.json() as Promise<ApiResult<StaffRow[]>>);
     if (result.data) setRows(result.data);
     if (result.error) setMessage(result.error.message);
+    setInitialLoading(false);
   }
 
   useEffect(() => {
@@ -375,7 +378,9 @@ export function UserManagement() {
             );
           })}
 
-          {rows.length === 0 ? (
+          {initialLoading && rows.length === 0 ? (
+            <PageSpinner label="Đang tải nhân sự…" />
+          ) : rows.length === 0 ? (
             <Card className="py-14 text-center lg:col-span-2">
               <h2 className="text-lg font-bold text-[#5B342C]">Chưa có nhân viên</h2>
               <p className="mt-2 text-sm text-[#9B746B]">Thêm nhân viên đầu tiên bằng form bên phải.</p>

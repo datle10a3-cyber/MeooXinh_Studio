@@ -6,6 +6,7 @@ import { Button } from "@/app/components/ui/button";
 import { Card, CardTitle } from "@/app/components/ui/card";
 import { DeleteConfirmation } from "@/app/components/ui/delete-confirmation";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
+import { PageSpinner } from "@/app/components/ui/skeleton";
 import { RESOURCE_CONFIG, type ResourceKey } from "@/app/lib/studio-config";
 import { formatDate, formatMoney } from "@/app/utils/format";
 
@@ -73,6 +74,7 @@ export function TrashView() {
   const [detailItem, setDetailItem] = useState<TrashItem | null>(null);
   const [longPressTimer, setLongPressTimer] = useState<number | null>(null);
   const [longPressActivated, setLongPressActivated] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   async function loadTrash() {
     const results = await Promise.all(
@@ -92,6 +94,7 @@ export function TrashView() {
         .flat()
         .sort((a, b) => new Date(String(b.deletedAt ?? b.createdAt ?? 0)).getTime() - new Date(String(a.deletedAt ?? a.createdAt ?? 0)).getTime()),
     );
+    setInitialLoading(false);
   }
 
   useEffect(() => {
@@ -372,7 +375,9 @@ export function TrashView() {
             </Card>
           );
         })}
-        {items.length === 0 ? (
+        {initialLoading && items.length === 0 ? (
+          <PageSpinner label="Đang tải thùng rác…" />
+        ) : items.length === 0 ? (
           <Card className="py-10 text-center text-[#9B746B]">Thùng rác đang trống.</Card>
         ) : null}
       </div>

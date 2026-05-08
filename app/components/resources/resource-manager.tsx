@@ -28,6 +28,7 @@ import { MediaGalleryPicker, MediaPicker } from "@/app/components/media/media-pi
 import { ImagePreview } from "@/app/components/media/image-preview";
 import { BookingCalendar } from "@/app/components/bookings/booking-calendar";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
+import { PageSpinner } from "@/app/components/ui/skeleton";
 import { RESOURCE_CONFIG, type FieldConfig, type ResourceKey } from "@/app/lib/studio-config";
 import { canCreate, canDelete, canMutate } from "@/app/types/auth";
 import { viOption } from "@/app/lib/vietnamese-labels";
@@ -707,6 +708,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMoreRows, setHasMoreRows] = useState(false);
   const [loadingMoreRows, setLoadingMoreRows] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [form, setForm] = useState<Row>(() => emptyForm(config.fields));
   const [editingId, setEditingId] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("");
@@ -762,6 +764,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
 
   const loadRows = useCallback(async (mode: "reset" | "append" = "reset", cursor?: string | null) => {
     if (mode === "append" && !cursor) return;
+    if (mode === "reset") setInitialLoading(true);
     setLoadingMoreRows(mode === "append");
     const params = new URLSearchParams({ take: "50", cursorMode: "1" });
     if (mode === "append" && cursor) params.set("cursor", cursor);
@@ -780,6 +783,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     }
     if (payload.error) setMessage(payload.error.message);
     setLoadingMoreRows(false);
+    setInitialLoading(false);
   }, [endpoint]);
 
   const loadWalletRows = useCallback(async () => {
@@ -1348,7 +1352,9 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
 
       <section className="space-y-3">
         {resource === "bookings" ? <BookingCalendar bookings={rows} onMove={moveBooking} /> : null}
-        {visibleRows.length === 0 && resource !== "wallets" ? (
+        {initialLoading && visibleRows.length === 0 && resource !== "wallets" ? (
+          <PageSpinner label={`Đang tải ${config.label}…`} />
+        ) : visibleRows.length === 0 && resource !== "wallets" ? (
           <Card className="rounded-[2rem] border-[#F4C7C4] bg-white py-12 text-center">
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#FFE4EA] text-[#EA7188]">
               <ImageIcon size={22} />

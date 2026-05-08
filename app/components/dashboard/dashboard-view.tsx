@@ -6,6 +6,7 @@ import { Button } from "@/app/components/ui/button";
 import { Card, CardTitle } from "@/app/components/ui/card";
 import { RevenueChart } from "@/app/components/dashboard/revenue-chart";
 import { StatCard } from "@/app/components/dashboard/stat-card";
+import { PageSpinner } from "@/app/components/ui/skeleton";
 import type { ApiResult, DashboardData } from "@/app/types/studio";
 import { formatDate, formatMoney } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
@@ -174,7 +175,9 @@ export function DashboardView() {
         </div>
       </section>
 
-      {!isStaff ? (
+      {loading && dashboard === fallbackData ? (
+        <PageSpinner label="Đang tải số liệu…" />
+      ) : !isStaff ? (
         <>
           <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
             <StatCard label="Tổng thu" value={dashboard.summary.totalIncome} tone="income" />
