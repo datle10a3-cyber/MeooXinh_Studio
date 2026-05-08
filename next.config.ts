@@ -5,11 +5,49 @@ const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  cacheOnFrontEndNav: false,
+  aggressiveFrontEndNavCaching: false,
   reloadOnOnline: true,
   workboxOptions: {
     disableDevLogs: true,
+    navigateFallback: "/",
+    navigateFallbackDenylist: [/^\/api\//, /^\/_next\//],
+    runtimeCaching: [
+      {
+        urlPattern: ({ request }) => request.mode === "navigate",
+        handler: "NetworkFirst",
+        options: {
+          cacheName: "studio-pages",
+          networkTimeoutSeconds: 8,
+          expiration: {
+            maxEntries: 12,
+            maxAgeSeconds: 60 * 60,
+          },
+        },
+      },
+      {
+        urlPattern: ({ url }) => url.pathname.startsWith("/_next/static/"),
+        handler: "StaleWhileRevalidate",
+        options: {
+          cacheName: "next-static",
+          expiration: {
+            maxEntries: 80,
+            maxAgeSeconds: 60 * 60 * 24 * 7,
+          },
+        },
+      },
+      {
+        urlPattern: ({ request }) => request.destination === "image",
+        handler: "CacheFirst",
+        options: {
+          cacheName: "studio-images",
+          expiration: {
+            maxEntries: 80,
+            maxAgeSeconds: 60 * 60 * 24 * 14,
+          },
+        },
+      },
+    ],
   },
 });
 

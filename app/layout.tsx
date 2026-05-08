@@ -5,6 +5,49 @@ import { AppLoader } from "@/app/components/ui/app-loader";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
+const mobileWebviewSafetyScript = `
+(function(){
+  try {
+    var ua = navigator.userAgent || "";
+    var isInApp = /FBAN|FBAV|FB_IAB|Messenger|Instagram|Zalo|TikTok|Bytedance|Line|MicroMessenger/i.test(ua);
+    var isStandalone = false;
+    try {
+      isStandalone = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
+    } catch (_) {}
+    if (isInApp && !isStandalone && "serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function(registrations) {
+        registrations.forEach(function(registration) {
+          registration.unregister();
+        });
+      }).catch(function(){});
+      if (window.caches && caches.keys) {
+        caches.keys().then(function(keys) {
+          keys.forEach(function(key) {
+            if (/studio-|next-|workbox|precache/i.test(key)) caches.delete(key);
+          });
+        }).catch(function(){});
+      }
+    }
+    window.addEventListener("error", function(event) {
+      var target = event && event.target;
+      var src = target && (target.src || target.href);
+      if (src && /\\/_next\\//.test(src) && !sessionStorage.getItem("studio-reloaded-after-chunk-error")) {
+        sessionStorage.setItem("studio-reloaded-after-chunk-error", "1");
+        window.location.reload();
+      }
+    }, true);
+    window.addEventListener("unhandledrejection", function(event) {
+      var reason = event && event.reason;
+      var message = String((reason && (reason.message || reason.stack)) || reason || "");
+      if (/ChunkLoadError|Loading chunk|Failed to fetch dynamically imported module|Importing a module script failed/i.test(message) && !sessionStorage.getItem("studio-reloaded-after-import-error")) {
+        sessionStorage.setItem("studio-reloaded-after-import-error", "1");
+        window.location.reload();
+      }
+    });
+  } catch (_) {}
+})();
+`;
+
 export const metadata: Metadata = {
   title: "MÈOO XINHH STUDIO | Make & Photo",
   description: "Quản lý booking, tài chính, CRM và vận hành MÈOO XINHH STUDIO.",
@@ -51,6 +94,11 @@ export default function RootLayout({
         <script
           dangerouslySetInnerHTML={{
             __html: "try{document.querySelectorAll('[fdprocessedid]').forEach(function(n){n.removeAttribute('fdprocessedid')})}catch(e){}",
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: mobileWebviewSafetyScript,
           }}
         />
         <meta name="apple-mobile-web-app-capable" content="yes" />
