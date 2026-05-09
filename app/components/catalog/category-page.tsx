@@ -433,10 +433,12 @@ function CategoryDetailModal({
     document.body.style.overflow = "hidden";
     document.body.style.position = "fixed";
     document.body.style.width = "100%";
+    document.body.classList.add("studio-modal-open");
     return () => {
       document.body.style.overflow = "";
       document.body.style.position = "";
       document.body.style.width = "";
+      document.body.classList.remove("studio-modal-open");
     };
   }, []);
 
