@@ -487,27 +487,32 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }
 
   async function removeMany(mode: "trash" | "hard") {
-    const selectedGroupRows = displayGroups.filter((group) => selectedGroupKeys.includes(group.key)).flatMap((group) => group.rows);
-    const selectedRowIds = new Set([...selectedIds, ...selectedGroupRows.map((row) => row.id)]);
-    const source = bulkDeleteMode === "all" ? filteredRows : filteredRows.filter((row) => selectedRowIds.has(row.id));
-    for (const row of source) {
-      const result = await fetch("/api/bookings", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: row.id, mode }),
-      }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
-      if (result.error) {
-        setMessage(result.error.message);
-        setBulkDeleteMode(null);
-        return;
+    setDeleting(true);
+    try {
+      const selectedGroupRows = displayGroups.filter((group) => selectedGroupKeys.includes(group.key)).flatMap((group) => group.rows);
+      const selectedRowIds = new Set([...selectedIds, ...selectedGroupRows.map((row) => row.id)]);
+      const source = bulkDeleteMode === "all" ? filteredRows : filteredRows.filter((row) => selectedRowIds.has(row.id));
+      for (const row of source) {
+        const result = await fetch("/api/bookings", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: row.id, mode }),
+        }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
+        if (result.error) {
+          setMessage(result.error.message);
+          setBulkDeleteMode(null);
+          return;
+        }
       }
+      setMessage(mode === "hard" ? `Đã xóa ${source.length} booking.` : `Đã chuyển ${source.length} booking vào thùng rác.`);
+      setSelectedIds([]);
+      setSelectedGroupKeys([]);
+      setGroupSelectionMode(false);
+      setBulkDeleteMode(null);
+      await loadData();
+    } finally {
+      setDeleting(false);
     }
-    setMessage(mode === "hard" ? `Đã xóa ${source.length} booking.` : `Đã chuyển ${source.length} booking vào thùng rác.`);
-    setSelectedIds([]);
-    setSelectedGroupKeys([]);
-    setGroupSelectionMode(false);
-    setBulkDeleteMode(null);
-    await loadData();
   }
 
   async function changeStatus(row: BookingItem, status: "CANCELLED" | "COMPLETED", printAfter = false, printWindow?: Window | null) {

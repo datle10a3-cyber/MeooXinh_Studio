@@ -1003,7 +1003,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       setDeleteTarget(null);
       setSelectedIds((current) => current.filter((id) => id !== String(row.id ?? "")));
       setMessage(mode === "hard" ? "Đã xóa vĩnh viễn dữ liệu." : "Đã chuyển dữ liệu vào thùng rác.");
-      void loadRows();
+      await loadRows();
     } finally {
       setSubmitting(false);
     }
@@ -1029,7 +1029,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       setMessage(mode === "hard" ? `Đã xóa ${rowsToDelete.length} mục.` : `Đã chuyển ${rowsToDelete.length} mục vào thùng rác.`);
       setSelectedIds([]);
       setBulkDeleteMode(null);
-      void loadRows();
+      await loadRows();
     } finally {
       setSubmitting(false);
     }

@@ -214,7 +214,7 @@ export function PackagePage() {
       setDetail(null);
       setDeleteTarget(null);
       setSelectedIds((current) => current.filter((id) => id !== row.id));
-      void loadData();
+      await loadData();
     } finally {
       setDeleting(false);
     }
@@ -239,7 +239,7 @@ export function PackagePage() {
       setMessage(mode === "hard" ? `Đã xóa ${source.length} gói.` : `Đã chuyển ${source.length} gói vào thùng rác.`);
       setSelectedIds([]);
       setBulkDeleteMode(null);
-      void loadData();
+      await loadData();
     } finally {
       setDeleting(false);
     }

@@ -100,7 +100,7 @@ export function CategoryPage() {
       setDetail(null);
       setDeleteTarget(null);
       setSelectedIds((current) => current.filter((id) => id !== row.id));
-      void loadRows();
+      await loadRows();
     } finally {
       setDeleting(false);
     }
@@ -125,7 +125,7 @@ export function CategoryPage() {
       setMessage(mode === "hard" ? `Đã xóa ${source.length} danh mục.` : `Đã chuyển ${source.length} danh mục vào thùng rác.`);
       setSelectedIds([]);
       setBulkDeleteMode(null);
-      void loadRows();
+      await loadRows();
     } finally {
       setDeleting(false);
     }

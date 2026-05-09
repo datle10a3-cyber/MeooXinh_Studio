@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Building2, CalendarPlus, LogOut, Moon, Settings, ShieldCheck, Sun, User, type LucideIcon } from "lucide-react";
+import { Building2, CalendarPlus, LogOut, Moon, Settings, ShieldCheck, Sun, User, Loader2, type LucideIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { AvatarUser } from "@/app/components/profile/avatar-user";
 import { Button } from "@/app/components/ui/button";
@@ -20,6 +20,7 @@ export function AvatarDropdown({ session, onLogout }: { session: CurrentSession;
   const pathname = usePathname();
   const boxRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const { darkMode, setDarkMode, setActiveResource } = useUiStore();
 
   useEffect(() => {
@@ -32,9 +33,14 @@ export function AvatarDropdown({ session, onLogout }: { session: CurrentSession;
   }, [open]);
 
   async function logout() {
-    await fetch("/api/auth/logout", { method: "POST" });
-    onLogout();
-    router.push("/login");
+    setLoggingOut(true);
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      onLogout();
+      router.push("/login");
+    } finally {
+      setLoggingOut(false);
+    }
   }
 
   function go(resource: string) {
@@ -88,9 +94,9 @@ export function AvatarDropdown({ session, onLogout }: { session: CurrentSession;
           </div>
 
           <div className="mt-3 border-t border-[#F4C7C4] pt-3">
-            <Button variant="ghost" className="w-full justify-start text-rose-600 hover:bg-rose-50" onClick={logout}>
-              <LogOut size={16} />
-              Đăng xuất
+            <Button variant="ghost" className="w-full justify-start text-rose-600 hover:bg-rose-50" onClick={logout} disabled={loggingOut}>
+              {loggingOut ? <Loader2 size={16} className="animate-spin mr-2" /> : <LogOut size={16} className="mr-2" />}
+              {loggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
             </Button>
           </div>
         </div>
