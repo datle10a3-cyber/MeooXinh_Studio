@@ -254,6 +254,7 @@ function CustomerSearchPicker({
 }
 
 export function BookingPage({ completedOnly = false }: { completedOnly?: boolean }) {
+  const [loadingData, setLoadingData] = useState(true);
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [packages, setPackages] = useState<PackageItem[]>([]);
   const [rows, setRows] = useState<BookingItem[]>([]);
@@ -272,6 +273,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const [bulkDeleteMode, setBulkDeleteMode] = useState<"selected" | "all" | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [processingStatus, setProcessingStatus] = useState(false);
   const [longPressActivated, setLongPressActivated] = useState(false);
   const [editStudioPassword, setEditStudioPassword] = useState("");
   const [groupPackageIds, setGroupPackageIds] = useState<string[]>([]);
@@ -374,24 +376,31 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }
 
   const loadData = useCallback(async () => {
-    const [customerResult, packageResult, bookingResult] = await Promise.all([
-      fetch("/api/resources/customers").then((res) => res.json() as Promise<ApiResult<CustomerItem[] | CustomerPage>>),
-      fetch("/api/packages").then((res) => res.json() as Promise<ApiResult<PackageItem[]>>),
-      fetch(completedOnly ? "/api/bookings?view=completed" : "/api/bookings").then((res) => res.json() as Promise<ApiResult<BookingItem[]>>),
-    ]);
-    const nextCustomers = customerListFromData(customerResult.data);
-    if (customerResult.data) setCustomers(nextCustomers);
-    if (packageResult.data) setPackages(packageResult.data);
-    if (bookingResult.data) {
-      setRows(
-        bookingResult.data.map((booking) => {
-          if (booking.customer || booking.customerId) return booking;
-          const matchedCustomer = nextCustomers.find((customer) => customer.name.trim().toLowerCase() === String(booking.customerName ?? "").trim().toLowerCase());
-          return matchedCustomer ? { ...booking, customerId: matchedCustomer.id, customer: matchedCustomer } : booking;
-        }),
-      );
+    setLoadingData(true);
+    try {
+      const [customerResult, packageResult, bookingResult] = await Promise.all([
+        fetch("/api/resources/customers").then((res) => res.json() as Promise<ApiResult<CustomerItem[] | CustomerPage>>),
+        fetch("/api/packages").then((res) => res.json() as Promise<ApiResult<PackageItem[]>>),
+        fetch(completedOnly ? "/api/bookings?view=completed" : "/api/bookings").then((res) => res.json() as Promise<ApiResult<BookingItem[]>>),
+      ]);
+      const nextCustomers = customerListFromData(customerResult.data);
+      if (customerResult.data) setCustomers(nextCustomers);
+      if (packageResult.data) setPackages(packageResult.data);
+      if (bookingResult.data) {
+        setRows(
+          bookingResult.data.map((booking) => {
+            if (booking.customer || booking.customerId) return booking;
+            const matchedCustomer = nextCustomers.find((customer) => customer.name.trim().toLowerCase() === String(booking.customerName ?? "").trim().toLowerCase());
+            return matchedCustomer ? { ...booking, customerId: matchedCustomer.id, customer: matchedCustomer } : booking;
+          }),
+        );
+      }
+      if (bookingResult.error) setMessage(bookingResult.error.message);
+    } catch (err) {
+      console.error("Booking load error:", err);
+    } finally {
+      setLoadingData(false);
     }
-    if (bookingResult.error) setMessage(bookingResult.error.message);
   }, [completedOnly]);
 
   useEffect(() => {
@@ -524,33 +533,40 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         return;
       }
     }
-    const result = await fetch("/api/bookings", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        id: row.id,
-        customerId: row.customerId ?? "",
-        customerName: row.customerName ?? "",
-        imageUrl: row.imageUrl ?? "",
-        packageId: row.packageId ?? "",
-        startTime: row.startTime,
-        endTime: row.endTime,
-        note: row.note ?? "",
-        status,
-        ...(role === "STAFF" ? { studioPassword } : {}),
-      }),
-    }).then((res) => res.json() as Promise<ApiResult<BookingItem>>);
+    setProcessingStatus(true);
+    try {
+      const result = await fetch("/api/bookings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: row.id,
+          customerId: row.customerId ?? "",
+          customerName: row.customerName ?? "",
+          imageUrl: row.imageUrl ?? "",
+          packageId: row.packageId ?? "",
+          startTime: row.startTime,
+          endTime: row.endTime,
+          note: row.note ?? "",
+          status,
+          ...(role === "STAFF" ? { studioPassword } : {}),
+        }),
+      }).then((res) => res.json() as Promise<ApiResult<BookingItem>>);
 
-    if (result.error) {
-      printWindow?.close();
-      return setMessage(result.error.message);
+      if (result.error) {
+        printWindow?.close();
+        return setMessage(result.error.message);
+      }
+      setCancelTarget(null);
+      setPaymentTarget(null);
+      setDetail(null);
+      setMessage(status === "COMPLETED" ? "Đã thanh toán, lưu hóa đơn và chuyển vào Booking hoàn tất." : "Đã hủy booking.");
+      if (status === "COMPLETED" && printAfter) printBookingInvoice(result.data ?? row, printWindow);
+      await loadData();
+    } catch (err) {
+      console.error("Change status error:", err);
+    } finally {
+      setProcessingStatus(false);
     }
-    setCancelTarget(null);
-    setPaymentTarget(null);
-    setDetail(null);
-    setMessage(status === "COMPLETED" ? "Đã thanh toán, lưu hóa đơn và chuyển vào Booking hoàn tất." : "Đã hủy booking.");
-    if (status === "COMPLETED" && printAfter) printBookingInvoice(result.data ?? row, printWindow);
-    await loadData();
   }
 
   function edit(row: BookingItem) {
@@ -869,12 +885,17 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
               </div>
             </div>
           ) : null}
-          {filteredRows.length === 0 ? (
+          {loadingData ? (
+            <Card className="py-12 flex flex-col items-center justify-center gap-3 text-center font-semibold text-[#9B746B]">
+              <Loader2 className="h-8 w-8 animate-spin text-[#EA7188]" />
+              <span>Đang tải dữ liệu...</span>
+            </Card>
+          ) : filteredRows.length === 0 ? (
             <Card className="py-12 text-center font-semibold text-[#9B746B]">
               {completedOnly ? "Chưa có booking hoàn tất" : "Chưa có booking đang xử lý"}
             </Card>
           ) : null}
-          {progressiveGroups.visibleItems.map((group, groupIndex) => {
+          {!loadingData && progressiveGroups.visibleItems.map((group, groupIndex) => {
             if (!group.title) return renderBookingRow(group.rows[0], groupIndex, displayGroups.length);
             const expanded = expandedGroups.includes(group.key);
             const packageNames = [...new Set(group.rows.map((row) => row.packageName).filter(Boolean))];
@@ -1165,6 +1186,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         danger
         onCancel={() => setCancelTarget(null)}
         onConfirm={() => cancelTarget ? void changeStatus(cancelTarget, "CANCELLED") : undefined}
+        loading={processingStatus}
       />
       <PaymentConfirmModal
         booking={paymentTarget}
@@ -1175,6 +1197,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
           const printWindow = window.open("", "_blank", "width=900,height=1000");
           void changeStatus(paymentTarget, "COMPLETED", true, printWindow);
         }}
+        loading={processingStatus}
       />
       <DeleteConfirmation
         open={Boolean(deleteTarget)}
@@ -1317,6 +1340,7 @@ function ActionConfirmModal({
   danger = false,
   onCancel,
   onConfirm,
+  loading = false,
 }: {
   open: boolean;
   title: string;
@@ -1325,6 +1349,7 @@ function ActionConfirmModal({
   danger?: boolean;
   onCancel: () => void;
   onConfirm: () => void;
+  loading?: boolean;
 }) {
   if (!open) return null;
   return (
@@ -1335,16 +1360,17 @@ function ActionConfirmModal({
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Xác nhận</p>
             <h3 className="mt-1 text-2xl font-black text-[#5B342C]">{title}</h3>
           </div>
-          <button type="button" className="grid h-10 w-10 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C]" onClick={onCancel}>
+          <button type="button" className="grid h-10 w-10 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C]" onClick={onCancel} disabled={loading}>
             <X size={18} />
           </button>
         </div>
         <p className="mt-4 text-sm font-semibold leading-6 text-[#7B554D]">{description}</p>
         <div className="mt-5 grid gap-2 sm:grid-cols-2">
-          <Button variant="secondary" className="min-h-11" onClick={onCancel}>
+          <Button variant="secondary" className="min-h-11" onClick={onCancel} disabled={loading}>
             Hủy
           </Button>
-          <Button variant={danger ? "danger" : "accent"} className="min-h-11" onClick={onConfirm}>
+          <Button variant={danger ? "danger" : "accent"} className="min-h-11" onClick={onConfirm} disabled={loading}>
+            {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
             {confirmLabel}
           </Button>
         </div>
@@ -1358,11 +1384,13 @@ function PaymentConfirmModal({
   onCancel,
   onPay,
   onPayAndPrint,
+  loading = false,
 }: {
   booking: BookingItem | null;
   onCancel: () => void;
   onPay: () => void;
   onPayAndPrint: () => void;
+  loading?: boolean;
 }) {
   if (!booking) return null;
   return (
@@ -1373,7 +1401,7 @@ function PaymentConfirmModal({
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Thanh toán</p>
             <h3 className="mt-1 text-2xl font-black text-[#5B342C]">Bạn có chắc muốn thanh toán?</h3>
           </div>
-          <button type="button" className="grid h-10 w-10 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C]" onClick={onCancel}>
+          <button type="button" className="grid h-10 w-10 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C]" onClick={onCancel} disabled={loading}>
             <X size={18} />
           </button>
         </div>
@@ -1392,14 +1420,15 @@ function PaymentConfirmModal({
           </div>
         </div>
         <div className="mt-5 grid gap-2 sm:grid-cols-3">
-          <Button variant="secondary" className="min-h-11" onClick={onCancel}>
+          <Button variant="secondary" className="min-h-11" onClick={onCancel} disabled={loading}>
             Hủy
           </Button>
-          <Button className="min-h-11" onClick={onPay}>
+          <Button className="min-h-11" onClick={onPay} disabled={loading}>
+            {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
             Thanh toán
           </Button>
-          <Button variant="accent" className="min-h-12 rounded-2xl bg-[#5B342C] text-white shadow-[0_16px_36px_rgba(91,52,44,0.22)] transition hover:-translate-y-0.5 hover:bg-[#3B221D]" onClick={onPayAndPrint}>
-            <Printer size={16} />
+          <Button variant="accent" className="min-h-12 rounded-2xl bg-[#5B342C] text-white shadow-[0_16px_36px_rgba(91,52,44,0.22)] transition hover:-translate-y-0.5 hover:bg-[#3B221D]" onClick={onPayAndPrint} disabled={loading}>
+            {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : <Printer size={16} />}
             Thanh toán + In
           </Button>
         </div>

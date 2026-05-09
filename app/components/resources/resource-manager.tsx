@@ -1390,7 +1390,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
 
           <section className="space-y-3">
             {resource === "bookings" ? <BookingCalendar bookings={rows} onMove={moveBooking} /> : null}
-            {initialLoading && visibleRows.length === 0 && resource !== "wallets" ? (
+            {initialLoading && visibleRows.length === 0 ? (
               <PageSpinner label={`Đang tải ${config.label}…`} />
             ) : visibleRows.length === 0 && resource !== "wallets" ? (
               <Card className="rounded-[2rem] border-[#F4C7C4] bg-white py-12 text-center">
