@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CalendarClock, CheckCircle2, Printer, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { CalendarClock, CheckCircle2, Loader2, Printer, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { DetailModal } from "@/app/components/ui/detail-modal";
 import { Card, CardTitle } from "@/app/components/ui/card";
@@ -270,6 +270,8 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const [paymentTarget, setPaymentTarget] = useState<BookingItem | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleteMode, setBulkDeleteMode] = useState<"selected" | "all" | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [longPressActivated, setLongPressActivated] = useState(false);
   const [editStudioPassword, setEditStudioPassword] = useState("");
   const [groupPackageIds, setGroupPackageIds] = useState<string[]>([]);
@@ -428,50 +430,60 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }, [focusedItemId, rows, setFocusedItemId]);
 
   async function save() {
-    const groupNames = parseGroupCustomers(form.groupCustomers);
-    const payloads = !editingId && form.bookingMode === "GROUP"
-      ? groupNames.map((name, index) => ({ ...form, packageId: groupPackageIds[index] || form.packageId, customerId: "", customerName: name, imageUrl: "", id: null }))
-      : [{ ...form, id: editingId, ...(editingId && role === "STAFF" ? { studioPassword: editStudioPassword } : {}) }];
+    setSaving(true);
+    try {
+      const groupNames = parseGroupCustomers(form.groupCustomers);
+      const payloads = !editingId && form.bookingMode === "GROUP"
+        ? groupNames.map((name, index) => ({ ...form, packageId: groupPackageIds[index] || form.packageId, customerId: "", customerName: name, imageUrl: "", id: null }))
+        : [{ ...form, id: editingId, ...(editingId && role === "STAFF" ? { studioPassword: editStudioPassword } : {}) }];
 
-    if (!editingId && form.bookingMode === "GROUP" && payloads.length === 0) {
-      return setMessage("Vui lòng nhập danh sách khách cho booking nhóm.");
-    }
-    if (!editingId && form.bookingMode === "GROUP" && payloads.some((payload) => !payload.packageId)) {
-      return setMessage("Vui lòng chọn gói cho từng khách trong booking nhóm.");
-    }
+      if (!editingId && form.bookingMode === "GROUP" && payloads.length === 0) {
+        return setMessage("Vui lòng nhập danh sách khách cho booking nhóm.");
+      }
+      if (!editingId && form.bookingMode === "GROUP" && payloads.some((payload) => !payload.packageId)) {
+        return setMessage("Vui lòng chọn gói cho từng khách trong booking nhóm.");
+      }
 
-    for (const payload of payloads) {
-      const result = await fetch("/api/bookings", {
-        method: editingId ? "PUT" : "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      }).then((res) => res.json() as Promise<ApiResult<BookingItem>>);
+      for (const payload of payloads) {
+        const result = await fetch("/api/bookings", {
+          method: editingId ? "PUT" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        }).then((res) => res.json() as Promise<ApiResult<BookingItem>>);
 
-      if (result.error) return setMessage(result.error.message);
+        if (result.error) return setMessage(result.error.message);
+      }
+      setForm(emptyForm);
+      setGroupPackageIds([]);
+      setEditingId(null);
+      setEditStudioPassword("");
+      setShowForm(false);
+      setMessage(editingId ? "Đã cập nhật booking." : form.bookingMode === "GROUP" ? `Đã tạo ${payloads.length} booking nhóm.` : "Đã tạo booking.");
+      await loadData();
+    } finally {
+      setSaving(false);
     }
-    setForm(emptyForm);
-    setGroupPackageIds([]);
-    setEditingId(null);
-    setEditStudioPassword("");
-    setShowForm(false);
-    setMessage(editingId ? "Đã cập nhật booking." : form.bookingMode === "GROUP" ? `Đã tạo ${payloads.length} booking nhóm.` : "Đã tạo booking.");
-    await loadData();
   }
 
   async function remove(row: BookingItem, mode: "trash" | "hard") {
-    const result = await fetch("/api/bookings", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: row.id, mode }),
-    }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
+    setDeleting(true);
+    try {
+      const result = await fetch("/api/bookings", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: row.id, mode }),
+      }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
 
-    if (result.error) return setMessage(result.error.message);
-    setMessage(mode === "hard" ? "Đã xóa booking." : "Đã chuyển booking vào thùng rác.");
-    setDetail(null);
-    setDeleteTarget(null);
-    setSelectedIds((current) => current.filter((id) => id !== row.id));
-    setSelectedGroupKeys((current) => current.filter((key) => !displayGroups.some((group) => group.key === key && group.rows.some((item) => item.id === row.id))));
-    await loadData();
+      if (result.error) return setMessage(result.error.message);
+      setMessage(mode === "hard" ? "Đã xóa booking." : "Đã chuyển booking vào thùng rác.");
+      setDetail(null);
+      setDeleteTarget(null);
+      setSelectedIds((current) => current.filter((id) => id !== row.id));
+      setSelectedGroupKeys((current) => current.filter((key) => !displayGroups.some((group) => group.key === key && group.rows.some((item) => item.id === row.id))));
+      await loadData();
+    } finally {
+      setDeleting(false);
+    }
   }
 
   async function removeMany(mode: "trash" | "hard") {
@@ -1116,8 +1128,8 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                   Hủy sửa
                 </Button>
               ) : null}
-              <Button className={`min-h-11 ${!editingId ? 'col-span-2' : ''}`} onClick={save}>
-                {editingId ? "Cập nhật" : "Lưu booking"}
+              <Button className={`min-h-11 ${!editingId ? 'col-span-2' : ''}`} onClick={save} disabled={saving}>
+                {saving ? <><Loader2 size={16} className="animate-spin mr-2" />{editingId ? "Đang cập nhật..." : "Đang lưu..."}</> : editingId ? "Cập nhật" : "Lưu booking"}
               </Button>
             </div>
             {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
@@ -1164,14 +1176,16 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         description={`Bạn có chắc chắn muốn xóa booking "${deleteTarget?.customerName ?? ""}"?`}
         onHardDelete={() => deleteTarget ? void remove(deleteTarget, "hard") : undefined}
         onMoveToTrash={() => deleteTarget ? void remove(deleteTarget, "trash") : undefined}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={() => deleting ? undefined : setDeleteTarget(null)}
+        loading={deleting}
       />
       <DeleteConfirmation
         open={Boolean(bulkDeleteMode)}
         description={bulkDeleteMode === "all" ? `Bạn có chắc chắn muốn xóa tất cả ${filteredRows.length} booking đang hiển thị?` : `Bạn có chắc chắn muốn xóa ${selectedDeleteCount} booking đã chọn?`}
         onHardDelete={() => void removeMany("hard")}
         onMoveToTrash={() => void removeMany("trash")}
-        onCancel={() => setBulkDeleteMode(null)}
+        onCancel={() => deleting ? undefined : setBulkDeleteMode(null)}
+        loading={deleting}
       />
     </div>
   );

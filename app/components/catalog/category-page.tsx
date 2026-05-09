@@ -23,6 +23,7 @@ export function CategoryPage() {
   const [detail, setDetail] = useState<CategoryItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<CategoryItem | null>(null);
   const [bulkDeleteMode, setBulkDeleteMode] = useState<"selected" | "all" | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [message, setMessage] = useState("");
@@ -87,37 +88,47 @@ export function CategoryPage() {
   }
 
   async function remove(row: CategoryItem, mode: "trash" | "hard") {
-    const result = await fetch("/api/categories", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: row.id, mode }),
-    }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
-    if (result.error) return setMessage(result.error.message);
-    setMessage(mode === "hard" ? "Đã xóa danh mục." : "Đã chuyển danh mục vào thùng rác.");
-    setDetail(null);
-    setDeleteTarget(null);
-    setSelectedIds((current) => current.filter((id) => id !== row.id));
-    void loadRows();
-  }
-
-  async function removeMany(mode: "trash" | "hard") {
-    const source = bulkDeleteMode === "all" ? filteredRows : filteredRows.filter((row) => selectedIds.includes(row.id));
-    for (const row of source) {
+    setDeleting(true);
+    try {
       const result = await fetch("/api/categories", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: row.id, mode }),
       }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
-      if (result.error) {
-        setMessage(result.error.message);
-        setBulkDeleteMode(null);
-        return;
-      }
+      if (result.error) return setMessage(result.error.message);
+      setMessage(mode === "hard" ? "Đã xóa danh mục." : "Đã chuyển danh mục vào thùng rác.");
+      setDetail(null);
+      setDeleteTarget(null);
+      setSelectedIds((current) => current.filter((id) => id !== row.id));
+      void loadRows();
+    } finally {
+      setDeleting(false);
     }
-    setMessage(mode === "hard" ? `Đã xóa ${source.length} danh mục.` : `Đã chuyển ${source.length} danh mục vào thùng rác.`);
-    setSelectedIds([]);
-    setBulkDeleteMode(null);
-    void loadRows();
+  }
+
+  async function removeMany(mode: "trash" | "hard") {
+    setDeleting(true);
+    try {
+      const source = bulkDeleteMode === "all" ? filteredRows : filteredRows.filter((row) => selectedIds.includes(row.id));
+      for (const row of source) {
+        const result = await fetch("/api/categories", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: row.id, mode }),
+        }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
+        if (result.error) {
+          setMessage(result.error.message);
+          setBulkDeleteMode(null);
+          return;
+        }
+      }
+      setMessage(mode === "hard" ? `Đã xóa ${source.length} danh mục.` : `Đã chuyển ${source.length} danh mục vào thùng rác.`);
+      setSelectedIds([]);
+      setBulkDeleteMode(null);
+      void loadRows();
+    } finally {
+      setDeleting(false);
+    }
   }
 
   function startCreate() {
@@ -406,14 +417,16 @@ export function CategoryPage() {
         description={`Bạn có chắc chắn muốn xóa danh mục "${deleteTarget?.name ?? ""}"?`}
         onHardDelete={() => deleteTarget ? void remove(deleteTarget, "hard") : undefined}
         onMoveToTrash={() => deleteTarget ? void remove(deleteTarget, "trash") : undefined}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={() => deleting ? undefined : setDeleteTarget(null)}
+        loading={deleting}
       />
       <DeleteConfirmation
         open={Boolean(bulkDeleteMode)}
         description={bulkDeleteMode === "all" ? `Bạn có chắc chắn muốn xóa tất cả ${filteredRows.length} danh mục đang hiển thị?` : `Bạn có chắc chắn muốn xóa ${selectedIds.length} danh mục đã chọn?`}
         onHardDelete={() => void removeMany("hard")}
         onMoveToTrash={() => void removeMany("trash")}
-        onCancel={() => setBulkDeleteMode(null)}
+        onCancel={() => deleting ? undefined : setBulkDeleteMode(null)}
+        loading={deleting}
       />
     </div>
   );

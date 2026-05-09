@@ -82,6 +82,7 @@ export function PackagePage() {
   const [deleteTarget, setDeleteTarget] = useState<PackageItem | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleteMode, setBulkDeleteMode] = useState<"selected" | "all" | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const [longPressActivated, setLongPressActivated] = useState(false);
   const [editStudioPassword, setEditStudioPassword] = useState("");
   const formRef = useRef<HTMLDivElement>(null);
@@ -199,39 +200,49 @@ export function PackagePage() {
   }
 
   async function remove(row: PackageItem, mode: "trash" | "hard") {
-    const result = await fetch("/api/packages", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: row.id, mode }),
-    }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
-
-    if (result.error) return setMessage(result.error.message);
-
-    setMessage(mode === "hard" ? "Đã xóa gói." : "Đã chuyển gói vào thùng rác.");
-    setDetail(null);
-    setDeleteTarget(null);
-    setSelectedIds((current) => current.filter((id) => id !== row.id));
-    void loadData();
-  }
-
-  async function removeMany(mode: "trash" | "hard") {
-    const source = bulkDeleteMode === "all" ? filteredRows : filteredRows.filter((row) => selectedIds.includes(row.id));
-    for (const row of source) {
+    setDeleting(true);
+    try {
       const result = await fetch("/api/packages", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ id: row.id, mode }),
       }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
-      if (result.error) {
-        setMessage(result.error.message);
-        setBulkDeleteMode(null);
-        return;
-      }
+
+      if (result.error) return setMessage(result.error.message);
+
+      setMessage(mode === "hard" ? "Đã xóa gói." : "Đã chuyển gói vào thùng rác.");
+      setDetail(null);
+      setDeleteTarget(null);
+      setSelectedIds((current) => current.filter((id) => id !== row.id));
+      void loadData();
+    } finally {
+      setDeleting(false);
     }
-    setMessage(mode === "hard" ? `Đã xóa ${source.length} gói.` : `Đã chuyển ${source.length} gói vào thùng rác.`);
-    setSelectedIds([]);
-    setBulkDeleteMode(null);
-    void loadData();
+  }
+
+  async function removeMany(mode: "trash" | "hard") {
+    setDeleting(true);
+    try {
+      const source = bulkDeleteMode === "all" ? filteredRows : filteredRows.filter((row) => selectedIds.includes(row.id));
+      for (const row of source) {
+        const result = await fetch("/api/packages", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: row.id, mode }),
+        }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
+        if (result.error) {
+          setMessage(result.error.message);
+          setBulkDeleteMode(null);
+          return;
+        }
+      }
+      setMessage(mode === "hard" ? `Đã xóa ${source.length} gói.` : `Đã chuyển ${source.length} gói vào thùng rác.`);
+      setSelectedIds([]);
+      setBulkDeleteMode(null);
+      void loadData();
+    } finally {
+      setDeleting(false);
+    }
   }
 
   function edit(row: PackageItem) {
@@ -438,14 +449,16 @@ export function PackagePage() {
         description={`Bạn có chắc chắn muốn xóa gói "${deleteTarget?.name ?? ""}"?`}
         onHardDelete={() => deleteTarget ? void remove(deleteTarget, "hard") : undefined}
         onMoveToTrash={() => deleteTarget ? void remove(deleteTarget, "trash") : undefined}
-        onCancel={() => setDeleteTarget(null)}
+        onCancel={() => deleting ? undefined : setDeleteTarget(null)}
+        loading={deleting}
       />
       <DeleteConfirmation
         open={Boolean(bulkDeleteMode)}
         description={bulkDeleteMode === "all" ? `Bạn có chắc chắn muốn xóa tất cả ${filteredRows.length} gói đang hiển thị?` : `Bạn có chắc chắn muốn xóa ${selectedIds.length} gói đã chọn?`}
         onHardDelete={() => void removeMany("hard")}
         onMoveToTrash={() => void removeMany("trash")}
-        onCancel={() => setBulkDeleteMode(null)}
+        onCancel={() => deleting ? undefined : setBulkDeleteMode(null)}
+        loading={deleting}
       />
 
       <ImagePreview

@@ -1,6 +1,6 @@
 "use client";
 
-import { Trash2, X } from "lucide-react";
+import { Loader2, Trash2, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardTitle } from "@/app/components/ui/card";
 
@@ -13,6 +13,8 @@ type DeleteConfirmationProps = {
   onCancel: () => void;
   hardLabel?: string;
   trashLabel?: string;
+  /** When true, show loading spinner and disable buttons */
+  loading?: boolean;
 };
 
 export function DeleteConfirmation({
@@ -24,11 +26,12 @@ export function DeleteConfirmation({
   onCancel,
   hardLabel = "Xóa",
   trashLabel = "Chuyển vào thùng rác",
+  loading = false,
 }: DeleteConfirmationProps) {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={onCancel}>
+    <div className="fixed inset-0 z-[80] grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={loading ? undefined : onCancel}>
       <Card
         className="w-full max-w-md rounded-[2rem] border-[#F4C7C4] bg-white shadow-[0_24px_80px_rgba(91,52,44,0.28)]"
         onClick={(event) => event.stopPropagation()}
@@ -42,8 +45,9 @@ export function DeleteConfirmation({
           </div>
           <button
             type="button"
-            className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C] shadow-sm transition hover:bg-[#FFF3EC]"
+            className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C] shadow-sm transition hover:bg-[#FFF3EC] disabled:opacity-50"
             onClick={onCancel}
+            disabled={loading}
             aria-label="Không xóa"
           >
             <X size={18} />
@@ -51,15 +55,15 @@ export function DeleteConfirmation({
         </div>
 
         <div className="mt-6 grid gap-3">
-          <Button type="button" variant="danger" className="min-h-12 justify-center" onClick={onHardDelete}>
-            <Trash2 size={17} />
-            {hardLabel}
+          <Button type="button" variant="danger" className="min-h-12 justify-center" onClick={onHardDelete} disabled={loading}>
+            {loading ? <Loader2 size={17} className="animate-spin" /> : <Trash2 size={17} />}
+            {loading ? "Đang xóa..." : hardLabel}
           </Button>
-          <Button type="button" variant="secondary" className="min-h-12 justify-center" onClick={onMoveToTrash}>
-            <Trash2 size={17} />
-            {trashLabel}
+          <Button type="button" variant="secondary" className="min-h-12 justify-center" onClick={onMoveToTrash} disabled={loading}>
+            {loading ? <Loader2 size={17} className="animate-spin" /> : <Trash2 size={17} />}
+            {loading ? "Đang chuyển..." : trashLabel}
           </Button>
-          <Button type="button" variant="ghost" className="min-h-12 justify-center" onClick={onCancel}>
+          <Button type="button" variant="ghost" className="min-h-12 justify-center" onClick={onCancel} disabled={loading}>
             Không xóa
           </Button>
         </div>
