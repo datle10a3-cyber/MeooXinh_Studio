@@ -1215,15 +1215,14 @@ function BookingDetailModal({
   }, [booking.id]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#2F1E1A]/75 backdrop-blur-sm touch-none">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-[#2F1E1A]/75 backdrop-blur-sm touch-none">
       <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className="flex min-h-full justify-start p-3 sm:items-center sm:justify-center sm:p-4">
           <div
             className="w-full max-w-2xl rounded-[2rem] border border-[#F4C7C4] bg-white shadow-[0_24px_80px_rgba(91,52,44,0.28)]"
             onClick={(event) => event.stopPropagation()}
           >
-            {/* Sticky header */}
-            <div className="sticky top-0 z-30 flex items-start justify-between gap-3 rounded-t-[2rem] border-b border-[#F4C7C4] bg-white/95 px-4 py-3 backdrop-blur sm:px-5">
+            <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5">
               <div className="flex min-w-0 items-start gap-3">
                 <CustomerAvatar booking={booking} large />
                 <div className="min-w-0">

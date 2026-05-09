@@ -613,15 +613,14 @@ function PackageDetailModal({
   }, [row.id]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-[#2F1E1A]/75 backdrop-blur-md touch-none">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-[#2F1E1A]/75 backdrop-blur-md touch-none">
       <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className="flex min-h-full justify-start p-1.5 sm:items-center sm:justify-center sm:p-4">
           <div
             className="w-full max-w-6xl overflow-hidden rounded-[1.5rem] border border-[#F4C7C4] bg-[#FFFDFC] shadow-[0_28px_90px_rgba(91,52,44,0.34)] sm:rounded-[2rem]"
             onClick={(event) => event.stopPropagation()}
           >
-            {/* Sticky header */}
-            <div className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-[#F4C7C4] bg-white/95 px-3 py-2.5 backdrop-blur sm:gap-3 sm:px-6 sm:py-3">
+            <div className="flex items-center justify-between gap-2 border-b border-[#F4C7C4] bg-white px-3 py-2.5 sm:gap-3 sm:px-6 sm:py-3">
               <div className="min-w-0">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-[#EA7188]">Chi tiết gói</p>
                 <h2 className="whitespace-normal break-words text-lg font-black leading-6 text-[#5B342C] sm:text-2xl">{row.name}</h2>
