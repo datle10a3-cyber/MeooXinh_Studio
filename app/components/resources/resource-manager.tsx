@@ -1547,24 +1547,8 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
           </div>
         ) : null}
       </div>
-            visibleRows={visibleRows}
-            config={config}
-            session={session}
-            selectedIds={selectedIds}
-            setSelectedIds={setSelectedIds}
-            focusedItemId={focusedItemId}
-            longPressActivated={longPressActivated}
-            setLongPressActivated={setLongPressActivated}
-            setDetailRow={setDetailRow}
-            startRowLongPress={startRowLongPress}
-            clearLongPress={clearLongPress}
-            edit={edit}
-            setDeleteTarget={setDeleteTarget}
-            openRowGallery={openRowGallery}
-          />
-        )}
 
-      </section>
+
 
       {hasMoreRows ? (
         <div className="flex justify-center">
