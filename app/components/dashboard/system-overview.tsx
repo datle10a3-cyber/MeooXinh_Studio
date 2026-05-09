@@ -27,6 +27,7 @@ import { Button } from "@/app/components/ui/button";
 import { DetailModal } from "@/app/components/ui/detail-modal";
 import { Card, CardTitle } from "@/app/components/ui/card";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
+import { AlertModal } from "@/app/components/ui/alert-modal";
 
 type ImportSectionKey =
   | "categories"
@@ -337,13 +338,7 @@ function RestoreBackupModal({ open, onClose }: { open: boolean; onClose: () => v
             </div>
           ) : null}
 
-          {message ? (
-            <div className={`rounded-2xl border p-4 text-sm font-bold ${success ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-[#F4C7C4] bg-[#FFF0F4] text-[#A84E61]"}`}>
-              {success ? <CheckCircle2 className="mr-2 inline" size={17} /> : null}
-              {message}
-              {success ? <span className="ml-1">Tổng cộng {success.total} mục.</span> : null}
-            </div>
-          ) : null}
+          <AlertModal isOpen={!!message} message={success ? `${message} (Tổng cộng ${success.total} mục)` : message} onClose={() => setMessage("")} />
       </div>
     </DetailModal>
   );

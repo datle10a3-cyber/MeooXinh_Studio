@@ -30,6 +30,7 @@ import { DateTimeInput, Input, Textarea } from "@/app/components/ui/input";
 const MediaGalleryPicker = dynamic(() => import("@/app/components/media/media-picker").then((m) => m.MediaGalleryPicker), { ssr: false });
 const MediaPicker = dynamic(() => import("@/app/components/media/media-picker").then((m) => m.MediaPicker), { ssr: false });
 import { ImagePreview } from "@/app/components/media/image-preview";
+import { AlertModal } from "@/app/components/ui/alert-modal";
 const BookingCalendar = dynamic(() => import("@/app/components/bookings/booking-calendar").then((m) => m.BookingCalendar), { ssr: false });
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 import { PageSpinner } from "@/app/components/ui/skeleton";
@@ -1155,7 +1156,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
           description="Chọn loại giao dịch cần xem để danh sách gọn hơn, dễ kiểm tra hơn trên điện thoại."
         />
 
-        {message ? <p className="rounded-2xl border border-[#F7C4CA] bg-[#FFF0F4] px-4 py-3 text-sm font-semibold text-[#A84E61]">{message}</p> : null}
+        <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
         <div className="grid grid-cols-2 gap-2 sm:gap-4">
           <button
@@ -1280,7 +1281,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
         </div>
       </section>
 
-      {message ? <p className="rounded-2xl border border-[#F7C4CA] bg-[#FFF0F4] px-4 py-3 text-sm font-semibold text-[#A84E61]">{message}</p> : null}
+      <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
       <div className="flex items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-4 py-3 shadow-sm">
         <Search size={18} className="shrink-0 text-[#EA7188]" />

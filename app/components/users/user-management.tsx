@@ -11,6 +11,7 @@ import { Input, Textarea } from "@/app/components/ui/input";
 import { MediaGalleryPicker } from "@/app/components/media/media-picker";
 import { ImagePreview } from "@/app/components/media/image-preview";
 import { formatMoney } from "@/app/utils/format";
+import { AlertModal } from "@/app/components/ui/alert-modal";
 
 type StaffRow = {
   id: string;
@@ -232,7 +233,7 @@ export function UserManagement() {
         </div>
       </section>
 
-      {message ? <p className="rounded-xl border border-[#F4C7C4] bg-white px-4 py-3 text-sm text-[#5B342C]">{message}</p> : null}
+      <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
       {false && !showForm ? (
         <div className="flex justify-end">

@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Eye, EyeOff, KeyRound, Loader2, Send } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
+import { AlertModal } from "@/app/components/ui/alert-modal";
 
 export default function ForgotPasswordPage() {
   const [form, setForm] = useState({ email: "", otp: "", password: "", confirmPassword: "" });
@@ -82,7 +83,7 @@ export default function ForgotPasswordPage() {
             <PasswordBox label="Nhập lại mật khẩu mới" value={form.confirmPassword} visible={showConfirmPassword} onToggle={() => setShowConfirmPassword((value) => !value)} onChange={(value) => setForm({ ...form, confirmPassword: value })} />
           </div>
 
-          {message ? <p className={`mt-4 rounded-2xl px-4 py-3 text-sm font-bold ${successTone ? "bg-[#FFF3EC] text-[#A84E61]" : "bg-rose-50 text-rose-700"}`}>{message}</p> : null}
+          <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
           <Button className="mt-6 h-12 w-full rounded-2xl bg-[#EA7188] text-white hover:bg-[#DA5E79]" type="submit" disabled={saving}>
             {saving ? <Loader2 className="animate-spin" size={17} /> : <KeyRound size={17} />}

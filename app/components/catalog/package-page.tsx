@@ -28,6 +28,7 @@ import { ImagePreview } from "@/app/components/media/image-preview";
 import type { ApiResult, CategoryItem, PackageItem } from "@/app/components/catalog/types";
 import { formatMoney } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
+import { AlertModal } from "@/app/components/ui/alert-modal";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 
 const emptyForm = {
@@ -338,11 +339,7 @@ export function PackagePage() {
         </div>
       </section>
 
-      {message ? (
-        <p className="rounded-2xl border border-[#F4C7C4] bg-white px-4 py-3 text-sm font-bold text-[#5B342C]">
-          {message}
-        </p>
-      ) : null}
+      <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
       <div className="flex items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-4 py-3 shadow-sm">
         <Search size={18} className="shrink-0 text-[#EA7188]" />

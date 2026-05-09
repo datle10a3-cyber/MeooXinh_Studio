@@ -32,6 +32,7 @@ import { Button } from "@/app/components/ui/button";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { cn } from "@/app/utils/cn";
+import { AlertModal } from "@/app/components/ui/alert-modal";
 
 type ProfileSummary = {
   user: CurrentSession["user"];
@@ -569,7 +570,7 @@ export function ProfilePage() {
         </div>
       </section>
 
-      {message ? <div className="rounded-2xl border border-[#F4C7C4] bg-white px-4 py-3 text-sm font-bold text-[#5B342C] shadow-sm">{message}</div> : null}
+      <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
       <div className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr] xl:gap-5">
         <div className="contents xl:block xl:space-y-5">

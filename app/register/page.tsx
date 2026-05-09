@@ -7,6 +7,7 @@ import { Building2, Camera, Eye, EyeOff, Heart, Loader2, MailCheck, PawPrint, Sp
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME } from "@/app/components/brand/studio-brand";
+import { AlertModal } from "@/app/components/ui/alert-modal";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -124,7 +125,7 @@ export default function RegisterPage() {
             </label>
           </div>
 
-          {message ? <p className="mt-4 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{message}</p> : null}
+          <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
           <Button className="mt-6 h-12 w-full rounded-2xl bg-[#EA7188] text-white hover:bg-[#DA5E79]" type="submit" disabled={loading}>
             {loading ? <Loader2 className="animate-spin" size={17} /> : <Building2 size={17} />}

@@ -13,6 +13,7 @@ import type { ApiResult, CategoryItem } from "@/app/components/catalog/types";
 import { formatDate } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
 import { PageSpinner } from "@/app/components/ui/skeleton";
+import { AlertModal } from "@/app/components/ui/alert-modal";
 
 const emptyForm = { name: "", description: "" };
 
@@ -241,7 +242,7 @@ export function CategoryPage() {
         </Button>
       </section>
 
-      {message ? <p className="whitespace-normal break-words rounded-2xl border border-[#F4C7C4] bg-white px-4 py-3 text-sm font-bold text-[#5B342C]">{message}</p> : null}
+      <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
       <div className="flex items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-4 py-3 shadow-sm">
         <Search size={18} className="shrink-0 text-[#EA7188]" />
