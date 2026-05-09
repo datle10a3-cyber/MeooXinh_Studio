@@ -1705,10 +1705,10 @@ function ResourceDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col bg-slate-950/45 backdrop-blur-sm">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto">
-        <div className="flex min-h-full justify-start p-3 pb-[max(env(safe-area-inset-bottom),64rem)] sm:p-4 sm:pb-4">
-          <Card className="w-full max-w-4xl rounded-[1.75rem] border-[#F4C7C4] bg-white p-4 pb-32 shadow-2xl sm:rounded-[2rem] sm:p-6 sm:pb-6">
+    <div className="fixed inset-0 z-[9999] flex flex-col bg-slate-950/45 backdrop-blur-sm touch-none">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div className="flex min-h-full justify-start p-3 sm:items-center sm:justify-center sm:p-4">
+          <Card className="w-full max-w-4xl rounded-[1.75rem] border-[#F4C7C4] bg-white p-4 shadow-2xl sm:rounded-[2rem] sm:p-6">
         <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết</p>
@@ -1778,8 +1778,8 @@ function ResourceDetailModal({
             </Button>
           ) : null}
         </div>
-        {/* Spacer để đảm bảo nút không bị che bởi mobile navigation bar */}
-        <div className="h-32 sm:hidden" />
+        {/* Safe area spacer for mobile */}
+        <div className="h-20 sm:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} />
       </Card>
       </div>
     </div>

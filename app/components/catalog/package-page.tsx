@@ -590,125 +590,150 @@ function PackageDetailModal({
   onRemove?: () => void;
   onOpenGallery: (row: PackageItem, index: number) => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
   const thumbs = gallery(row.galleryUrls);
   const includes = listText(row.includes);
   const deliverables = listText(row.deliverables);
 
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+    };
+  }, []);
+
+  useEffect(() => {
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
+  }, [row.id]);
+
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center overflow-y-auto overscroll-contain bg-[#2F1E1A]/75 p-1.5 backdrop-blur-md sm:p-4" onClick={onClose}>
-      <div
-        className="max-h-[95vh] w-[calc(100vw-0.75rem)] max-w-6xl overflow-hidden rounded-[1.5rem] border border-[#F4C7C4] bg-[#FFFDFC] shadow-[0_28px_90px_rgba(91,52,44,0.34)] sm:w-[calc(100vw-2rem)] sm:rounded-[2rem]"
-        onClick={(event) => event.stopPropagation()}
-      >
-        <div className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-[#F4C7C4] bg-white/95 px-3 py-2.5 backdrop-blur sm:gap-3 sm:px-6 sm:py-3">
-          <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-[#EA7188]">Chi tiết gói</p>
-            <h2 className="whitespace-normal break-words text-lg font-black leading-6 text-[#5B342C] sm:text-2xl">{row.name}</h2>
-          </div>
-          <div className="relative z-40 flex shrink-0 gap-1.5 sm:gap-2">
-            <Button variant="secondary" size="icon" className="h-12 w-12 touch-manipulation rounded-2xl sm:h-11 sm:w-11" aria-label="Sửa gói" onClick={(event) => { event.stopPropagation(); onEdit(); }}>
-              <Pencil size={16} />
-            </Button>
-            {onRemove ? (
-              <Button variant="danger" size="icon" className="h-12 w-12 touch-manipulation rounded-2xl sm:h-11 sm:w-11" aria-label="Xóa gói" onClick={(event) => { event.stopPropagation(); onRemove(); }}>
-                <Trash2 size={16} />
-              </Button>
-            ) : null}
-            <Button variant="secondary" size="icon" className="h-12 w-12 touch-manipulation rounded-2xl sm:h-11 sm:w-11" aria-label="Đóng chi tiết gói" onClick={(event) => { event.stopPropagation(); onClose(); }}>
-              <X size={18} />
-            </Button>
-          </div>
-        </div>
-
-        <div className="grid max-h-[calc(95vh-62px)] overflow-y-auto lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)]">
-          <div className="min-w-0 bg-[radial-gradient(circle_at_top_left,#FFE3EA_0,#FFF8F1_32%,#FFFFFF_72%)] p-3 sm:p-6">
-            <div className="rounded-[1.5rem] border border-white bg-white/80 p-2 shadow-[0_18px_45px_rgba(91,52,44,0.12)] sm:rounded-[2rem] sm:p-3">
-              <button
-                type="button"
-                className="grid w-full max-w-full place-items-center rounded-[1.25rem] bg-white p-2 sm:rounded-[1.5rem] sm:p-3"
-                onClick={() => onOpenGallery(row, 0)}
-              >
-                {row.imageUrl ? (
-                  <img src={row.imageUrl} alt={row.name} className="block h-auto max-h-[46vh] w-auto max-w-full rounded-[1rem] object-contain sm:max-h-[58vh]" />
-                ) : (
-                  <ImageIcon size={42} className="text-[#EA7188]" />
-                )}
-              </button>
+    <div className="fixed inset-0 z-50 flex flex-col bg-[#2F1E1A]/75 backdrop-blur-md touch-none">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div className="flex min-h-full justify-start p-1.5 sm:items-center sm:justify-center sm:p-4">
+          <div
+            className="w-full max-w-6xl overflow-hidden rounded-[1.5rem] border border-[#F4C7C4] bg-[#FFFDFC] shadow-[0_28px_90px_rgba(91,52,44,0.34)] sm:rounded-[2rem]"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {/* Sticky header */}
+            <div className="sticky top-0 z-30 flex items-center justify-between gap-2 border-b border-[#F4C7C4] bg-white/95 px-3 py-2.5 backdrop-blur sm:gap-3 sm:px-6 sm:py-3">
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#EA7188]">Chi tiết gói</p>
+                <h2 className="whitespace-normal break-words text-lg font-black leading-6 text-[#5B342C] sm:text-2xl">{row.name}</h2>
+              </div>
+              <div className="relative z-40 flex shrink-0 gap-1.5 sm:gap-2">
+                <Button variant="secondary" size="icon" className="h-12 w-12 touch-manipulation rounded-2xl sm:h-11 sm:w-11" aria-label="Sửa gói" onClick={(event) => { event.stopPropagation(); onEdit(); }}>
+                  <Pencil size={16} />
+                </Button>
+                {onRemove ? (
+                  <Button variant="danger" size="icon" className="h-12 w-12 touch-manipulation rounded-2xl sm:h-11 sm:w-11" aria-label="Xóa gói" onClick={(event) => { event.stopPropagation(); onRemove(); }}>
+                    <Trash2 size={16} />
+                  </Button>
+                ) : null}
+                <Button variant="secondary" size="icon" className="h-12 w-12 touch-manipulation rounded-2xl sm:h-11 sm:w-11" aria-label="Đóng chi tiết gói" onClick={(event) => { event.stopPropagation(); onClose(); }}>
+                  <X size={18} />
+                </Button>
+              </div>
             </div>
 
-            {thumbs.length ? (
-              <div className="mt-4 rounded-[1.75rem] border border-white bg-white/85 p-3 shadow-sm">
-                <div className="mb-3 flex items-center justify-between">
-                  <p className="text-xs font-black uppercase tracking-[0.12em] text-[#9B746B]">Bộ ảnh</p>
-                  <span className="rounded-full bg-[#FFF0F4] px-3 py-1 text-xs font-black text-[#EA7188]">
-                    {thumbs.length + (row.imageUrl ? 1 : 0)} ảnh
-                  </span>
+            {/* Content */}
+            <div className="grid lg:grid-cols-[minmax(0,1.05fr)_minmax(380px,0.95fr)]">
+              <div className="min-w-0 bg-[radial-gradient(circle_at_top_left,#FFE3EA_0,#FFF8F1_32%,#FFFFFF_72%)] p-3 sm:p-6">
+                <div className="rounded-[1.5rem] border border-white bg-white/80 p-2 shadow-[0_18px_45px_rgba(91,52,44,0.12)] sm:rounded-[2rem] sm:p-3">
+                  <button
+                    type="button"
+                    className="grid w-full max-w-full place-items-center rounded-[1.25rem] bg-white p-2 sm:rounded-[1.5rem] sm:p-3"
+                    onClick={() => onOpenGallery(row, 0)}
+                  >
+                    {row.imageUrl ? (
+                      <img src={row.imageUrl} alt={row.name} className="block h-auto max-h-[46vh] w-auto max-w-full rounded-[1rem] object-contain sm:max-h-[58vh]" />
+                    ) : (
+                      <ImageIcon size={42} className="text-[#EA7188]" />
+                    )}
+                  </button>
                 </div>
-                <div className="grid grid-cols-4 gap-2">
-                  {thumbs.map((url, index) => (
-                    <button
-                      key={`${url}-${index}`}
-                      type="button"
-                      onClick={() => onOpenGallery(row, index + (row.imageUrl ? 1 : 0))}
-                      className="group grid h-20 place-items-center overflow-hidden rounded-2xl border border-[#F4C7C4] bg-[#FFF8F1] p-1 transition hover:-translate-y-0.5 hover:border-[#EA7188] hover:bg-white hover:shadow-md sm:h-24"
-                    >
-                      <img src={url} alt="" className="block h-full w-full object-contain transition group-hover:scale-[1.03]" />
-                    </button>
-                  ))}
+
+                {thumbs.length ? (
+                  <div className="mt-4 rounded-[1.75rem] border border-white bg-white/85 p-3 shadow-sm">
+                    <div className="mb-3 flex items-center justify-between">
+                      <p className="text-xs font-black uppercase tracking-[0.12em] text-[#9B746B]">Bộ ảnh</p>
+                      <span className="rounded-full bg-[#FFF0F4] px-3 py-1 text-xs font-black text-[#EA7188]">
+                        {thumbs.length + (row.imageUrl ? 1 : 0)} ảnh
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
+                      {thumbs.map((url, index) => (
+                        <button
+                          key={`${url}-${index}`}
+                          type="button"
+                          onClick={() => onOpenGallery(row, index + (row.imageUrl ? 1 : 0))}
+                          className="group grid h-20 place-items-center overflow-hidden rounded-2xl border border-[#F4C7C4] bg-[#FFF8F1] p-1 transition hover:-translate-y-0.5 hover:border-[#EA7188] hover:bg-white hover:shadow-md sm:h-24"
+                        >
+                          <img src={url} alt="" className="block h-full w-full object-contain transition group-hover:scale-[1.03]" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+
+              <div className="min-w-0 space-y-3 p-3 sm:space-y-4 sm:p-6">
+                <div className="rounded-[1.5rem] border border-[#F4C7C4] bg-white p-4 shadow-[0_16px_45px_rgba(91,52,44,0.08)] sm:rounded-[2rem] sm:p-5">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="w-fit rounded-full bg-[#FFF0F4] px-3 py-1 text-xs font-black uppercase text-[#EA7188]">
+                      {row.category?.name ?? "Chưa có danh mục"}
+                    </p>
+                    <p className="w-fit rounded-full bg-[#FFF8F1] px-3 py-1 text-xs font-black text-[#9B746B]">
+                      Menu khách xem
+                    </p>
+                  </div>
+                  <h3 className="mt-3 text-2xl font-black leading-tight text-[#5B342C] sm:mt-4 sm:text-4xl">{row.name}</h3>
+                  <div className="mt-4 rounded-[1.5rem] bg-[#EA7188] p-4 text-white shadow-[0_16px_36px_rgba(234,113,136,0.28)]">
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-white/75">Giá gói</p>
+                    <p className="mt-1 break-words text-2xl font-black sm:text-4xl">{formatMoney(row.price)}</p>
+                  </div>
                 </div>
-              </div>
-            ) : null}
-          </div>
 
-          <div className="min-w-0 space-y-3 p-3 sm:space-y-4 sm:p-6">
-            <div className="rounded-[1.5rem] border border-[#F4C7C4] bg-white p-4 shadow-[0_16px_45px_rgba(91,52,44,0.08)] sm:rounded-[2rem] sm:p-5">
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="w-fit rounded-full bg-[#FFF0F4] px-3 py-1 text-xs font-black uppercase text-[#EA7188]">
-                  {row.category?.name ?? "Chưa có danh mục"}
-                </p>
-                <p className="w-fit rounded-full bg-[#FFF8F1] px-3 py-1 text-xs font-black text-[#9B746B]">
-                  Menu khách xem
-                </p>
-              </div>
-              <h3 className="mt-3 text-2xl font-black leading-tight text-[#5B342C] sm:mt-4 sm:text-4xl">{row.name}</h3>
-              <div className="mt-4 rounded-[1.5rem] bg-[#EA7188] p-4 text-white shadow-[0_16px_36px_rgba(234,113,136,0.28)]">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-white/75">Giá gói</p>
-                <p className="mt-1 break-words text-2xl font-black sm:text-4xl">{formatMoney(row.price)}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  <MenuMeta icon={Clock} label={row.duration || "Chưa nhập"} />
+                  <MenuMeta icon={Users} label={row.peopleCount || "Linh hoạt"} />
+                  <MenuMeta icon={Shirt} label={row.outfitCount || "Tùy chọn"} />
+                  <MenuMeta icon={MapPin} label={row.location || "Tại studio"} />
+                </div>
+
+                {row.description ? (
+                  <section className="rounded-[1.5rem] border border-[#F4C7C4] bg-white p-4 shadow-sm">
+                    <p className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-[#EA7188]">Mô tả</p>
+                    <p className="text-sm font-semibold leading-6 text-[#8C655E]">{row.description}</p>
+                  </section>
+                ) : null}
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {includes.length ? <MenuBlock icon={CheckCircle2} title="Bao gồm" items={includes} /> : null}
+                  {deliverables.length ? <MenuBlock icon={Gift} title="Khách nhận được" items={deliverables} /> : null}
+                </div>
+
+                {row.suitableFor ? (
+                  <div className="rounded-[1.5rem] border border-[#F4C7C4] bg-[#FFF8F1] p-4 text-sm font-semibold leading-6 text-[#5B342C]">
+                    <span className="font-black text-[#EA7188]">Phù hợp: </span>
+                    {row.suitableFor}
+                  </div>
+                ) : null}
+
+                {row.customerNote ? (
+                  <div className="rounded-[1.5rem] border border-[#F4C7C4] bg-white p-4 shadow-sm">
+                    <p className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-[#EA7188]">Lưu ý</p>
+                    <p className="text-sm font-semibold leading-6 text-[#9B746B]">{row.customerNote}</p>
+                  </div>
+                ) : null}
+
+                {/* Safe area spacer for mobile */}
+                <div className="h-20 sm:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} />
               </div>
             </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <MenuMeta icon={Clock} label={row.duration || "Chưa nhập"} />
-              <MenuMeta icon={Users} label={row.peopleCount || "Linh hoạt"} />
-              <MenuMeta icon={Shirt} label={row.outfitCount || "Tùy chọn"} />
-              <MenuMeta icon={MapPin} label={row.location || "Tại studio"} />
-            </div>
-
-            {row.description ? (
-              <section className="rounded-[1.5rem] border border-[#F4C7C4] bg-white p-4 shadow-sm">
-                <p className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-[#EA7188]">Mô tả</p>
-                <p className="text-sm font-semibold leading-6 text-[#8C655E]">{row.description}</p>
-              </section>
-            ) : null}
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              {includes.length ? <MenuBlock icon={CheckCircle2} title="Bao gồm" items={includes} /> : null}
-              {deliverables.length ? <MenuBlock icon={Gift} title="Khách nhận được" items={deliverables} /> : null}
-            </div>
-
-            {row.suitableFor ? (
-              <div className="rounded-[1.5rem] border border-[#F4C7C4] bg-[#FFF8F1] p-4 text-sm font-semibold leading-6 text-[#5B342C]">
-                <span className="font-black text-[#EA7188]">Phù hợp: </span>
-                {row.suitableFor}
-              </div>
-            ) : null}
-
-            {row.customerNote ? (
-              <div className="rounded-[1.5rem] border border-[#F4C7C4] bg-white p-4 shadow-sm">
-                <p className="mb-2 text-xs font-black uppercase tracking-[0.12em] text-[#EA7188]">Lưu ý</p>
-                <p className="text-sm font-semibold leading-6 text-[#9B746B]">{row.customerNote}</p>
-              </div>
-            ) : null}
           </div>
         </div>
       </div>
