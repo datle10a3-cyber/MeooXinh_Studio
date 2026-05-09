@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/app/utils/cn";
@@ -25,6 +26,12 @@ export function ImagePreview({
   const touchIntent = useRef<"horizontal" | "vertical" | null>(null);
   const touchMoved = useRef(false);
   const lastWheelAt = useRef(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const list = images?.length ? images : src ? [src] : [];
   const currentIndex = Math.min(Math.max(index, 0), Math.max(list.length - 1, 0));
   const currentSrc = list[currentIndex];
@@ -102,7 +109,9 @@ export function ImagePreview({
     onClose();
   }
 
-  return (
+  if (!mounted || !currentSrc) return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-[120] overflow-y-auto overscroll-contain bg-[#2B1C1A]/80 p-2 backdrop-blur-md sm:p-4"
       onClick={handleBackdropClick}
@@ -161,6 +170,7 @@ export function ImagePreview({
           </div>
         ) : null}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
