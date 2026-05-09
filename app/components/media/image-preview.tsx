@@ -32,6 +32,29 @@ export function ImagePreview({
     setMounted(true);
   }, []);
 
+  // Back gesture / browser back button history listener
+  useEffect(() => {
+    const previewId = Math.random().toString(36).substring(2, 9);
+    const stateKey = `preview-${previewId}`;
+    
+    window.history.pushState({ stateKey }, "");
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state?.stateKey !== stateKey) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (window.history.state?.stateKey === stateKey) {
+        window.history.back();
+      }
+    };
+  }, [onClose]);
+
   const list = images?.length ? images : src ? [src] : [];
   const currentIndex = Math.min(Math.max(index, 0), Math.max(list.length - 1, 0));
   const currentSrc = list[currentIndex];

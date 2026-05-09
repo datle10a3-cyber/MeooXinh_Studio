@@ -31,6 +31,29 @@ export function DetailModal({
   // Portal mount
   useEffect(() => setMounted(true), []);
 
+  // Back gesture / browser back button history listener
+  useEffect(() => {
+    const modalId = Math.random().toString(36).substring(2, 9);
+    const stateKey = `modal-${modalId}`;
+    
+    window.history.pushState({ stateKey }, "");
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (event.state?.stateKey !== stateKey) {
+        onClose();
+      }
+    };
+
+    window.addEventListener("popstate", handlePopState);
+
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+      if (window.history.state?.stateKey === stateKey) {
+        window.history.back();
+      }
+    };
+  }, [onClose]);
+
   // Body scroll lock with stack counting to prevent losing scroll position on multiple modals
   useEffect(() => {
     const html = document.documentElement;
