@@ -31,7 +31,7 @@ export function DeleteConfirmation({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={loading ? undefined : onCancel}>
+    <div className="fixed inset-0 z-[150] grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={loading ? undefined : onCancel}>
       <Card
         className="w-full max-w-md rounded-[2rem] border-[#F4C7C4] bg-white shadow-[0_24px_80px_rgba(91,52,44,0.28)]"
         onClick={(event) => event.stopPropagation()}
