@@ -1222,7 +1222,7 @@ function BookingDetailModal({
             className="w-full max-w-2xl rounded-[2rem] border border-[#F4C7C4] bg-white shadow-[0_24px_80px_rgba(91,52,44,0.28)]"
             onClick={(event) => event.stopPropagation()}
           >
-            <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5">
+            <div className="sticky top-0 z-30 flex items-start justify-between gap-3 rounded-t-[2rem] border-b border-[#F4C7C4] bg-white/95 px-4 py-3 backdrop-blur sm:px-5">
               <div className="flex min-w-0 items-start gap-3">
                 <CustomerAvatar booking={booking} large />
                 <div className="min-w-0">

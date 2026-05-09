@@ -447,7 +447,7 @@ function CategoryDetailModal({
       <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className="flex min-h-full justify-start p-3 sm:items-center sm:justify-center sm:p-4">
           <div className="w-full max-w-xl rounded-[2rem] border border-[#F4C7C4] bg-white shadow-[0_24px_80px_rgba(91,52,44,0.28)]" onClick={(event) => event.stopPropagation()}>
-            <div className="flex items-start justify-between gap-3 px-4 py-3 sm:px-5">
+            <div className="sticky top-0 z-30 flex items-start justify-between gap-3 rounded-t-[2rem] border-b border-[#F4C7C4] bg-white/95 px-4 py-3 backdrop-blur sm:px-5">
               <div className="flex min-w-0 items-center gap-3">
                 <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#FFF3EC] text-[#EA7188]">
                   <FolderOpen size={22} />

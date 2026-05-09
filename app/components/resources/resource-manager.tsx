@@ -1367,28 +1367,25 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
         <div ref={formRef} className="scroll-mt-20">
         <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm(config.fields)); setShowForm(false); }} />
         <Card className="studio-mobile-form-sheet rounded-[1.5rem] border-[#F4C7C4] bg-white shadow-[0_18px_50px_rgba(184,95,108,0.1)] sm:rounded-[2rem]">
-          <div className="mb-3 flex justify-end">
-            <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm(config.fields)); setShowForm(false); }}>
-              <X size={16} />
-            </Button>
-          </div>
-          <div className="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-            <div>
-              <CardTitle>{title}</CardTitle>
-              <p className="mt-1 text-sm font-semibold text-[#9B746B]">Form được chia theo nhóm để nhập nhanh, nhìn rõ và dễ kiểm tra.</p>
-            </div>
-            {editingId ? (
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  setEditingId(null);
-                  setForm(emptyForm(config.fields));
-                }}
-              >
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <CardTitle>{title}</CardTitle>
+            <div className="flex shrink-0 gap-2">
+              {editingId ? (
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => {
+                    setEditingId(null);
+                    setForm(emptyForm(config.fields));
+                  }}
+                >
+                  Hủy sửa
+                </Button>
+              ) : null}
+              <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm(config.fields)); setShowForm(false); }}>
                 <X size={16} />
-                Hủy sửa
               </Button>
-            ) : null}
+            </div>
           </div>
 
           {groupedFields.image.length ? (
@@ -1412,7 +1409,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
             </div>
           ) : null}
 
-          <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
             {groupedFields.main.filter((field) => !(resource === "transactions" && field.key === "type")).map((field) => (
               <label key={field.key}>
                 <span className="mb-2 block text-sm font-medium text-[#7B554D]">{field.label}</span>
