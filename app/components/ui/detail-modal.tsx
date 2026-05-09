@@ -21,19 +21,23 @@ interface DetailModalProps {
 /**
  * Unified detail modal used across the entire studio app.
  *
- * Layout:
- *   ┌─ fixed overlay (backdrop + scroll container) ─────┐
+ * Structure (single scrollable overlay):
+ *   ┌─ fixed overlay (backdrop + scroll) ────────────────┐
  *   │  ┌─ card ───────────────────────────────────────┐  │
- *   │  │  ┌─ sticky header (content + X) ──────────┐  │  │
- *   │  │  │  {header}                        [X]   │  │  │
- *   │  │  └────────────────────────────────────────┘  │  │
- *   │  │  ┌─ body (scrollable) ────────────────────┐  │  │
- *   │  │  │  {children}                             │  │  │
- *   │  │  │  {footer}                               │  │  │
- *   │  │  │  safe-area-spacer                       │  │  │
- *   │  │  └────────────────────────────────────────┘  │  │
+ *   │  │  sticky header  [title]              [X]     │  │
+ *   │  │  ─────────────────────────────────────────── │  │
+ *   │  │  body content                                │  │
+ *   │  │  footer (action buttons)                     │  │
+ *   │  │  bottom spacer                               │  │
  *   │  └──────────────────────────────────────────────┘  │
  *   └────────────────────────────────────────────────────┘
+ *
+ * Key design decisions:
+ * - ONE div is backdrop + scroll container (no separate layers)
+ * - Body scroll lock uses overflow:hidden only (no position:fixed on body)
+ * - overscroll-contain prevents scroll chaining on mobile
+ * - Large bottom spacer (h-28) to clear mobile nav bars
+ * - Sticky header for X button always accessible
  */
 export function DetailModal({
   onClose,
@@ -47,17 +51,14 @@ export function DetailModal({
 
   /* ── body scroll lock ── */
   useEffect(() => {
-    const scrollY = window.scrollY;
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
+    const html = document.documentElement;
+    // Prevent body scroll — simple overflow:hidden on <html>
+    // No position:fixed trick (causes scroll-to-top and conflicts with modal)
+    html.style.overflow = "hidden";
     document.body.classList.add("studio-modal-open");
     return () => {
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
+      html.style.overflow = "";
       document.body.classList.remove("studio-modal-open");
-      window.scrollTo(0, scrollY);
     };
   }, []);
 
@@ -67,50 +68,42 @@ export function DetailModal({
   }, [scrollKey]);
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col">
-      {/* Backdrop — click to close */}
-      <div
-        className="absolute inset-0 bg-[#2F1E1A]/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
+    <div
+      ref={scrollRef}
+      className="fixed inset-0 z-[100] overflow-y-auto overscroll-contain bg-[#2F1E1A]/60 backdrop-blur-sm"
+      style={{ WebkitOverflowScrolling: "touch" }}
+      onClick={onClose}
+    >
+      <div className="flex min-h-full items-start justify-center p-3 sm:items-center sm:p-4">
+        {/* Card */}
+        <div
+          className={`relative w-full ${maxWidth} rounded-[2rem] border border-[#F4C7C4] bg-white shadow-[0_24px_80px_rgba(91,52,44,0.28)]`}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* ── Sticky Header ── */}
+          <div className="sticky top-0 z-30 flex items-start justify-between gap-3 rounded-t-[2rem] border-b border-[#F4C7C4] bg-white/95 px-4 py-3 backdrop-blur sm:px-5">
+            <div className="min-w-0 flex-1">{header}</div>
+            <button
+              type="button"
+              className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C] shadow-sm"
+              onClick={onClose}
+              aria-label="Đóng"
+            >
+              <X size={18} />
+            </button>
+          </div>
 
-      {/* Scroll container — fills viewport, scroll happens here */}
-      <div
-        ref={scrollRef}
-        className="relative flex-1 overflow-y-auto overscroll-contain"
-        style={{ WebkitOverflowScrolling: "touch" }}
-      >
-        <div className="flex min-h-full items-start justify-center p-3 sm:items-center sm:p-4">
-          {/* Card */}
-          <div
-            className={`relative w-full ${maxWidth} rounded-[2rem] border border-[#F4C7C4] bg-white shadow-[0_24px_80px_rgba(91,52,44,0.28)]`}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* ── Sticky Header ── */}
-            <div className="sticky top-0 z-30 flex items-start justify-between gap-3 rounded-t-[2rem] border-b border-[#F4C7C4] bg-white/95 px-4 py-3 backdrop-blur sm:px-5">
-              <div className="min-w-0 flex-1">{header}</div>
-              <button
-                type="button"
-                className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C] shadow-sm"
-                onClick={onClose}
-                aria-label="Đóng"
-              >
-                <X size={18} />
-              </button>
-            </div>
+          {/* ── Body ── */}
+          <div className="p-4 sm:p-5">
+            {children}
 
-            {/* ── Body ── */}
-            <div className="p-4 sm:p-5">
-              {children}
+            {footer ? <div className="mt-5">{footer}</div> : null}
 
-              {footer ? <div className="mt-5">{footer}</div> : null}
-
-              {/* Safe area spacer for mobile nav / home indicator */}
-              <div
-                className="h-16 sm:hidden"
-                style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
-              />
-            </div>
+            {/* Bottom spacer — large enough to clear mobile nav bars + home indicator */}
+            <div
+              className="h-28 sm:h-6"
+              style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+            />
           </div>
         </div>
       </div>

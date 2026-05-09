@@ -1661,8 +1661,7 @@ function ResourceDetailModal({
   onDelete: (row: Row) => void;
   onOpenGallery: (row: Row, index: number) => void;
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  
+
   const printable = printableInvoiceData(row);
   const isFinancial = ["transactions", "invoices", "projects"].includes(resource);
   const isPlainTransaction = resource === "transactions" && !canPrintInvoice(row);
