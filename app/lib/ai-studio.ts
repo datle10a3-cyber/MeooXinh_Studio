@@ -342,6 +342,16 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
   const canViewFinance = canViewStudioFinance(user.role);
   const studioId = user.studioId;
 
+  const normalizedQuestion = normalizeText(question);
+  const wantsCustomer = includesAny(normalizedQuestion, ["khách", "khach", "sdt", "số điện thoại", "lien he", "contact", "nguyen", "tran", "le", "pham"]);
+  const wantsPackage = includesAny(normalizedQuestion, ["gói", "goi", "concept", "dịch vụ", "dich vu", "giá", "gia", "báo giá"]);
+  const wantsCategory = includesAny(normalizedQuestion, ["danh mục", "danh muc", "loại", "loai"]);
+  const wantsProject = includesAny(normalizedQuestion, ["dự án", "du an", "chưa giao", "chua giao", "deadline"]);
+  const wantsEmployee = includesAny(normalizedQuestion, ["nhân viên", "nhan vien", "nhân sự", "nhan su", "thợ", "tho", "lương", "luong", "ca"]);
+  const wantsEquipment = includesAny(normalizedQuestion, ["thiết bị", "thiet bi", "đồ", "do", "máy ảnh", "may anh", "đèn", "den", "lens", "phụ kiện", "phu kien"]);
+  const wantsAudit = includesAny(normalizedQuestion, ["lịch sử", "lich su", "hoạt động", "hoat dong", "ai đã", "ai da", "vừa xong"]);
+  const wantsHistory = includesAny(normalizedQuestion, ["trước", "truoc", "qua", "gần đây", "gan day", "tháng", "thang", "tuần", "tuan"]);
+
   const [
     studio,
     currentUser,
@@ -395,68 +405,69 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
       orderBy: { startAt: "asc" },
       take: 15,
     }),
-    prisma.booking.findMany({
+    wantsHistory ? prisma.booking.findMany({
       where: { studioId, deletedAt: null, status: "COMPLETED", startAt: { gte: month.start, lt: month.end } },
-      include: { package: { include: { category: true } }, customer: true },
+      select: { id: true, title: true, startAt: true, endAt: true, status: true, customerName: true, packageName: true, price: true, total: true, deposit: true, package: { select: { name: true } } },
       orderBy: { startAt: "desc" },
       take: 10,
-    }),
-    prisma.booking.findMany({
+    }) : Promise.resolve([]),
+    wantsHistory ? prisma.booking.findMany({
       where: { studioId, deletedAt: null },
-      include: { package: { include: { category: true } }, customer: true },
+      select: { id: true, title: true, startAt: true, endAt: true, status: true, customerName: true, packageName: true, package: { select: { name: true } } },
       orderBy: { updatedAt: "desc" },
-      take: 15,
-    }),
-    prisma.customer.findMany({
+      take: 10,
+    }) : Promise.resolve([]),
+    wantsCustomer ? prisma.customer.findMany({
       where: { studioId, deletedAt: null },
+      select: { id: true, name: true, phone: true, email: true, note: true, totalSpent: true, source: true },
       orderBy: [{ totalSpent: "desc" }, { updatedAt: "desc" }],
       take: 15,
-    }),
-    prisma.package.findMany({
+    }) : Promise.resolve([]),
+    wantsPackage ? prisma.package.findMany({
       where: { studioId, deletedAt: null },
-      include: { category: true },
+      select: { id: true, name: true, price: true, duration: true, suitableFor: true, category: { select: { name: true } }, peopleCount: true, location: true },
       orderBy: { updatedAt: "desc" },
       take: 20,
-    }),
-    prisma.category.findMany({ where: { studioId, deletedAt: null }, orderBy: { createdAt: "desc" }, take: 20 }),
-    prisma.project.findMany({
+    }) : Promise.resolve([]),
+    wantsCategory ? prisma.category.findMany({ where: { studioId, deletedAt: null }, select: { id: true, name: true, description: true }, orderBy: { createdAt: "desc" }, take: 20 }) : Promise.resolve([]),
+    wantsProject ? prisma.project.findMany({
       where: { studioId, deletedAt: null },
-      include: { customer: true, booking: true },
+      select: { id: true, code: true, name: true, status: true, amount: true, dueAmount: true, deadlineAt: true, customer: { select: { name: true } } },
       orderBy: [{ deadlineAt: "asc" }, { updatedAt: "desc" }],
       take: 15,
-    }),
-    prisma.employee.findMany({ where: { studioId, deletedAt: null }, orderBy: { updatedAt: "desc" }, take: 20 }),
-    prisma.equipment.findMany({
+    }) : Promise.resolve([]),
+    wantsEmployee ? prisma.employee.findMany({ where: { studioId, deletedAt: null }, select: { id: true, name: true, phone: true, position: true, salaryType: true, baseSalary: true, workSchedule: true }, orderBy: { updatedAt: "desc" }, take: 20 }) : Promise.resolve([]),
+    wantsEquipment ? prisma.equipment.findMany({
       where: { studioId, deletedAt: null },
-      include: { maintenance: { orderBy: { servicedAt: "desc" }, take: 2 } },
+      select: { id: true, name: true, type: true, serial: true, status: true, assignedTo: true, note: true, maintenance: { select: { nextDueAt: true }, orderBy: { servicedAt: "desc" as const }, take: 1 } },
       orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
       take: 15,
-    }),
-    prisma.notification.findMany({ where: { studioId, deletedAt: null }, orderBy: { createdAt: "desc" }, take: 10 }),
-    prisma.auditLog.findMany({
+    }) : Promise.resolve([]),
+    prisma.notification.findMany({ where: { studioId, deletedAt: null }, select: { id: true, title: true, message: true, type: true, isRead: true, dueAt: true }, orderBy: { createdAt: "desc" }, take: 10 }),
+    wantsAudit ? prisma.auditLog.findMany({
       where: { studioId },
       include: { user: { select: { name: true, role: { select: { name: true } } } } },
       orderBy: { createdAt: "desc" },
       take: 15,
-    }),
-    prisma.walletShift.findMany({
+    }) : Promise.resolve([]),
+    canViewFinance ? prisma.walletShift.findMany({
       where: { studioId, status: "OPEN" },
       include: {
         openedBy: { select: { name: true, role: { select: { name: true } } } },
         closedBy: { select: { name: true, role: { select: { name: true } } } },
       },
       orderBy: { openedAt: "desc" },
-      take: 10,
-    }),
-    prisma.walletShift.findMany({
+      take: 5,
+    }) : Promise.resolve([]),
+    canViewFinance && wantsHistory ? prisma.walletShift.findMany({
       where: { studioId, status: "CLOSED" },
       include: {
         openedBy: { select: { name: true, role: { select: { name: true } } } },
         closedBy: { select: { name: true, role: { select: { name: true } } } },
       },
       orderBy: { closedAt: "desc" },
-      take: 10,
-    }),
+      take: 5,
+    }) : Promise.resolve([]),
     canViewFinance
       ? prisma.transaction.aggregate({
           where: { studioId, deletedAt: null, type: "INCOME", approvalStatus: "APPROVED", occurredAt: { gte: month.start, lt: month.end } },
@@ -481,23 +492,23 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
           _sum: { amount: true },
         })
       : Promise.resolve({ _sum: { amount: 0 } }),
-    canViewFinance
+    canViewFinance && wantsHistory
       ? prisma.invoice.findMany({
           where: { studioId, deletedAt: null },
-          include: { customer: true, project: true, items: true },
+          select: { id: true, code: true, status: true, issueDate: true, due: true, total: true, paid: true, customer: { select: { name: true } } },
           orderBy: [{ due: "desc" }, { issueDate: "desc" }],
-          take: 15,
+          take: 10,
         })
       : Promise.resolve([]),
-    canViewFinance
+    canViewFinance && wantsHistory
       ? prisma.transaction.findMany({
           where: { studioId, deletedAt: null },
-          include: { customer: true, project: true, wallet: true, category: true, walletShift: true },
+          select: { id: true, title: true, type: true, amount: true, method: true, approvalStatus: true, occurredAt: true, note: true, wallet: { select: { name: true } } },
           orderBy: { occurredAt: "desc" },
-          take: 20,
+          take: 10,
         })
       : Promise.resolve([]),
-    canViewFinance ? prisma.wallet.findMany({ where: { studioId, deletedAt: null }, orderBy: { createdAt: "desc" }, take: 10 }) : Promise.resolve([]),
+    canViewFinance ? prisma.wallet.findMany({ where: { studioId, deletedAt: null }, select: { id: true, name: true, type: true, balance: true, isActive: true, openingBalance: true }, orderBy: { createdAt: "desc" }, take: 10 }) : Promise.resolve([]),
     prisma.aiMemory.findMany({
       where: { studioId, isActive: true, OR: [{ userId: null }, { userId: user.id }] },
       orderBy: [{ updatedAt: "desc" }],
@@ -704,9 +715,22 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
     wantsBooking || wantsCustomer
       ? prisma.booking.findMany({
           where: bookingWhere,
-          include: { customer: true, package: { include: { category: true } } },
+          select: {
+            id: true,
+            customerName: true,
+            title: true,
+            packageName: true,
+            categoryName: true,
+            startAt: true,
+            endAt: true,
+            status: true,
+            imageUrl: true,
+            galleryUrls: true,
+            customer: { select: { name: true, phone: true } },
+            package: { select: { name: true, category: { select: { name: true } } } },
+          },
           orderBy: { startAt: "desc" },
-          take: range ? 100 : 60,
+          take: range ? 40 : 25,
         })
       : Promise.resolve([]),
     wantsMissingImage
@@ -716,39 +740,82 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
             deletedAt: null,
             OR: [{ imageUrl: null }, { imageUrl: "" }, { galleryUrls: null }, { galleryUrls: "" }],
           },
-          include: { customer: true, package: { include: { category: true } } },
+          select: {
+            id: true,
+            customerName: true,
+            title: true,
+            packageName: true,
+            startAt: true,
+            status: true,
+            imageUrl: true,
+            galleryUrls: true,
+            customer: { select: { name: true } },
+            package: { select: { name: true } },
+          },
           orderBy: { startAt: "desc" },
-          take: 40,
+          take: 20,
         })
       : Promise.resolve([]),
     wantsCustomer
       ? prisma.customer.findMany({
           where: { studioId: user.studioId, deletedAt: null },
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+            email: true,
+            note: true,
+          },
           orderBy: { updatedAt: "desc" },
-          take: 80,
+          take: 40,
         })
       : Promise.resolve([]),
     canViewFinance && isFinanceQuestion(question)
       ? prisma.transaction.findMany({
           where: { studioId: user.studioId, deletedAt: null, ...(range ? { occurredAt: { gte: range.start, lt: range.end } } : {}) },
-          include: { customer: true, project: true, wallet: true },
+          select: {
+            id: true,
+            title: true,
+            type: true,
+            amount: true,
+            occurredAt: true,
+            note: true,
+            customer: { select: { name: true } },
+            project: { select: { name: true } },
+            wallet: { select: { name: true } },
+          },
           orderBy: { occurredAt: "desc" },
-          take: 60,
+          take: 30,
         })
       : Promise.resolve([]),
     wantsPackage
       ? prisma.package.findMany({
           where: { studioId: user.studioId, deletedAt: null },
-          include: { category: true },
+          select: {
+            id: true,
+            name: true,
+            price: true,
+            description: true,
+            customerNote: true,
+            category: { select: { name: true } },
+          },
           orderBy: { updatedAt: "desc" },
-          take: 40,
+          take: 25,
         })
       : Promise.resolve([]),
     wantsEquipment
       ? prisma.equipment.findMany({
           where: { studioId: user.studioId, deletedAt: null },
+          select: {
+            id: true,
+            name: true,
+            type: true,
+            serial: true,
+            status: true,
+            note: true,
+          },
           orderBy: { updatedAt: "desc" },
-          take: 40,
+          take: 25,
         })
       : Promise.resolve([]),
   ]);
@@ -770,7 +837,7 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
     .filter((item) => matchesTokens([item.title, item.note, item.customer?.name, item.project?.name, item.wallet?.name].filter(Boolean).join(" ")))
     .slice(0, 30);
   const matchedPackages = (packageRows as any[])
-    .filter((item) => matchesTokens([item.name, item.category?.name, item.description, item.note].filter(Boolean).join(" ")))
+    .filter((item) => matchesTokens([item.name, item.category?.name, item.description, item.customerNote].filter(Boolean).join(" ")))
     .slice(0, 20);
   const matchedEquipment = (equipmentRows as any[])
     .filter((item) => matchesTokens([item.name, item.type, item.serial, item.note].filter(Boolean).join(" ")))

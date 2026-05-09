@@ -28,10 +28,84 @@ function isTrashable(definition: Record<string, unknown>) {
 }
 
 function resourceInclude(resource: ResourceKey) {
-  const projectWithBookingPackage = { include: { booking: { include: { package: true } } } };
-  if (resource === "invoices") return { customer: true, project: projectWithBookingPackage, items: true };
-  if (resource === "transactions") return { customer: true, project: projectWithBookingPackage };
-  if (resource === "projects") return { customer: true, booking: { include: { package: true } } };
+  const projectWithBookingPackage = {
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      status: true,
+      booking: {
+        select: {
+          id: true,
+          package: {
+            select: {
+              id: true,
+              imageUrl: true,
+              galleryUrls: true
+            }
+          }
+        }
+      }
+    }
+  };
+
+  if (resource === "invoices") {
+    return {
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          email: true,
+          avatarUrl: true
+        }
+      },
+      project: projectWithBookingPackage,
+      items: true
+    };
+  }
+
+  if (resource === "transactions") {
+    return {
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          email: true,
+          avatarUrl: true
+        }
+      },
+      project: projectWithBookingPackage
+    };
+  }
+
+  if (resource === "projects") {
+    return {
+      customer: {
+        select: {
+          id: true,
+          name: true,
+          phone: true,
+          email: true,
+          avatarUrl: true
+        }
+      },
+      booking: {
+        select: {
+          id: true,
+          package: {
+            select: {
+              id: true,
+              imageUrl: true,
+              galleryUrls: true
+            }
+          }
+        }
+      }
+    };
+  }
+
   return undefined;
 }
 
