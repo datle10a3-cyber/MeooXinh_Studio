@@ -764,23 +764,28 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         ) : null}
 
         {!completedOnly ? (
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <Button variant="secondary" size="sm" className="min-h-10 rounded-2xl" onClick={(event) => { event.stopPropagation(); edit(row); }}>
+          <div className="mt-4 grid grid-cols-4 gap-1.5">
+            <Button variant="secondary" size="sm" className="h-9 rounded-xl text-xs font-bold gap-1 px-1.5" onClick={(event) => { event.stopPropagation(); edit(row); }}>
+              <Pencil size={13} className="shrink-0 text-[#EA7188]" />
               Sửa
             </Button>
-            <Button variant="danger" size="sm" className="min-h-10 rounded-2xl" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
+            <Button variant="danger" size="sm" className="h-9 rounded-xl text-xs font-bold gap-1 px-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 hover:text-rose-800" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
+              <Trash2 size={13} className="shrink-0" />
               Xóa
             </Button>
-            <Button variant="secondary" size="sm" className="min-h-10 rounded-2xl" onClick={(event) => { event.stopPropagation(); setCancelTarget(row); }}>
-              Hủy đơn
+            <Button variant="secondary" size="sm" className="h-9 rounded-xl text-xs font-bold gap-1 px-1.5" onClick={(event) => { event.stopPropagation(); setCancelTarget(row); }}>
+              <X size={13} className="shrink-0 text-amber-600" />
+              Hủy
             </Button>
-            <Button size="sm" className="min-h-10 rounded-2xl" onClick={(event) => { event.stopPropagation(); setPaymentTarget(row); }}>
-              Hoàn thành
+            <Button size="sm" className="h-9 rounded-xl text-xs font-bold gap-1 px-1.5 bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm" onClick={(event) => { event.stopPropagation(); setPaymentTarget(row); }}>
+              <CheckCircle2 size={13} className="shrink-0" />
+              Xong
             </Button>
           </div>
         ) : (
           <div className="mt-4">
-            <Button variant="danger" size="sm" className="min-h-10 w-full rounded-2xl" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
+            <Button variant="danger" size="sm" className="h-9 w-full rounded-xl text-xs font-bold gap-1 px-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 hover:text-rose-800" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
+              <Trash2 size={13} className="shrink-0" />
               Xóa lịch sử
             </Button>
           </div>
