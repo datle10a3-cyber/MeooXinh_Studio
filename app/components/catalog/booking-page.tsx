@@ -529,6 +529,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     if (role === "STAFF") {
       studioPassword = window.prompt("Nhập mật khẩu studio 6 số để cập nhật booking.")?.trim() ?? "";
       if (!/^\d{6}$/.test(studioPassword)) {
+        printWindow?.close();
         setMessage("Nhân viên cần nhập đúng mật khẩu studio 6 số để cập nhật booking.");
         return;
       }
@@ -563,6 +564,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
       if (status === "COMPLETED" && printAfter) printBookingInvoice(result.data ?? row, printWindow);
       await loadData();
     } catch (err) {
+      printWindow?.close();
       console.error("Change status error:", err);
     } finally {
       setProcessingStatus(false);
