@@ -1364,168 +1364,189 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
         </div>
       ) : null}
 
-      {canMutate(session) && showForm ? (
-        <div ref={formRef} className="scroll-mt-20">
-        <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm(config.fields)); setShowForm(false); }} />
-        <Card className="studio-mobile-form-sheet rounded-[1.5rem] border-[#F4C7C4] bg-white shadow-[0_18px_50px_rgba(184,95,108,0.1)] sm:rounded-[2rem]">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <CardTitle>{title}</CardTitle>
-            <div className="flex shrink-0 gap-2">
-              {editingId ? (
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => {
-                    setEditingId(null);
-                    setForm(emptyForm(config.fields));
-                  }}
-                >
-                  Hủy sửa
-                </Button>
-              ) : null}
-              <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm(config.fields)); setShowForm(false); }}>
-                <X size={16} />
-              </Button>
-            </div>
-          </div>
-
-          {groupedFields.image.length ? (
-            <div className="mb-5 rounded-[1.5rem] bg-[#FFF3EC] p-4">
-              <p className="mb-3 text-sm font-bold text-[#5B342C]">Ảnh</p>
-              {groupedFields.image.map((field) => (
-                <label key={field.key}>
-                  <span className="mb-2 block text-sm font-medium text-[#7B554D]">{field.label}</span>
-                  {field.key === config.imageField && config.fields.some((item) => item.key === "galleryUrls") ? (
-                    <MediaGalleryPicker
-                      mainUrl={String(form[field.key] ?? "")}
-                      galleryUrls={String(form.galleryUrls ?? "[]")}
-                      onMainChange={(value) => setForm((current) => ({ ...current, [field.key]: value }))}
-                      onGalleryChange={(value) => setForm((current) => ({ ...current, galleryUrls: value }))}
-                    />
-                  ) : (
-                    <FieldInput field={field} value={form[field.key]} onChange={(value) => setForm((current) => ({ ...current, [field.key]: value }))} />
-                  )}
-                </label>
-              ))}
-            </div>
-          ) : null}
-
-          <div className="grid gap-3 sm:gap-4 md:grid-cols-2">
-            {groupedFields.main.filter((field) => !(resource === "transactions" && field.key === "type")).map((field) => (
-              <label key={field.key}>
-                <span className="mb-2 block text-sm font-medium text-[#7B554D]">{field.label}</span>
-                {resource === "transactions" && field.key === "walletId" ? (
-                  <select
-                    className="h-12 w-full rounded-2xl border border-[#F1C5C1] bg-[#FFF9F4] px-4 text-sm font-semibold text-[#5B342C] outline-none transition focus:border-[#EA7188] focus:ring-2 focus:ring-[#FFD4DF]"
-                    value={String(form.walletId ?? "")}
-                    onChange={(event) => setForm((current) => ({ ...current, walletId: event.target.value }))}
-                  >
-                    <option value="">Chọn ví tiền</option>
-                    {walletRows.map((wallet) => (
-                      <option key={String(wallet.id)} value={String(wallet.id)}>
-                        {String(wallet.name ?? "Ví không tên")} - {formatMoney(wallet.balance as string | number | null | undefined)}
-                      </option>
-                    ))}
-                  </select>
-                ) : (
-                  <FieldInput field={field} value={form[field.key]} onChange={(value) => setForm((current) => ({ ...current, [field.key]: value }))} />
-                )}
+      <div className={canMutate(session) && showForm ? "grid items-start gap-4 xl:grid-cols-[1fr_420px]" : "grid gap-4"}>
+        <div className="order-2 space-y-4 xl:order-1">
+          {visibleRows.length && canDelete(session) && resource !== "wallets" ? (
+            <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <label className="flex items-center gap-2 text-sm font-black text-[#5B342C]">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-[#EA7188]"
+                  checked={allVisibleSelected}
+                  onChange={(event) => setSelectedIds(event.target.checked ? visibleRows.map((row) => String(row.id ?? "")) : [])}
+                />
+                Chọn tất cả ({visibleRows.length})
               </label>
-            ))}
-          </div>
-
-          {groupedFields.note.length ? (
-            <div className="mt-4 grid gap-4">
-              {groupedFields.note.map((field) => (
-                <label key={field.key}>
-                  <span className="mb-2 block text-sm font-medium text-[#7B554D]">{field.label}</span>
-                  <FieldInput field={field} value={form[field.key]} onChange={(value) => setForm((current) => ({ ...current, [field.key]: value }))} />
-                </label>
-              ))}
+              <div className="grid grid-cols-2 gap-2 sm:flex">
+                <Button variant="secondary" size="sm" disabled={!selectedIds.length} onClick={() => setBulkDeleteMode("selected")}>
+                  Xóa đã chọn ({selectedIds.length})
+                </Button>
+                <Button variant="danger" size="sm" onClick={() => setBulkDeleteMode("all")}>
+                  Xóa tất cả
+                </Button>
+              </div>
             </div>
           ) : null}
 
-          <div className="studio-sticky-actions mt-5 flex justify-end">
-            <Button className="w-full sm:w-auto" onClick={save} disabled={submitting}>
-              {submitting ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
-              {submitting ? "Đang lưu..." : "Lưu dữ liệu"}
-            </Button>
-          </div>
-          {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
-          <div className="h-20 sm:hidden" />
-        </Card>
+          <section className="space-y-3">
+            {resource === "bookings" ? <BookingCalendar bookings={rows} onMove={moveBooking} /> : null}
+            {initialLoading && visibleRows.length === 0 && resource !== "wallets" ? (
+              <PageSpinner label={`Đang tải ${config.label}…`} />
+            ) : visibleRows.length === 0 && resource !== "wallets" ? (
+              <Card className="rounded-[2rem] border-[#F4C7C4] bg-white py-12 text-center">
+                <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#FFE4EA] text-[#EA7188]">
+                  <ImageIcon size={22} />
+                </div>
+                <h2 className="mt-4 text-lg font-bold text-[#5B342C]">Chưa có dữ liệu</h2>
+                <p className="mt-2 text-sm font-semibold text-[#9B746B]">Tạo bản ghi đầu tiên bằng form bên cạnh.</p>
+              </Card>
+            ) : resource === "transactions" ? (
+              <TransactionDateListWithProgressive
+                groups={transactionDayGroups}
+                walletById={walletById}
+                canEdit={canMutate(session)}
+                canRemove={canDelete(session)}
+                selectedIds={selectedIds}
+                onToggleSelect={(id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])}
+                onEdit={edit}
+                onDelete={setDeleteTarget}
+                onOpenDetail={setDetailRow}
+                onOpenGallery={openRowGallery}
+              />
+            ) : resource === "wallets" ? (
+              <WalletAppView
+                rows={visibleRows}
+                transactions={walletTransactions}
+                canRemove={canDelete(session)}
+                selectedIds={selectedIds}
+                onToggleSelect={(id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])}
+                onReceive={() => {
+                  setTransactionIntent("income");
+                  goToResource("transactions");
+                }}
+                onSpend={() => {
+                  setTransactionIntent("expense");
+                  goToResource("transactions");
+                }}
+                onTransfer={() => goToResource("transactions")}
+                onWalletCreated={loadRows}
+                onOpenDetail={setDetailRow}
+              />
+            ) : (
+              <ResourceListWithProgressive
+                resource={resource}
+                visibleRows={visibleRows}
+                config={config}
+                session={session}
+                selectedIds={selectedIds}
+                setSelectedIds={setSelectedIds}
+                focusedItemId={focusedItemId}
+                longPressActivated={longPressActivated}
+                setLongPressActivated={setLongPressActivated}
+                setDetailRow={setDetailRow}
+                startRowLongPress={startRowLongPress}
+                clearLongPress={clearLongPress}
+                edit={edit}
+                setDeleteTarget={setDeleteTarget}
+                openRowGallery={openRowGallery}
+              />
+            )}
+          </section>
         </div>
-      ) : null}
 
-      {visibleRows.length && canDelete(session) && resource !== "wallets" ? (
-        <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-          <label className="flex items-center gap-2 text-sm font-black text-[#5B342C]">
-            <input
-              type="checkbox"
-              className="h-4 w-4 accent-[#EA7188]"
-              checked={allVisibleSelected}
-              onChange={(event) => setSelectedIds(event.target.checked ? visibleRows.map((row) => String(row.id ?? "")) : [])}
-            />
-            Chọn tất cả ({visibleRows.length})
-          </label>
-          <div className="grid grid-cols-2 gap-2 sm:flex">
-            <Button variant="secondary" size="sm" disabled={!selectedIds.length} onClick={() => setBulkDeleteMode("selected")}>
-              Xóa đã chọn ({selectedIds.length})
-            </Button>
-            <Button variant="danger" size="sm" onClick={() => setBulkDeleteMode("all")}>
-              Xóa tất cả
-            </Button>
+        {canMutate(session) && showForm ? (
+          <div ref={formRef} className="order-1 scroll-mt-20 xl:order-2">
+            <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm(config.fields)); setShowForm(false); }} />
+            <Card className="studio-mobile-form-sheet rounded-[1.5rem] border-[#F4C7C4] bg-white shadow-[0_18px_50px_rgba(184,95,108,0.1)] sm:sticky sm:top-[5.5rem] sm:rounded-[2rem]">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <CardTitle>{title}</CardTitle>
+                <div className="flex shrink-0 gap-2">
+                  {editingId ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => {
+                        setEditingId(null);
+                        setForm(emptyForm(config.fields));
+                      }}
+                    >
+                      Hủy sửa
+                    </Button>
+                  ) : null}
+                  <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm(config.fields)); setShowForm(false); }}>
+                    <X size={16} />
+                  </Button>
+                </div>
+              </div>
+
+              {groupedFields.image.length ? (
+                <div className="mb-5 rounded-[1.5rem] bg-[#FFF3EC] p-4">
+                  <p className="mb-3 text-sm font-bold text-[#5B342C]">Ảnh</p>
+                  {groupedFields.image.map((field) => (
+                    <label key={field.key}>
+                      <span className="mb-2 block text-sm font-medium text-[#7B554D]">{field.label}</span>
+                      {field.key === config.imageField && config.fields.some((item) => item.key === "galleryUrls") ? (
+                        <MediaGalleryPicker
+                          mainUrl={String(form[field.key] ?? "")}
+                          galleryUrls={String(form.galleryUrls ?? "[]")}
+                          onMainChange={(value) => setForm((current) => ({ ...current, [field.key]: value }))}
+                          onGalleryChange={(value) => setForm((current) => ({ ...current, galleryUrls: value }))}
+                        />
+                      ) : (
+                        <FieldInput field={field} value={form[field.key]} onChange={(value) => setForm((current) => ({ ...current, [field.key]: value }))} />
+                      )}
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+
+              <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-1">
+                {groupedFields.main.filter((field) => !(resource === "transactions" && field.key === "type")).map((field) => (
+                  <label key={field.key}>
+                    <span className="mb-2 block text-sm font-medium text-[#7B554D]">{field.label}</span>
+                    {resource === "transactions" && field.key === "walletId" ? (
+                      <select
+                        className="h-12 w-full rounded-2xl border border-[#F1C5C1] bg-[#FFF9F4] px-4 text-sm font-semibold text-[#5B342C] outline-none transition focus:border-[#EA7188] focus:ring-2 focus:ring-[#FFD4DF]"
+                        value={String(form.walletId ?? "")}
+                        onChange={(event) => setForm((current) => ({ ...current, walletId: event.target.value }))}
+                      >
+                        <option value="">Chọn ví tiền</option>
+                        {walletRows.map((wallet) => (
+                          <option key={String(wallet.id)} value={String(wallet.id)}>
+                            {String(wallet.name ?? "Ví không tên")} - {formatMoney(wallet.balance as string | number | null | undefined)}
+                          </option>
+                        ))}
+                      </select>
+                    ) : (
+                      <FieldInput field={field} value={form[field.key]} onChange={(value) => setForm((current) => ({ ...current, [field.key]: value }))} />
+                    )}
+                  </label>
+                ))}
+              </div>
+
+              {groupedFields.note.length ? (
+                <div className="mt-4 grid gap-4">
+                  {groupedFields.note.map((field) => (
+                    <label key={field.key}>
+                      <span className="mb-2 block text-sm font-medium text-[#7B554D]">{field.label}</span>
+                      <FieldInput field={field} value={form[field.key]} onChange={(value) => setForm((current) => ({ ...current, [field.key]: value }))} />
+                    </label>
+                  ))}
+                </div>
+              ) : null}
+
+              <div className="studio-sticky-actions mt-5 flex justify-end">
+                <Button className="w-full sm:w-auto" onClick={save} disabled={submitting}>
+                  {submitting ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
+                  {submitting ? "Đang lưu..." : "Lưu dữ liệu"}
+                </Button>
+              </div>
+              {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
+              <div className="h-20 sm:hidden" />
+            </Card>
           </div>
-        </div>
-      ) : null}
-
-      <section className="space-y-3">
-        {resource === "bookings" ? <BookingCalendar bookings={rows} onMove={moveBooking} /> : null}
-        {initialLoading && visibleRows.length === 0 && resource !== "wallets" ? (
-          <PageSpinner label={`Đang tải ${config.label}…`} />
-        ) : visibleRows.length === 0 && resource !== "wallets" ? (
-          <Card className="rounded-[2rem] border-[#F4C7C4] bg-white py-12 text-center">
-            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[#FFE4EA] text-[#EA7188]">
-              <ImageIcon size={22} />
-            </div>
-            <h2 className="mt-4 text-lg font-bold text-[#5B342C]">Chưa có dữ liệu</h2>
-            <p className="mt-2 text-sm font-semibold text-[#9B746B]">Tạo bản ghi đầu tiên bằng form phía trên.</p>
-          </Card>
-        ) : resource === "transactions" ? (
-          <TransactionDateListWithProgressive
-            groups={transactionDayGroups}
-            walletById={walletById}
-            canEdit={canMutate(session)}
-            canRemove={canDelete(session)}
-            selectedIds={selectedIds}
-            onToggleSelect={(id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])}
-            onEdit={edit}
-            onDelete={setDeleteTarget}
-            onOpenDetail={setDetailRow}
-            onOpenGallery={openRowGallery}
-          />
-        ) : resource === "wallets" ? (
-          <WalletAppView
-            rows={visibleRows}
-            transactions={walletTransactions}
-            canRemove={canDelete(session)}
-            selectedIds={selectedIds}
-            onToggleSelect={(id) => setSelectedIds((current) => current.includes(id) ? current.filter((item) => item !== id) : [...current, id])}
-            onReceive={() => {
-              setTransactionIntent("income");
-              goToResource("transactions");
-            }}
-            onSpend={() => {
-              setTransactionIntent("expense");
-              goToResource("transactions");
-            }}
-            onTransfer={() => goToResource("transactions")}
-            onWalletCreated={loadRows}
-            onOpenDetail={setDetailRow}
-          />
-        ) : (
-          <ResourceListWithProgressive
-            resource={resource}
+        ) : null}
+      </div>
             visibleRows={visibleRows}
             config={config}
             session={session}
