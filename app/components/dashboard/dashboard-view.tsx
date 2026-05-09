@@ -4,12 +4,22 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { CalendarDays, Download, RefreshCw, Sparkles, Target, WalletCards, type LucideIcon } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardTitle } from "@/app/components/ui/card";
-import { RevenueChart } from "@/app/components/dashboard/revenue-chart";
 import { StatCard } from "@/app/components/dashboard/stat-card";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 import type { ApiResult, DashboardData } from "@/app/types/studio";
 import { formatDate, formatMoney } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
+import dynamic from "next/dynamic";
+
+const RevenueChart = dynamic(() => import("@/app/components/dashboard/revenue-chart").then((mod) => mod.RevenueChart), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-[350px] w-full flex-col items-center justify-center rounded-[1.5rem] border border-[#F4C7C4] bg-white">
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#FFE4EA] border-t-[#EA7188]" />
+      <p className="mt-3 text-sm font-bold text-[#9B746B]">Đang tải biểu đồ...</p>
+    </div>
+  ),
+});
 
 type ChartMode = "day" | "month" | "year";
 

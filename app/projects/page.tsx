@@ -1,5 +1,10 @@
 import { AppShell } from "@/app/components/layout/app-shell";
-import { ResourceManager } from "@/app/components/resources/resource-manager";
+import dynamic from "next/dynamic";
+import { ViewSkeleton } from "@/app/components/ui/skeleton";
+
+const ResourceManager = dynamic(() => import("@/app/components/resources/resource-manager").then((mod) => mod.ResourceManager), {
+  loading: () => <ViewSkeleton />,
+});
 
 export default function Page() {
   return (

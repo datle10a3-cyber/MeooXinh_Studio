@@ -1,5 +1,10 @@
 import { AppShell } from "@/app/components/layout/app-shell";
-import { BookingPage } from "@/app/components/catalog/booking-page";
+import dynamic from "next/dynamic";
+import { ViewSkeleton } from "@/app/components/ui/skeleton";
+
+const BookingPage = dynamic(() => import("@/app/components/catalog/booking-page").then((mod) => mod.BookingPage), {
+  loading: () => <ViewSkeleton />,
+});
 
 export default function Page() {
   return (
