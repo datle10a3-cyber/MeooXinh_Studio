@@ -14,6 +14,7 @@ import {
   Loader2,
   MoreHorizontal,
   PawPrint,
+  Pencil,
   Repeat2,
   Save,
   Search,
@@ -723,11 +724,11 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
         <FinancialPackageThumb row={row} resource={resource} onOpenGallery={onOpenGallery} />
-        <div className="flex flex-1 gap-2">
+        <div className="flex flex-1 justify-end gap-2">
           {["invoices", "transactions"].includes(resource) ? <PrintInvoiceMenu row={row} /> : null}
           {canEdit ? (
-            <Button variant="secondary" size="sm" className="min-h-10 flex-1 rounded-2xl" onClick={(event) => { event.stopPropagation(); onEdit(row); }}>
-              Sửa
+            <Button variant="secondary" size="icon" className="h-10 w-10 shrink-0 rounded-2xl" aria-label="Sửa dữ liệu" onClick={(event) => { event.stopPropagation(); onEdit(row); }}>
+              <Pencil size={16} className="text-[#EA7188]" />
             </Button>
           ) : null}
           {canRemove ? (
@@ -1982,11 +1983,11 @@ function ResourceListWithProgressive({
                   {canMutate(session) ? (
                     <div className="col-span-3 flex shrink-0 flex-row justify-end gap-2 sm:col-span-1 md:flex-col">
                       {["invoices", "transactions"].includes(resource) ? <PrintInvoiceMenu row={row} /> : null}
-                      <Button variant="secondary" size="sm" onClick={(event) => { event.stopPropagation(); edit(row); }}>
-                        Sửa
+                      <Button variant="secondary" size="icon" className="h-10 w-10 shrink-0 rounded-2xl" aria-label="Sửa dữ liệu" onClick={(event) => { event.stopPropagation(); edit(row); }}>
+                        <Pencil size={16} className="text-[#EA7188]" />
                       </Button>
                       {canDelete(session) ? (
-                        <Button variant="danger" size="icon" aria-label="Xóa dữ liệu" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
+                        <Button variant="danger" size="icon" className="h-10 w-10 shrink-0 rounded-2xl" aria-label="Xóa dữ liệu" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
                           <Trash2 size={16} />
                         </Button>
                       ) : null}
