@@ -411,41 +411,61 @@ function TrashDetailModal({ item, onClose, onRestore, onDelete }: { item: TrashI
   const rows = detailRows(item);
   const canRestore = item.resource !== "categories" && item.resource !== "packages";
 
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    document.body.classList.add("studio-modal-open");
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.classList.remove("studio-modal-open");
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[80] grid place-items-center bg-[#3A2420]/45 p-3 backdrop-blur-sm">
-      <div className="max-h-[88vh] w-full max-w-3xl overflow-hidden rounded-[2rem] border border-[#F4C7C4] bg-white shadow-[0_30px_90px_rgba(91,52,44,0.25)]">
-        <div className="flex items-start justify-between gap-3 border-b border-[#F4C7C4] p-5">
-          <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-[#EA7188]">Chi tiết trong thùng rác</p>
-            <h2 className="mt-1 whitespace-normal break-words text-2xl font-black text-[#5B342C]">{title}</h2>
-            <p className="mt-1 text-sm font-semibold text-[#9B746B]">{config.label}</p>
-          </div>
-          <button type="button" onClick={onClose} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C] shadow-sm transition hover:bg-[#FFF3EC]">
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="max-h-[55vh] overflow-y-auto p-5">
-          <div className="grid gap-3 sm:grid-cols-2">
-            {rows.map(([key, value]) => (
-              <div key={key} className="rounded-2xl bg-[#FFF8F1] p-4 ring-1 ring-[#F4C7C4]">
-                <p className="text-xs font-black uppercase tracking-[0.12em] text-[#A84E61]">{getFieldLabel(item, key)}</p>
-                <p className="mt-2 whitespace-pre-wrap break-words text-sm font-bold leading-6 text-[#5B342C]">{formatTrashValue(value)}</p>
+    <div className="fixed inset-0 z-[100] flex flex-col bg-[#3A2420]/75 backdrop-blur-sm touch-none">
+      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div className="flex min-h-full justify-start p-3 sm:items-center sm:justify-center sm:p-4">
+          <div className="w-full max-w-3xl rounded-[2rem] border border-[#F4C7C4] bg-white shadow-[0_30px_90px_rgba(91,52,44,0.25)]">
+            <div className="sticky top-0 z-30 flex items-start justify-between gap-3 rounded-t-[2rem] border-b border-[#F4C7C4] bg-white/95 px-4 py-3 backdrop-blur sm:px-5">
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-[0.18em] text-[#EA7188]">Chi tiết trong thùng rác</p>
+                <h2 className="mt-1 whitespace-normal break-words text-xl font-black leading-7 text-[#5B342C] sm:text-2xl">{title}</h2>
+                <p className="mt-1 text-sm font-semibold text-[#9B746B]">{config.label}</p>
               </div>
-            ))}
-          </div>
-        </div>
+              <button type="button" onClick={onClose} className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C] shadow-sm touch-manipulation">
+                <X size={18} />
+              </button>
+            </div>
 
-        <div className="flex flex-col gap-2 border-t border-[#F4C7C4] bg-[#FFF8F1] p-5 sm:flex-row sm:justify-end">
-          <Button variant="secondary" onClick={onClose}>Đóng</Button>
-          <Button variant="secondary" disabled={!canRestore} onClick={onRestore}>
-            <RotateCcw size={16} />
-            Khôi phục
-          </Button>
-          <Button variant="danger" onClick={onDelete}>
-            <Trash2 size={16} />
-            Xóa hẳn
-          </Button>
+            <div className="p-4 sm:p-5">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {rows.map(([key, value]) => (
+                  <div key={key} className="rounded-2xl bg-[#FFF8F1] p-4 ring-1 ring-[#F4C7C4]">
+                    <p className="text-xs font-black uppercase tracking-[0.12em] text-[#A84E61]">{getFieldLabel(item, key)}</p>
+                    <p className="mt-2 whitespace-pre-wrap break-words text-sm font-bold leading-6 text-[#5B342C]">{formatTrashValue(value)}</p>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-5 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <Button variant="secondary" onClick={onClose}>Đóng</Button>
+                <Button variant="secondary" disabled={!canRestore} onClick={onRestore}>
+                  <RotateCcw size={16} />
+                  Khôi phục
+                </Button>
+                <Button variant="danger" onClick={onDelete}>
+                  <Trash2 size={16} />
+                  Xóa hẳn
+                </Button>
+              </div>
+
+              {/* Safe area spacer for mobile */}
+              <div className="h-20 sm:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} />
+            </div>
+          </div>
         </div>
       </div>
     </div>

@@ -1704,85 +1704,90 @@ function ResourceDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[9999] flex flex-col bg-slate-950/45 backdrop-blur-sm touch-none">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-slate-950/45 backdrop-blur-sm touch-none">
       <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
         <div className="flex min-h-full justify-start p-3 sm:items-center sm:justify-center sm:p-4">
-          <Card className="w-full max-w-4xl rounded-[1.75rem] border-[#F4C7C4] bg-white p-4 shadow-2xl sm:rounded-[2rem] sm:p-6">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết</p>
-            <h2 className="mt-1 whitespace-normal break-words text-2xl font-black leading-tight text-[#5B342C] sm:text-3xl">{title}</h2>
-            {subtitle ? <p className="mt-2 whitespace-normal break-words text-sm font-bold leading-6 text-[#9B746B]">{subtitle}</p> : null}
-          </div>
-          <Button variant="secondary" size="icon" aria-label="Đóng" onClick={onClose}>
-            <X size={18} />
-          </Button>
-        </div>
-
-        {images.length ? (
-          <div className="mt-5 rounded-[1.5rem] bg-[#FFF8F1] p-3 ring-1 ring-[#F4C7C4]">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-[#A84E61]">Bộ ảnh</p>
-              <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#EA7188]">{images.length} ảnh</span>
+          <div className="w-full max-w-4xl rounded-[1.75rem] border border-[#F4C7C4] bg-white shadow-2xl sm:rounded-[2rem]">
+            {/* Sticky header */}
+            <div className="sticky top-0 z-30 flex items-start justify-between gap-3 rounded-t-[1.75rem] border-b border-[#F4C7C4] bg-white/95 px-4 py-3 backdrop-blur sm:rounded-t-[2rem] sm:px-6">
+              <div className="min-w-0">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết</p>
+                <h2 className="mt-1 whitespace-normal break-words text-xl font-black leading-7 text-[#5B342C] sm:text-2xl">{title}</h2>
+                {subtitle ? <p className="mt-1 whitespace-normal break-words text-sm font-bold leading-6 text-[#9B746B]">{subtitle}</p> : null}
+              </div>
+              <Button variant="secondary" size="icon" aria-label="Đóng" onClick={onClose}>
+                <X size={18} />
+              </Button>
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
-              {images.map((src, index) => (
-                <button
-                  key={`${String(row.id ?? "detail")}-${index}-${src}`}
-                  type="button"
-                  onClick={() => onOpenGallery(row, index)}
-                  className="relative aspect-square overflow-hidden rounded-2xl border border-[#F4C7C4] bg-white p-1 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-                >
-                  <img src={src} alt="" className="h-full w-full object-contain" />
-                  <span className="absolute bottom-1 left-1 right-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[10px] font-black text-[#A84E61] shadow-sm">
-                    {evidenceImageLabel(row, resource, index)}
-                  </span>
-                </button>
-              ))}
+
+            {/* Content */}
+            <div className="p-4 sm:p-6">
+              {images.length ? (
+                <div className="rounded-[1.5rem] bg-[#FFF8F1] p-3 ring-1 ring-[#F4C7C4]">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-[#A84E61]">Bộ ảnh</p>
+                    <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#EA7188]">{images.length} ảnh</span>
+                  </div>
+                  <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                    {images.map((src, index) => (
+                      <button
+                        key={`${String(row.id ?? "detail")}-${index}-${src}`}
+                        type="button"
+                        onClick={() => onOpenGallery(row, index)}
+                        className="relative aspect-square overflow-hidden rounded-2xl border border-[#F4C7C4] bg-white p-1 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                      >
+                        <img src={src} alt="" className="h-full w-full object-contain" />
+                        <span className="absolute bottom-1 left-1 right-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[10px] font-black text-[#A84E61] shadow-sm">
+                          {evidenceImageLabel(row, resource, index)}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
+
+              {isFinancial && !isPlainTransaction ? (
+                <div className={`${images.length ? "mt-5" : ""} grid gap-3 sm:grid-cols-3`}>
+                  <InfoPill label="Khách hàng" value={printable.customerName} />
+                  <InfoPill label="Gói chụp" value={printable.packageName} />
+                  <InfoPill label="Tổng tiền" value={formatMoney(printable.amount as string | number | null | undefined)} />
+                </div>
+              ) : null}
+
+              <div className={`${images.length || (isFinancial && !isPlainTransaction) ? "mt-5" : ""} grid gap-3 sm:grid-cols-2 lg:grid-cols-3`}>
+                {fields.map((field) => (
+                  <InfoPill key={field} label={fieldLabel(config, field)} value={displayDetailValue(field)} />
+                ))}
+              </div>
+
+              {cleanSystemNote(row) ? (
+                <div className="mt-5 rounded-[1.5rem] bg-[#FFF3EC] p-4">
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-[#A84E61]">Ghi chú</p>
+                  <p className="mt-2 whitespace-normal break-words text-sm font-semibold leading-6 text-[#5B342C]">{cleanSystemNote(row)}</p>
+                </div>
+              ) : null}
+
+              <div className="mt-6 flex flex-wrap justify-end gap-2">
+                {["invoices", "transactions"].includes(resource) ? <PrintInvoiceMenu row={row} /> : null}
+                {canEdit ? (
+                  <Button variant="secondary" size="sm" onClick={() => { onClose(); onEdit(row); }}>
+                    Sửa
+                  </Button>
+                ) : null}
+                {canRemove ? (
+                  <Button variant="danger" size="sm" onClick={() => { onClose(); onDelete(row); }}>
+                    Xóa
+                  </Button>
+                ) : null}
+              </div>
+
+              {/* Safe area spacer for mobile */}
+              <div className="h-20 sm:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} />
             </div>
           </div>
-        ) : null}
-
-        {isFinancial && !isPlainTransaction ? (
-          <div className="mt-5 grid gap-3 sm:grid-cols-3">
-            <InfoPill label="Khách hàng" value={printable.customerName} />
-            <InfoPill label="Gói chụp" value={printable.packageName} />
-            <InfoPill label="Tổng tiền" value={formatMoney(printable.amount as string | number | null | undefined)} />
-          </div>
-        ) : null}
-
-        <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {fields.map((field) => (
-            <InfoPill key={field} label={fieldLabel(config, field)} value={displayDetailValue(field)} />
-          ))}
         </div>
-
-        {cleanSystemNote(row) ? (
-          <div className="mt-5 rounded-[1.5rem] bg-[#FFF3EC] p-4">
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-[#A84E61]">Ghi chú</p>
-            <p className="mt-2 whitespace-normal break-words text-sm font-semibold leading-6 text-[#5B342C]">{cleanSystemNote(row)}</p>
-          </div>
-        ) : null}
-
-        <div className="mt-6 flex flex-wrap justify-end gap-2">
-          {["invoices", "transactions"].includes(resource) ? <PrintInvoiceMenu row={row} /> : null}
-          {canEdit ? (
-            <Button variant="secondary" size="sm" onClick={() => { onClose(); onEdit(row); }}>
-              Sửa
-            </Button>
-          ) : null}
-          {canRemove ? (
-            <Button variant="danger" size="sm" onClick={() => { onClose(); onDelete(row); }}>
-              Xóa
-            </Button>
-          ) : null}
-        </div>
-        {/* Safe area spacer for mobile */}
-        <div className="h-20 sm:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} />
-      </Card>
       </div>
     </div>
-  </div>
   );
 }
 

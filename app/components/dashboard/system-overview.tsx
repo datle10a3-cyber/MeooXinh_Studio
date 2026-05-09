@@ -190,10 +190,25 @@ function RestoreBackupModal({ open, onClose }: { open: boolean; onClose: () => v
     setSelectedSections((current) => current.includes(key) ? current.filter((item) => item !== key) : [...current, key]);
   }
 
+  useEffect(() => {
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.width = "100%";
+    document.body.classList.add("studio-modal-open");
+    return () => {
+      document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.width = "";
+      document.body.classList.remove("studio-modal-open");
+    };
+  }, []);
+
   return (
-    <div className="fixed inset-0 z-[100] overflow-y-auto bg-[#2B1C1A]/40 p-3 backdrop-blur-sm" onClick={onClose}>
-      <div className="mx-auto my-6 w-full max-w-4xl overflow-hidden rounded-[2rem] border border-[#F4C7C4] bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-        <div className="flex items-start justify-between gap-4 border-b border-[#F4C7C4] bg-[#FFF7F0] p-4 sm:p-6">
+    <div className="fixed inset-0 z-[100] flex flex-col bg-[#2B1C1A]/75 backdrop-blur-sm touch-none">
+      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
+        <div className="flex min-h-full justify-start p-3 sm:items-center sm:justify-center sm:p-4">
+          <div className="w-full max-w-4xl overflow-hidden rounded-[2rem] border border-[#F4C7C4] bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+        <div className="sticky top-0 z-30 flex items-start justify-between gap-4 rounded-t-[2rem] border-b border-[#F4C7C4] bg-[#FFF7F0]/95 p-4 backdrop-blur sm:p-6">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.2em] text-[#EA7188]">Khôi phục JSON</p>
             <h2 className="mt-1 text-2xl font-black text-[#5B342C]">Import / khôi phục dữ liệu</h2>
@@ -335,7 +350,7 @@ function RestoreBackupModal({ open, onClose }: { open: boolean; onClose: () => v
             </div>
           ) : null}
 
-          <div className="flex flex-col-reverse gap-2 border-t border-[#F4C7C4] pt-4 sm:flex-row sm:justify-end">
+          <div className="flex flex-col-reverse gap-2 border-t border-[#F4C7C4] p-4 sm:flex-row sm:justify-end sm:p-6">
             <Button variant="secondary" onClick={onClose}>Đóng</Button>
             {preview ? (
               <Button onClick={() => void importBackup()} disabled={!canImport}>
@@ -344,9 +359,14 @@ function RestoreBackupModal({ open, onClose }: { open: boolean; onClose: () => v
               </Button>
             ) : null}
           </div>
+
+          {/* Safe area spacer for mobile */}
+          <div className="h-16 sm:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} />
         </div>
       </div>
     </div>
+  </div>
+  </div>
   );
 }
 
