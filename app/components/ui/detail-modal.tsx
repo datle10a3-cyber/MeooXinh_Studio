@@ -31,16 +31,24 @@ export function DetailModal({
   // Portal mount
   useEffect(() => setMounted(true), []);
 
-  // Body scroll lock
+  // Body scroll lock with stack counting to prevent losing scroll position on multiple modals
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;
-    const scrollY = window.scrollY;
-
-    // Lock body scroll
-    html.style.overflow = "hidden";
-    body.style.overflow = "hidden";
-    body.classList.add("studio-modal-open");
+    
+    // Check if a modal is already open
+    const isAlreadyLocked = body.classList.contains("studio-modal-open");
+    
+    let scrollY = 0;
+    if (!isAlreadyLocked) {
+      scrollY = window.scrollY;
+      body.style.position = "fixed";
+      body.style.top = `-${scrollY}px`;
+      body.style.left = "0";
+      body.style.right = "0";
+      body.style.width = "100%";
+      body.classList.add("studio-modal-open");
+    }
 
     // Force modal scroll to top after paint
     requestAnimationFrame(() => {
@@ -48,10 +56,24 @@ export function DetailModal({
     });
 
     return () => {
-      html.style.overflow = "";
-      body.style.overflow = "";
-      body.classList.remove("studio-modal-open");
-      window.scrollTo(0, scrollY);
+      // Only restore body if we are the last modal closing
+      // We can check if there are other modals by looking at the DOM, but
+      // a simple timeout allows other unmounts/mounts to settle.
+      // A better way is to just let the modal unmount and if no more modals exist, unlock.
+      // Since this is a simple app, we can just look for other modals.
+      setTimeout(() => {
+        if (!document.querySelector('.studio-modal-open-element')) {
+          body.style.position = "";
+          body.style.top = "";
+          body.style.left = "";
+          body.style.right = "";
+          body.style.width = "";
+          body.classList.remove("studio-modal-open");
+          if (!isAlreadyLocked) {
+            window.scrollTo(0, scrollY);
+          }
+        }
+      }, 0);
     };
   }, []);
 
@@ -61,7 +83,7 @@ export function DetailModal({
   }, [scrollKey]);
 
   const modal = (
-    <div className="fixed inset-0 z-[100]">
+    <div className="studio-modal-open-element fixed inset-0 z-[100]">
       {/* Scroll container — absolute fills the fixed shell */}
       <div
         ref={scrollRef}
