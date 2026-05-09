@@ -331,6 +331,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     return () => window.removeEventListener("wheel", handleGlobalWheel);
   }, []);
 
+  const isAiPage = pathname === "/ai";
+  const shouldHideMobileNav = hideMobileNav || isAiPage;
+
   return (
     <div className={darkMode ? "min-h-dvh bg-[#2B1C1A] text-white" : "min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
       <div className="flex min-h-dvh">
@@ -340,7 +343,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <Button
-                  variant="secondary"
+                   variant="secondary"
                   size="icon"
                   className="h-11 w-11 shrink-0 touch-manipulation rounded-2xl border-2 border-[#F4A7B9] bg-white text-[#5B342C] shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] xl:hidden"
                   aria-label="Mở menu"
@@ -519,7 +522,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <nav className={`fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC]/60 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg supports-[backdrop-filter]:bg-[#FFF3EC]/40 transition-all duration-300 ease-in-out xl:hidden ${hideMobileNav ? 'hidden' : ''}`} style={{ transform: "translateZ(0)" }}>
+      <nav className={`fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC]/60 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg supports-[backdrop-filter]:bg-[#FFF3EC]/40 transition-all duration-300 ease-in-out xl:hidden ${shouldHideMobileNav ? 'hidden' : ''}`} style={{ transform: "translateZ(0)" }}>
         <div className="mx-auto flex h-14 w-full max-w-md items-center justify-around px-8">
           {mobilePrimary.map((item) => {
             const Icon = item.icon;
