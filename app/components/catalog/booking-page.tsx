@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CalendarClock, CheckCircle2, Printer, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
+import { DetailModal } from "@/app/components/ui/detail-modal";
 import { Card, CardTitle } from "@/app/components/ui/card";
 import { DeleteConfirmation } from "@/app/components/ui/delete-confirmation";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
@@ -1195,98 +1196,65 @@ function BookingDetailModal({
   onCancel: (booking: BookingItem) => void;
   onComplete: (booking: BookingItem) => void;
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.width = "100%";
-    document.body.classList.add("studio-modal-open");
-    return () => {
-      document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.width = "";
-      document.body.classList.remove("studio-modal-open");
-    };
-  }, []);
-
-  useEffect(() => {
-    if (scrollRef.current) scrollRef.current.scrollTop = 0;
-  }, [booking.id]);
-
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[#2F1E1A]/75 backdrop-blur-sm touch-none">
-      <div ref={scrollRef} className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
-        <div className="flex min-h-full justify-start p-3 sm:items-center sm:justify-center sm:p-4">
-          <div
-            className="w-full max-w-2xl rounded-[2rem] border border-[#F4C7C4] bg-white shadow-[0_24px_80px_rgba(91,52,44,0.28)]"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="sticky top-0 z-30 flex items-start justify-between gap-3 rounded-t-[2rem] border-b border-[#F4C7C4] bg-white/95 px-4 py-3 backdrop-blur sm:px-5">
-              <div className="flex min-w-0 items-start gap-3">
-                <CustomerAvatar booking={booking} large />
-                <div className="min-w-0">
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết booking</p>
-                  <h2 className="mt-1 whitespace-normal break-words text-xl font-black leading-7 text-[#5B342C] sm:text-2xl sm:leading-8">{booking.customerName || "Khách chưa đặt tên"}</h2>
-                  <p className="mt-0.5 text-sm font-semibold text-[#9B746B]">{booking.packageName || "Chưa có gói"}</p>
-                </div>
-              </div>
-              <button type="button" className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C] shadow-sm touch-manipulation" onClick={onClose}>
-                <X size={18} />
-              </button>
-            </div>
-
-            {/* Content */}
-            <div className="p-4 sm:p-5">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <DetailBox label="Khách" value={booking.customerName || "Không có"} />
-                <DetailBox label="Trạng thái" value={viOption(booking.status)} />
-                <DetailBox label="Gói" value={booking.packageName || "Không có"} />
-                <DetailBox label="Danh mục" value={booking.categoryName || "Không có"} />
-                <DetailBox label="Giá gốc" value={formatMoney(booking.price)} />
-                <DetailBox label="Thanh toán" value={formatMoney(booking.total ?? booking.price)} />
-                <DetailBox label="Ngày tạo" value={formatDate(booking.createdAt)} />
-                <DetailBox label="Bắt đầu" value={formatDate(booking.startTime ?? "")} />
-                <DetailBox label="Kết thúc" value={formatDate(booking.endTime ?? "")} />
-              </div>
-
-              <div className="mt-3 rounded-[1.25rem] bg-[#FFF3EC] p-4">
-                <p className="text-xs font-black uppercase tracking-[0.12em] text-[#9B746B]">Ghi chú</p>
-                <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-[#5B342C]">{booking.note || "Không có ghi chú."}</p>
-              </div>
-
-              <div className="mt-6 grid grid-cols-2 gap-2 sm:flex sm:justify-end">
-                {!completedOnly ? (
-                  <>
-                    <Button variant="secondary" className="min-h-11" onClick={() => onEdit(booking)}>
-                      <Pencil size={16} />
-                      Sửa
-                    </Button>
-                    <Button variant="secondary" className="min-h-11" onClick={() => onCancel(booking)}>
-                      <X size={16} />
-                      Hủy
-                    </Button>
-                    <Button className="min-h-11" onClick={() => onComplete(booking)}>
-                      <CheckCircle2 size={16} />
-                      Hoàn thành
-                    </Button>
-                  </>
-                ) : null}
-                {canDelete ? (
-                  <Button variant="danger" className="min-h-11" onClick={() => onRemove(booking)}>
-                    <Trash2 size={16} />
-                    Xóa
-                  </Button>
-                ) : null}
-              </div>
-
-              {/* Safe area spacer for mobile */}
-              <div className="h-20 sm:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} />
-            </div>
+    <DetailModal
+      onClose={onClose}
+      maxWidth="max-w-2xl"
+      scrollKey={booking.id}
+      header={
+        <div className="flex min-w-0 items-start gap-3">
+          <CustomerAvatar booking={booking} large />
+          <div className="min-w-0">
+            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết booking</p>
+            <h2 className="mt-1 whitespace-normal break-words text-xl font-black leading-7 text-[#5B342C] sm:text-2xl sm:leading-8">{booking.customerName || "Khách chưa đặt tên"}</h2>
+            <p className="mt-0.5 text-sm font-semibold text-[#9B746B]">{booking.packageName || "Chưa có gói"}</p>
           </div>
         </div>
+      }
+      footer={
+        <div className="grid grid-cols-2 gap-2 sm:flex sm:justify-end">
+          {!completedOnly ? (
+            <>
+              <Button variant="secondary" className="min-h-11" onClick={() => onEdit(booking)}>
+                <Pencil size={16} />
+                Sửa
+              </Button>
+              <Button variant="secondary" className="min-h-11" onClick={() => onCancel(booking)}>
+                <X size={16} />
+                Hủy
+              </Button>
+              <Button className="min-h-11" onClick={() => onComplete(booking)}>
+                <CheckCircle2 size={16} />
+                Hoàn thành
+              </Button>
+            </>
+          ) : null}
+          {canDelete ? (
+            <Button variant="danger" className="min-h-11" onClick={() => onRemove(booking)}>
+              <Trash2 size={16} />
+              Xóa
+            </Button>
+          ) : null}
+        </div>
+      }
+    >
+      <div className="grid gap-3 sm:grid-cols-2">
+        <DetailBox label="Khách" value={booking.customerName || "Không có"} />
+        <DetailBox label="Trạng thái" value={viOption(booking.status)} />
+        <DetailBox label="Gói" value={booking.packageName || "Không có"} />
+        <DetailBox label="Danh mục" value={booking.categoryName || "Không có"} />
+        <DetailBox label="Giá gốc" value={formatMoney(booking.price)} />
+        <DetailBox label="Thanh toán" value={formatMoney(booking.total ?? booking.price)} />
+        <DetailBox label="Ngày tạo" value={formatDate(booking.createdAt)} />
+        <DetailBox label="Bắt đầu" value={formatDate(booking.startTime ?? "")} />
+        <DetailBox label="Kết thúc" value={formatDate(booking.endTime ?? "")} />
       </div>
-    </div>
+
+      <div className="mt-3 rounded-[1.25rem] bg-[#FFF3EC] p-4">
+        <p className="text-xs font-black uppercase tracking-[0.12em] text-[#9B746B]">Ghi chú</p>
+        <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-[#5B342C]">{booking.note || "Không có ghi chú."}</p>
+      </div>
+    </DetailModal>
   );
 }
 

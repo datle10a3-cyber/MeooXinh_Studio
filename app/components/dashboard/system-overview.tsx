@@ -24,6 +24,7 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
+import { DetailModal } from "@/app/components/ui/detail-modal";
 import { Card, CardTitle } from "@/app/components/ui/card";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 
@@ -190,36 +191,30 @@ function RestoreBackupModal({ open, onClose }: { open: boolean; onClose: () => v
     setSelectedSections((current) => current.includes(key) ? current.filter((item) => item !== key) : [...current, key]);
   }
 
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    document.body.style.position = "fixed";
-    document.body.style.width = "100%";
-    document.body.classList.add("studio-modal-open");
-    return () => {
-      document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.width = "";
-      document.body.classList.remove("studio-modal-open");
-    };
-  }, []);
-
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-[#2B1C1A]/75 backdrop-blur-sm touch-none">
-      <div className="flex-1 overflow-y-auto overscroll-contain" style={{ WebkitOverflowScrolling: "touch" }}>
-        <div className="flex min-h-full justify-start p-3 sm:items-center sm:justify-center sm:p-4">
-          <div className="w-full max-w-4xl overflow-hidden rounded-[2rem] border border-[#F4C7C4] bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
-        <div className="sticky top-0 z-30 flex items-start justify-between gap-4 rounded-t-[2rem] border-b border-[#F4C7C4] bg-[#FFF7F0]/95 p-4 backdrop-blur sm:p-6">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.2em] text-[#EA7188]">Khôi phục JSON</p>
-            <h2 className="mt-1 text-2xl font-black text-[#5B342C]">Import / khôi phục dữ liệu</h2>
-            <p className="mt-2 text-sm font-semibold leading-6 text-[#9B746B]">Hệ thống sẽ tải xuống một bản backup an toàn trước khi ghi dữ liệu mới.</p>
-          </div>
-          <Button variant="secondary" size="icon" aria-label="Đóng" onClick={onClose}>
-            <X size={18} />
-          </Button>
+    <DetailModal
+      onClose={onClose}
+      maxWidth="max-w-4xl"
+      header={
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.2em] text-[#EA7188]">Khôi phục JSON</p>
+          <h2 className="mt-1 text-2xl font-black text-[#5B342C]">Import / khôi phục dữ liệu</h2>
+          <p className="mt-2 text-sm font-semibold leading-6 text-[#9B746B]">Hệ thống sẽ tải xuống một bản backup an toàn trước khi ghi dữ liệu mới.</p>
         </div>
-
-        <div className="space-y-4 p-4 sm:p-6">
+      }
+      footer={
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="secondary" onClick={onClose}>Đóng</Button>
+          {preview ? (
+            <Button onClick={() => void importBackup()} disabled={!canImport}>
+              {loading ? <Loader2 className="animate-spin" size={17} /> : <RotateCcw size={17} />}
+              Khôi phục dữ liệu
+            </Button>
+          ) : null}
+        </div>
+      }
+    >
+      <div className="space-y-4">
           <div className="flex gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-amber-800">
             <AlertTriangle className="mt-0.5 shrink-0" size={20} />
             <div>
@@ -349,24 +344,8 @@ function RestoreBackupModal({ open, onClose }: { open: boolean; onClose: () => v
               {success ? <span className="ml-1">Tổng cộng {success.total} mục.</span> : null}
             </div>
           ) : null}
-
-          <div className="flex flex-col-reverse gap-2 border-t border-[#F4C7C4] p-4 sm:flex-row sm:justify-end sm:p-6">
-            <Button variant="secondary" onClick={onClose}>Đóng</Button>
-            {preview ? (
-              <Button onClick={() => void importBackup()} disabled={!canImport}>
-                {loading ? <Loader2 className="animate-spin" size={17} /> : <RotateCcw size={17} />}
-                Khôi phục dữ liệu
-              </Button>
-            ) : null}
-          </div>
-
-          {/* Safe area spacer for mobile */}
-          <div className="h-16 sm:hidden" style={{ paddingBottom: "env(safe-area-inset-bottom)" }} />
-        </div>
       </div>
-    </div>
-  </div>
-  </div>
+    </DetailModal>
   );
 }
 
