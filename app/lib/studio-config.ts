@@ -264,13 +264,11 @@ export const RESOURCE_CONFIG: Record<ResourceKey, ResourceConfig> = {
     imageField: "imageUrl",
     tableFields: ["title", "type", "isRead", "dueAt"],
     fields: [
-      { key: "imageUrl", label: "Ảnh đính kèm", type: "image", placeholder: "Upload ảnh minh chứng" },
-      { key: "galleryUrls", label: "Ảnh phụ", type: "gallery" },
-      { key: "title", label: "Tiêu đề", type: "text" },
-      { key: "message", label: "Nội dung", type: "textarea" },
-      { key: "type", label: "Loại thông báo", type: "select", options: ["BOOKING", "PAYMENT", "DEBT", "APPROVAL", "SYSTEM"] },
-      { key: "isRead", label: "Đã đọc", type: "boolean", options: ["true", "false"] },
+      { key: "title", label: "Tiêu đề", type: "text", placeholder: "Ví dụ: Gọi điện cho khách hàng, chuẩn bị thiết bị..." },
+      { key: "message", label: "Nội dung chi tiết", type: "textarea", placeholder: "Nội dung chi tiết nhắc việc hoặc ghi chú..." },
       { key: "dueAt", label: "Thời gian nhắc", type: "datetime" },
+      { key: "type", label: "Loại thông báo", type: "select", options: ["SYSTEM", "BOOKING", "PAYMENT", "DEBT", "APPROVAL"] },
+      { key: "imageUrl", label: "Ảnh đính kèm (nếu có)", type: "image", placeholder: "Upload ảnh đính kèm" },
     ],
   },
 };
