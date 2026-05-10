@@ -1493,6 +1493,27 @@ function printBookingInvoice(booking: BookingItem, targetWindow?: Window | null)
   const amountValue = booking.invoiceTotal ?? booking.invoiceItems?.[0]?.total ?? booking.price;
   const amount = formatMoney(amountValue);
   const invoiceTime = booking.invoiceIssueDate || new Date();
+
+  const originalPrice = Number(booking.price || amountValue || 0);
+  const finalPrice = Number(amountValue || 0);
+  const discountAmount = Math.max(0, originalPrice - finalPrice);
+
+  let discountLabel = "";
+  let discountPercent = "";
+  if (booking.note) {
+    const match = /Giảm giá:\s*([^\n\r()]+)(?:\s*\((\d+%)\))?/.exec(booking.note);
+    if (match) {
+      discountLabel = match[1].trim();
+      if (match[2]) {
+        discountPercent = match[2];
+      }
+    }
+  }
+
+  if (!discountLabel && discountAmount > 0) {
+    discountLabel = `${discountAmount.toLocaleString("vi-VN")} đ`;
+  }
+
   const paymentQrUrl = buildPaymentQrUrl(amountValue, invoiceCode);
   const qrBlock = paymentQrUrl
     ? `<div class="sep"></div><div class="center qr"><img src="${receiptEscape(paymentQrUrl)}" alt="QR thanh toán" /><div class="small bold">Quét mã để thanh toán</div><div class="small">Số tiền: ${receiptEscape(amount)}</div></div>`
@@ -1561,10 +1582,21 @@ function printBookingInvoice(booking: BookingItem, targetWindow?: Window | null)
     <div class="section">💰 CHI TIẾT</div>
     <div class="item">
       <div>${receiptEscape(packageName)}</div>
-      <div class="row qty"><span>x1</span><span class="right">${receiptEscape(amount)}</span></div>
+      <div class="row qty"><span>x1</span><span class="right">${receiptEscape(formatMoney(originalPrice))}</span></div>
     </div>
     <div class="solid"></div>
-    <div class="row bold total"><span>TỔNG TIỀN</span><span class="right">${receiptEscape(amount)}</span></div>
+    ${discountAmount > 0 ? `
+    <div class="row info" style="margin-bottom: 4px; font-size: 11px; color: #7a5750;">
+      <span>Giá gốc</span>
+      <span class="right">${receiptEscape(formatMoney(originalPrice))}</span>
+    </div>
+    <div class="row info" style="margin-bottom: 6px; font-weight: bold; color: #e86b88;">
+      <span>🏷️ Giảm giá ${discountPercent ? `(${discountPercent})` : ""}</span>
+      <span class="right">-${receiptEscape(discountLabel)}</span>
+    </div>
+    <div class="solid" style="margin: 4px 0;"></div>
+    ` : ""}
+    <div class="row bold total"><span>TỔNG THANH TOÁN</span><span class="right">${receiptEscape(formatMoney(finalPrice))}</span></div>
     <div class="sep"></div>
     <div class="status">ĐÃ THANH TOÁN ✔</div>
     ${qrBlock}
