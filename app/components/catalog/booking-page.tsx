@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CalendarClock, CheckCircle2, Loader2, Printer, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { CalendarClock, CheckCircle2, Loader2, Printer, Pencil, Plus, Search, Trash2, X, CreditCard, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { DetailModal } from "@/app/components/ui/detail-modal";
 import { Card, CardTitle } from "@/app/components/ui/card";
@@ -1148,42 +1148,46 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-end gap-1.5 border-t border-dashed border-[#F4C7C4]/50 pt-2.5 sm:border-t-0 sm:pt-0 sm:gap-2 shrink-0">
+                  <div className="flex flex-wrap items-center justify-end gap-1.5 border-t border-dashed border-[#F4C7C4]/50 pt-2.5 sm:border-t-0 sm:pt-0 sm:gap-2 shrink-0">
                     {completedOnly ? (
                       <button
                         type="button"
-                        className="rounded-full bg-[#FFF0F4] hover:bg-[#FFE2EA] px-3 py-1.5 text-xs font-black text-[#EA7188] transition"
+                        className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-[#FFF0F4] hover:bg-[#FFE2EA] px-3 py-1.5 text-xs font-black text-[#EA7188] transition active:scale-95"
                         onClick={(event) => {
                           event.stopPropagation();
                           printBookingGroupInvoice(group);
                         }}
                       >
-                        🖨️ In bill tổng
+                        <Printer size={13} strokeWidth={2.5} />
+                        In bill tổng
                       </button>
                     ) : null}
                     {!completedOnly && uncompletedRows.length > 0 ? (
                       <button
                         type="button"
-                        className="rounded-full bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-600 transition"
+                        className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-600 transition active:scale-95"
                         onClick={(event) => {
                           event.stopPropagation();
                           setGroupPaymentTarget(group);
                         }}
                       >
+                        <CreditCard size={13} strokeWidth={2.5} />
                         Thanh toán ({uncompletedRows.length})
                       </button>
                     ) : null}
                     <button
                       type="button"
-                      className="rounded-full bg-[#FFF0F4] px-3 py-1.5 text-xs font-black text-[#A84E61] transition hover:bg-[#FFE2EA]"
+                      className="flex items-center gap-1 rounded-full border border-[#FCD34D] bg-[#FFF8F1] hover:bg-[#FFF3EC] px-3 py-1.5 text-xs font-black text-[#D97706] transition active:scale-95"
                       onClick={(event) => {
                         event.stopPropagation();
                         void renameGroup(group);
                       }}
                     >
+                      <Pencil size={13} strokeWidth={2.5} />
                       Sửa tên
                     </button>
-                    <span className="rounded-full bg-[#FFF0F4] px-3 py-1.5 text-xs font-black text-[#A84E61]">
+                    <span className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-white hover:bg-[#FFF8F1] px-3 py-1.5 text-xs font-black text-[#A84E61] transition">
+                      {expanded ? <EyeOff size={13} strokeWidth={2.5} /> : <Eye size={13} strokeWidth={2.5} />}
                       {expanded ? "Thu gọn" : "Xem"}
                     </span>
                   </div>
