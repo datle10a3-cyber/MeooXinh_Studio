@@ -444,11 +444,18 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }, [loadData]);
 
   useEffect(() => {
-    if (!showForm || completedOnly) return;
-    const frame = window.requestAnimationFrame(() => {
-      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-    return () => window.cancelAnimationFrame(frame);
+    if (showForm && !completedOnly) {
+      document.body.classList.add("studio-modal-open");
+      const frame = window.requestAnimationFrame(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      return () => {
+        window.cancelAnimationFrame(frame);
+        document.body.classList.remove("studio-modal-open");
+      };
+    } else {
+      document.body.classList.remove("studio-modal-open");
+    }
   }, [completedOnly, showForm]);
 
   useEffect(() => {

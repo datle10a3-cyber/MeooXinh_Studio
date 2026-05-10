@@ -162,11 +162,18 @@ export function PackagePage() {
   }, []);
 
   useEffect(() => {
-    if (!showForm) return;
-    const frame = window.requestAnimationFrame(() => {
-      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-    return () => window.cancelAnimationFrame(frame);
+    if (showForm) {
+      document.body.classList.add("studio-modal-open");
+      const frame = window.requestAnimationFrame(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      return () => {
+        window.cancelAnimationFrame(frame);
+        document.body.classList.remove("studio-modal-open");
+      };
+    } else {
+      document.body.classList.remove("studio-modal-open");
+    }
   }, [showForm]);
 
   useEffect(() => {
