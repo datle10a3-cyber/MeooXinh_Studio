@@ -2536,29 +2536,31 @@ function WalletAppView({
           {renderClosedShiftList()}
         </Card>
         {openingOpen ? (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-            <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-2xl font-black text-[#2F2F2F]">Mở ca</h3>
-                <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setOpeningOpen(false)}>
-                  <X size={18} />
-                </Button>
-              </div>
-              <div className="mt-5 space-y-3">
-                <label className="block">
-                  <span className="mb-2 block text-sm font-black text-[#5B342C]">Tiền đầu ca</span>
-                  <Input type="number" value={openingBalance} placeholder="0" onChange={(event) => setOpeningBalance(event.target.value)} />
-                </label>
-                <label className="block">
-                  <span className="mb-2 block text-sm font-black text-[#5B342C]">Ghi chú mở ca</span>
-                  <Input value={openingNote} placeholder="Ví dụ: ca sáng / ca tối" onChange={(event) => setOpeningNote(event.target.value)} />
-                </label>
-                <Button className="h-12 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => void openShiftNow()}>
-                  Xác nhận
-                </Button>
-              </div>
-            </Card>
-          </div>
+          <Portal>
+            <div className="fixed inset-0 z-[150] grid place-items-center bg-black/40 p-4" onClick={() => setOpeningOpen(false)}>
+              <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-2xl font-black text-[#2F2F2F]">Mở ca</h3>
+                  <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setOpeningOpen(false)}>
+                    <X size={18} />
+                  </Button>
+                </div>
+                <div className="mt-5 space-y-3">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-black text-[#5B342C]">Tiền đầu ca</span>
+                    <Input type="number" value={openingBalance} placeholder="0" onChange={(event) => setOpeningBalance(event.target.value)} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-black text-[#5B342C]">Ghi chú mở ca</span>
+                    <Input value={openingNote} placeholder="Ví dụ: ca sáng / ca tối" onChange={(event) => setOpeningNote(event.target.value)} />
+                  </label>
+                  <Button className="h-12 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => void openShiftNow()}>
+                    Xác nhận
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          </Portal>
         ) : null}
       </div>
     );
@@ -2586,90 +2588,96 @@ function WalletAppView({
         </Card>
 
         {openingOpen ? (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-            <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-2xl font-black text-[#2F2F2F]">Mở ca {shiftData.nextCode ? `(${shiftData.nextCode})` : ""}</h3>
-                <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setOpeningOpen(false)}>
-                  <X size={18} />
-                </Button>
-              </div>
-              <div className="mt-5 space-y-3">
-                <label className="block">
-                  <span className="mb-2 block text-sm font-black text-[#5B342C]">Tiền đầu ca</span>
-                  <Input type="number" value={openingBalance} placeholder={String(activeWallet.balance ?? "0")} onChange={(event) => setOpeningBalance(event.target.value)} />
-                </label>
-                <label className="block">
-                  <span className="mb-2 block text-sm font-black text-[#5B342C]">Ghi chú mở ca</span>
-                  <Input value={openingNote} placeholder="Ví dụ: ca sáng / ca tối" onChange={(event) => setOpeningNote(event.target.value)} />
-                </label>
-                <Button className="h-12 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => void openShiftNow()} disabled={isOpening}>
-                  {isOpening ? <Loader2 className="mr-2 animate-spin" size={18} /> : null}
-                  Xác nhận
-                </Button>
-              </div>
-            </Card>
-          </div>
+          <Portal>
+            <div className="fixed inset-0 z-[150] grid place-items-center bg-black/40 p-4" onClick={() => setOpeningOpen(false)}>
+              <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-2xl font-black text-[#2F2F2F]">Mở ca {shiftData.nextCode ? `(${shiftData.nextCode})` : ""}</h3>
+                  <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setOpeningOpen(false)}>
+                    <X size={18} />
+                  </Button>
+                </div>
+                <div className="mt-5 space-y-3">
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-black text-[#5B342C]">Tiền đầu ca</span>
+                    <Input type="number" value={openingBalance} placeholder={String(activeWallet.balance ?? "0")} onChange={(event) => setOpeningBalance(event.target.value)} />
+                  </label>
+                  <label className="block">
+                    <span className="mb-2 block text-sm font-black text-[#5B342C]">Ghi chú mở ca</span>
+                    <Input value={openingNote} placeholder="Ví dụ: ca sáng / ca tối" onChange={(event) => setOpeningNote(event.target.value)} />
+                  </label>
+                  <Button className="h-12 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => void openShiftNow()} disabled={isOpening}>
+                    {isOpening ? <Loader2 className="mr-2 animate-spin" size={18} /> : null}
+                    Xác nhận
+                  </Button>
+                </div>
+              </Card>
+            </div>
+          </Portal>
         ) : null}
 
         {deleteShiftTarget ? (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-            <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-2xl font-black text-[#2F2F2F]">Xóa ca</h3>
-                <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setDeleteShiftTarget(null)}>
-                  <X size={18} />
+          <Portal>
+            <div className="fixed inset-0 z-[150] grid place-items-center bg-black/40 p-4" onClick={() => setDeleteShiftTarget(null)}>
+              <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="text-2xl font-black text-[#2F2F2F]">Xóa ca</h3>
+                  <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setDeleteShiftTarget(null)}>
+                    <X size={18} />
+                  </Button>
+                </div>
+                <p className="mt-3 text-sm font-bold leading-6 text-[#7A7A7A]">
+                  Nhập mật khẩu studio 6 số để xóa ca này. Mật khẩu mặc định ban đầu là 000000.
+                </p>
+                <label className="mt-4 block">
+                  <span className="mb-2 block text-sm font-black text-[#5B342C]">Mật khẩu studio</span>
+                  <Input type="password" inputMode="numeric" value={deleteShiftPassword} placeholder="000000" onChange={(event) => setDeleteShiftPassword(event.target.value.replace(/\D/g, "").slice(0, 6))} />
+                </label>
+                {deleteShiftMessage ? <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{deleteShiftMessage}</p> : null}
+                <Button variant="danger" className="mt-4 h-12 w-full rounded-2xl text-base font-black" onClick={() => void deleteShiftNow()} disabled={isDeleting}>
+                  {isDeleting ? <Loader2 className="mr-2 animate-spin" size={18} /> : null}
+                  Xác nhận xóa
                 </Button>
-              </div>
-              <p className="mt-3 text-sm font-bold leading-6 text-[#7A7A7A]">
-                Nhập mật khẩu studio 6 số để xóa ca này. Mật khẩu mặc định ban đầu là 000000.
-              </p>
-              <label className="mt-4 block">
-                <span className="mb-2 block text-sm font-black text-[#5B342C]">Mật khẩu studio</span>
-                <Input type="password" inputMode="numeric" value={deleteShiftPassword} placeholder="000000" onChange={(event) => setDeleteShiftPassword(event.target.value.replace(/\D/g, "").slice(0, 6))} />
-              </label>
-              {deleteShiftMessage ? <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{deleteShiftMessage}</p> : null}
-              <Button variant="danger" className="mt-4 h-12 w-full rounded-2xl text-base font-black" onClick={() => void deleteShiftNow()} disabled={isDeleting}>
-                {isDeleting ? <Loader2 className="mr-2 animate-spin" size={18} /> : null}
-                Xác nhận xóa
-              </Button>
-            </Card>
-          </div>
+              </Card>
+            </div>
+          </Portal>
         ) : null}
 
         {selectedShift ? (
-          <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-            <Card className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-[1.75rem] border-white bg-white p-5 shadow-2xl">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết ca</p>
-                  <h3 className="mt-1 text-2xl font-black text-[#2F2F2F]">Ca đã đóng</h3>
+          <Portal>
+            <div className="fixed inset-0 z-[150] grid place-items-center bg-black/40 p-4" onClick={() => setSelectedShift(null)}>
+              <Card className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-[1.75rem] border-white bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết ca</p>
+                    <h3 className="mt-1 text-2xl font-black text-[#2F2F2F]">Ca đã đóng</h3>
+                  </div>
+                  <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setSelectedShift(null)}>
+                    <X size={18} />
+                  </Button>
                 </div>
-                <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setSelectedShift(null)}>
-                  <X size={18} />
-                </Button>
-              </div>
-              <div className="mt-5 grid gap-2 sm:grid-cols-3">
-                <InfoPill label="Tổng thu" value={formatMoney(selectedShift.totalIncome as string | number | null | undefined)} />
-                <InfoPill label="Tổng chi" value={formatMoney(selectedShift.totalExpense as string | number | null | undefined)} />
-                <InfoPill label="Chênh lệch" value={formatMoney(selectedShift.difference as string | number | null | undefined)} />
-              </div>
-              <div className="mt-5">
-                <h4 className="text-base font-black text-[#2F2F2F]">Giao dịch trong ca</h4>
-                {transactionsForSelectedShift.length ? (
-                  <div className="mt-3 space-y-2">
-                    {transactionsForSelectedShift.map((row, index) => (
-                      <ShiftTransactionRow key={String(row.id ?? index)} row={row} index={index} onOpenDetail={onOpenDetail} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="mt-3 rounded-[1.5rem] bg-[#F6F7FB] p-5 text-center text-sm font-bold text-[#7A7A7A]">
-                    Ca này chưa có giao dịch.
-                  </div>
-                )}
-              </div>
-            </Card>
-          </div>
+                <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                  <InfoPill label="Tổng thu" value={formatMoney(selectedShift.totalIncome as string | number | null | undefined)} />
+                  <InfoPill label="Tổng chi" value={formatMoney(selectedShift.totalExpense as string | number | null | undefined)} />
+                  <InfoPill label="Chênh lệch" value={formatMoney(selectedShift.difference as string | number | null | undefined)} />
+                </div>
+                <div className="mt-5">
+                  <h4 className="text-base font-black text-[#2F2F2F]">Giao dịch trong ca</h4>
+                  {transactionsForSelectedShift.length ? (
+                    <div className="mt-3 space-y-2">
+                      {transactionsForSelectedShift.map((row, index) => (
+                        <ShiftTransactionRow key={String(row.id ?? index)} row={row} index={index} onOpenDetail={onOpenDetail} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="mt-3 rounded-[1.5rem] bg-[#F6F7FB] p-5 text-center text-sm font-bold text-[#7A7A7A]">
+                      Ca này chưa có giao dịch.
+                    </div>
+                  )}
+                </div>
+              </Card>
+            </div>
+          </Portal>
         ) : null}
       </div>
     );
@@ -2831,122 +2839,130 @@ function WalletAppView({
           </Card>
 
           {openingOpen ? (
-            <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-              <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-2xl font-black text-[#2F2F2F]">Mở ca</h3>
-                  <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setOpeningOpen(false)}>
-                    <X size={18} />
-                  </Button>
-                </div>
-                <div className="mt-5 space-y-3">
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-black text-[#5B342C]">Tiền đầu ca</span>
-                    <Input type="number" value={openingBalance} placeholder={String(activeWallet.balance ?? "0")} onChange={(event) => setOpeningBalance(event.target.value)} />
-                  </label>
-                  <label className="block">
-                    <span className="mb-2 block text-sm font-black text-[#5B342C]">Ghi chú mở ca</span>
-                    <Input value={openingNote} placeholder="Ví dụ: ca sáng / ca tối" onChange={(event) => setOpeningNote(event.target.value)} />
-                  </label>
-                  <Button className="h-12 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => void openShiftNow()} disabled={isOpening}>
-                    {isOpening ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
-                    {isOpening ? "Đang xử lý..." : "Xác nhận"}
-                  </Button>
-                </div>
-              </Card>
-            </div>
+            <Portal>
+              <div className="fixed inset-0 z-[150] grid place-items-center bg-black/40 p-4" onClick={() => setOpeningOpen(false)}>
+                <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-2xl font-black text-[#2F2F2F]">Mở ca</h3>
+                    <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setOpeningOpen(false)}>
+                      <X size={18} />
+                    </Button>
+                  </div>
+                  <div className="mt-5 space-y-3">
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-black text-[#5B342C]">Tiền đầu ca</span>
+                      <Input type="number" value={openingBalance} placeholder={String(activeWallet.balance ?? "0")} onChange={(event) => setOpeningBalance(event.target.value)} />
+                    </label>
+                    <label className="block">
+                      <span className="mb-2 block text-sm font-black text-[#5B342C]">Ghi chú mở ca</span>
+                      <Input value={openingNote} placeholder="Ví dụ: ca sáng / ca tối" onChange={(event) => setOpeningNote(event.target.value)} />
+                    </label>
+                    <Button className="h-12 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => void openShiftNow()} disabled={isOpening}>
+                      {isOpening ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
+                      {isOpening ? "Đang xử lý..." : "Xác nhận"}
+                    </Button>
+                  </div>
+                </Card>
+              </div>
+            </Portal>
           ) : null}
 
           {closingOpen && openShift ? (
-            <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-              <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-2xl font-black text-[#2F2F2F]">Đóng ca</h3>
-                  <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setClosingOpen(false)}>
-                    <X size={18} />
+            <Portal>
+              <div className="fixed inset-0 z-[150] grid place-items-center bg-black/40 p-4" onClick={() => setClosingOpen(false)}>
+                <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-2xl font-black text-[#2F2F2F]">Đóng ca</h3>
+                    <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setClosingOpen(false)}>
+                      <X size={18} />
+                    </Button>
+                  </div>
+                  <div className="mt-5 grid gap-2">
+                    <InfoPill label="Tổng thu" value={formatMoney(openShift.totalIncome as string | number | null | undefined)} />
+                    <InfoPill label="Tổng chi" value={formatMoney(openShift.totalExpense as string | number | null | undefined)} />
+                    <InfoPill label="Số dư hệ thống" value={formatMoney(openShift.expectedClosingBalance as string | number | null | undefined)} />
+                  </div>
+                  <label className="mt-4 block">
+                    <span className="mb-2 block text-sm font-black text-[#5B342C]">Tiền thực tế</span>
+                    <Input type="number" value={actualClosingBalance} placeholder={String(openShift.expectedClosingBalance ?? "0")} onChange={(event) => setActualClosingBalance(event.target.value)} />
+                  </label>
+                  <div className={cn("mt-3 rounded-2xl px-4 py-3 text-sm font-black", closingDifference === 0 ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-orange-700")}>
+                    Chênh lệch: {formatMoney(closingDifference)}
+                  </div>
+                  <Button className="mt-4 h-12 w-full rounded-2xl bg-rose-600 text-base font-black text-white hover:bg-rose-700" onClick={() => void closeShiftNow()} disabled={isClosing}>
+                    {isClosing ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
+                    {isClosing ? "Đang xử lý..." : "Xác nhận"}
                   </Button>
-                </div>
-                <div className="mt-5 grid gap-2">
-                  <InfoPill label="Tổng thu" value={formatMoney(openShift.totalIncome as string | number | null | undefined)} />
-                  <InfoPill label="Tổng chi" value={formatMoney(openShift.totalExpense as string | number | null | undefined)} />
-                  <InfoPill label="Số dư hệ thống" value={formatMoney(openShift.expectedClosingBalance as string | number | null | undefined)} />
-                </div>
-                <label className="mt-4 block">
-                  <span className="mb-2 block text-sm font-black text-[#5B342C]">Tiền thực tế</span>
-                  <Input type="number" value={actualClosingBalance} placeholder={String(openShift.expectedClosingBalance ?? "0")} onChange={(event) => setActualClosingBalance(event.target.value)} />
-                </label>
-                <div className={cn("mt-3 rounded-2xl px-4 py-3 text-sm font-black", closingDifference === 0 ? "bg-emerald-50 text-emerald-700" : "bg-orange-50 text-orange-700")}>
-                  Chênh lệch: {formatMoney(closingDifference)}
-                </div>
-                <Button className="mt-4 h-12 w-full rounded-2xl bg-rose-600 text-base font-black text-white hover:bg-rose-700" onClick={() => void closeShiftNow()} disabled={isClosing}>
-                  {isClosing ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
-                  {isClosing ? "Đang xử lý..." : "Xác nhận"}
-                </Button>
-              </Card>
-            </div>
+                </Card>
+              </div>
+            </Portal>
           ) : null}
 
           {deleteShiftTarget ? (
-            <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-              <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl">
-                <div className="flex items-center justify-between gap-3">
-                  <h3 className="text-2xl font-black text-[#2F2F2F]">Xóa ca</h3>
-                  <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setDeleteShiftTarget(null)}>
-                    <X size={18} />
+            <Portal>
+              <div className="fixed inset-0 z-[150] grid place-items-center bg-black/40 p-4" onClick={() => setDeleteShiftTarget(null)}>
+                <Card className="w-full max-w-md rounded-[1.75rem] border-white bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                  <div className="flex items-center justify-between gap-3">
+                    <h3 className="text-2xl font-black text-[#2F2F2F]">Xóa ca</h3>
+                    <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setDeleteShiftTarget(null)}>
+                      <X size={18} />
+                    </Button>
+                  </div>
+                  <p className="mt-3 text-sm font-bold leading-6 text-[#7A7A7A]">
+                    Nhập mật khẩu studio 6 số để xóa ca này. Mật khẩu mặc định ban đầu là 000000.
+                  </p>
+                  <label className="mt-4 block">
+                    <span className="mb-2 block text-sm font-black text-[#5B342C]">Mật khẩu studio</span>
+                    <Input type="password" inputMode="numeric" value={deleteShiftPassword} placeholder="000000" onChange={(event) => setDeleteShiftPassword(event.target.value.replace(/\D/g, "").slice(0, 6))} />
+                  </label>
+                  {deleteShiftMessage ? <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{deleteShiftMessage}</p> : null}
+                  <Button variant="danger" className="mt-4 h-12 w-full rounded-2xl text-base font-black" onClick={() => void deleteShiftNow()} disabled={isDeleting}>
+                    {isDeleting ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
+                    {isDeleting ? "Đang xóa..." : "Xác nhận xóa"}
                   </Button>
-                </div>
-                <p className="mt-3 text-sm font-bold leading-6 text-[#7A7A7A]">
-                  Nhập mật khẩu studio 6 số để xóa ca này. Mật khẩu mặc định ban đầu là 000000.
-                </p>
-                <label className="mt-4 block">
-                  <span className="mb-2 block text-sm font-black text-[#5B342C]">Mật khẩu studio</span>
-                  <Input type="password" inputMode="numeric" value={deleteShiftPassword} placeholder="000000" onChange={(event) => setDeleteShiftPassword(event.target.value.replace(/\D/g, "").slice(0, 6))} />
-                </label>
-                {deleteShiftMessage ? <p className="mt-3 rounded-2xl bg-rose-50 px-4 py-3 text-sm font-bold text-rose-700">{deleteShiftMessage}</p> : null}
-                <Button variant="danger" className="mt-4 h-12 w-full rounded-2xl text-base font-black" onClick={() => void deleteShiftNow()} disabled={isDeleting}>
-                  {isDeleting ? <Loader2 className="animate-spin mr-2" size={18} /> : null}
-                  {isDeleting ? "Đang xóa..." : "Xác nhận xóa"}
-                </Button>
-              </Card>
-            </div>
+                </Card>
+              </div>
+            </Portal>
           ) : null}
 
           {selectedShift ? (
-            <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4">
-              <Card className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-[1.75rem] border-white bg-white p-5 shadow-2xl">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết ca</p>
-                    <h3 className="mt-1 text-2xl font-black text-[#2F2F2F]">{String(selectedShift.code ?? "Ca đã đóng")}</h3>
+            <Portal>
+              <div className="fixed inset-0 z-[150] grid place-items-center bg-black/40 p-4" onClick={() => setSelectedShift(null)}>
+                <Card className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-[1.75rem] border-white bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết ca</p>
+                      <h3 className="mt-1 text-2xl font-black text-[#2F2F2F]">{String(selectedShift.code ?? "Ca đã đóng")}</h3>
+                    </div>
+                    <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setSelectedShift(null)}>
+                      <X size={18} />
+                    </Button>
                   </div>
-                  <Button variant="secondary" size="icon" aria-label="Đóng" onClick={() => setSelectedShift(null)}>
-                    <X size={18} />
-                  </Button>
-                </div>
-                <div className="mt-5 grid gap-2 sm:grid-cols-3">
-                  <InfoPill label="Người mở" value={String((selectedShift.openedBy as Row | undefined)?.name ?? "Chưa rõ")} />
-                  <InfoPill label="Người đóng" value={String((selectedShift.closedBy as Row | undefined)?.name ?? "Chưa rõ")} />
-                  <InfoPill label="Tiền thực tế" value={formatMoney(selectedShift.actualClosingBalance as string | number | null | undefined)} />
-                  <InfoPill label="Tổng thu" value={formatMoney(selectedShift.totalIncome as string | number | null | undefined)} />
-                  <InfoPill label="Tổng chi" value={formatMoney(selectedShift.totalExpense as string | number | null | undefined)} />
-                  <InfoPill label="Chênh lệch" value={formatMoney(selectedShift.difference as string | number | null | undefined)} />
-                </div>
-                <div className="mt-5">
-                  <h4 className="text-base font-black text-[#2F2F2F]">Giao dịch trong ca</h4>
-                  {transactionsForSelectedShift.length ? (
-                    <div className="mt-3 space-y-2">
-                      {transactionsForSelectedShift.map((row, index) => (
-                        <ShiftTransactionRow key={String(row.id ?? index)} row={row} index={index} onOpenDetail={onOpenDetail} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-3 rounded-[1.5rem] bg-[#F6F7FB] p-5 text-center text-sm font-bold text-[#7A7A7A]">
-                      Ca này chưa có giao dịch.
-                    </div>
-                  )}
-                </div>
-              </Card>
-            </div>
+                  <div className="mt-5 grid gap-2 sm:grid-cols-3">
+                    <InfoPill label="Người mở" value={String((selectedShift.openedBy as Row | undefined)?.name ?? "Chưa rõ")} />
+                    <InfoPill label="Người đóng" value={String((selectedShift.closedBy as Row | undefined)?.name ?? "Chưa rõ")} />
+                    <InfoPill label="Tiền thực tế" value={formatMoney(selectedShift.actualClosingBalance as string | number | null | undefined)} />
+                    <InfoPill label="Tổng thu" value={formatMoney(selectedShift.totalIncome as string | number | null | undefined)} />
+                    <InfoPill label="Tổng chi" value={formatMoney(selectedShift.totalExpense as string | number | null | undefined)} />
+                    <InfoPill label="Chênh lệch" value={formatMoney(selectedShift.difference as string | number | null | undefined)} />
+                  </div>
+                  <div className="mt-5">
+                    <h4 className="text-base font-black text-[#2F2F2F]">Giao dịch trong ca</h4>
+                    {transactionsForSelectedShift.length ? (
+                      <div className="mt-3 space-y-2">
+                        {transactionsForSelectedShift.map((row, index) => (
+                          <ShiftTransactionRow key={String(row.id ?? index)} row={row} index={index} onOpenDetail={onOpenDetail} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="mt-3 rounded-[1.5rem] bg-[#F6F7FB] p-5 text-center text-sm font-bold text-[#7A7A7A]">
+                        Ca này chưa có giao dịch.
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              </div>
+            </Portal>
           ) : null}
 
         </section>
