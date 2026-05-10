@@ -306,19 +306,48 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }
 
   function toggleGroupSelection(groupKey: string) {
+    const group = displayGroups.find((g) => g.key === groupKey);
+    if (!group) return;
+
+    const isSelecting = !selectedGroupKeys.includes(groupKey);
+    const childIds = group.rows.map((row) => row.id);
+
     setSelectedGroupKeys((current) => {
-      const next = current.includes(groupKey) ? current.filter((key) => key !== groupKey) : [...current, groupKey];
+      const next = isSelecting ? [...current, groupKey] : current.filter((key) => key !== groupKey);
       setGroupSelectionMode(next.length > 0);
       return next;
+    });
+
+    setSelectedIds((current) => {
+      if (isSelecting) {
+        const next = [...current];
+        for (const id of childIds) {
+          if (!next.includes(id)) next.push(id);
+        }
+        return next;
+      } else {
+        return current.filter((id) => !childIds.includes(id));
+      }
     });
   }
 
   function beginGroupLongPress(groupKey: string) {
     clearLongPress();
     longPressTimer.current = window.setTimeout(() => {
-      setSelectedGroupKeys((current) => current.includes(groupKey) ? current : [...current, groupKey]);
-      setGroupSelectionMode(true);
-      setLongPressActivated(true);
+      const group = displayGroups.find((g) => g.key === groupKey);
+      if (group) {
+        const childIds = group.rows.map((row) => row.id);
+        setSelectedGroupKeys((current) => current.includes(groupKey) ? current : [...current, groupKey]);
+        setSelectedIds((current) => {
+          const next = [...current];
+          for (const id of childIds) {
+            if (!next.includes(id)) next.push(id);
+          }
+          return next;
+        });
+        setGroupSelectionMode(true);
+        setLongPressActivated(true);
+      }
       longPressTimer.current = null;
     }, 430);
   }
@@ -329,6 +358,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     const currentTarget = event.currentTarget as HTMLElement;
     const interactive = target.closest("button,a,input,select,textarea");
     if (interactive && interactive !== currentTarget) return;
+    event.stopPropagation();
     beginLongPress(row);
   }
 
@@ -346,6 +376,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     const currentTarget = event.currentTarget as HTMLElement;
     const interactive = target.closest("button,a,input,select,textarea");
     if (interactive && interactive !== currentTarget) return;
+    event.stopPropagation();
     const touch = event.touches[0];
     if (touch.clientX < 28 || touch.clientX > window.innerWidth - 28) return;
     touchStart.current = { x: touch.clientX, y: touch.clientY };
@@ -703,6 +734,29 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
             setLongPressActivated(false);
             return;
           }
+          if (selectedIds.length > 0 || selectedGroupKeys.length > 0) {
+            setSelectedIds((current) => {
+              const isUnselecting = current.includes(row.id);
+              const next = isUnselecting ? current.filter((id) => id !== row.id) : [...current, row.id];
+              
+              if (isUnselecting) {
+                const groupKey = bookingGroupKey(row);
+                if (groupKey) {
+                  setSelectedGroupKeys((gKeys) => gKeys.filter((key) => key !== groupKey));
+                }
+              } else {
+                const groupKey = bookingGroupKey(row);
+                if (groupKey) {
+                  const group = displayGroups.find((g) => g.key === groupKey);
+                  if (group && group.rows.every((r) => r.id === row.id || next.includes(r.id))) {
+                    setSelectedGroupKeys((gKeys) => gKeys.includes(groupKey) ? gKeys : [...gKeys, groupKey]);
+                  }
+                }
+              }
+              return next;
+            });
+            return;
+          }
           setDetail(row);
         }}
         onKeyDown={(event) => {
@@ -712,16 +766,39 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
             setLongPressActivated(false);
             return;
           }
+          if (selectedIds.length > 0 || selectedGroupKeys.length > 0) {
+            setSelectedIds((current) => {
+              const isUnselecting = current.includes(row.id);
+              const next = isUnselecting ? current.filter((id) => id !== row.id) : [...current, row.id];
+              
+              if (isUnselecting) {
+                const groupKey = bookingGroupKey(row);
+                if (groupKey) {
+                  setSelectedGroupKeys((gKeys) => gKeys.filter((key) => key !== groupKey));
+                }
+              } else {
+                const groupKey = bookingGroupKey(row);
+                if (groupKey) {
+                  const group = displayGroups.find((g) => g.key === groupKey);
+                  if (group && group.rows.every((r) => r.id === row.id || next.includes(r.id))) {
+                    setSelectedGroupKeys((gKeys) => gKeys.includes(groupKey) ? gKeys : [...gKeys, groupKey]);
+                  }
+                }
+              }
+              return next;
+            });
+            return;
+          }
           setDetail(row);
         }}
         onPointerDown={(event) => startLongPress(event, row)}
-        onPointerUp={clearLongPress}
-        onPointerCancel={clearLongPress}
-        onPointerLeave={clearLongPress}
+        onPointerUp={(event) => { event.stopPropagation(); clearLongPress(); }}
+        onPointerCancel={(event) => { event.stopPropagation(); clearLongPress(); }}
+        onPointerLeave={(event) => { event.stopPropagation(); clearLongPress(); }}
         onTouchStart={(event) => startTouchLongPress(event, row)}
-        onTouchMove={moveTouchLongPress}
-        onTouchEnd={endTouchLongPress}
-        onTouchCancel={endTouchLongPress}
+        onTouchMove={(event) => { event.stopPropagation(); moveTouchLongPress(event); }}
+        onTouchEnd={(event) => { event.stopPropagation(); endTouchLongPress(); }}
+        onTouchCancel={(event) => { event.stopPropagation(); endTouchLongPress(); }}
         className="relative mt-6 w-full cursor-pointer rounded-[1.75rem] border border-[#F4C7C4] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]"
       >
         <span className="absolute -top-3 left-5 rounded-full border border-[#F4C7C4] bg-[#FFF0F4] px-3 py-1 text-[11px] font-black text-[#C14F69] shadow-sm">
@@ -730,14 +807,33 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
 
         <div className="flex items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
-            {selectedIds.length > 0 || selectedIds.includes(row.id) ? (
+            {selectedIds.length > 0 || selectedGroupKeys.length > 0 || selectedIds.includes(row.id) ? (
               <span
                 role="checkbox"
                 aria-checked={selectedIds.includes(row.id)}
                 tabIndex={0}
                 onClick={(event) => {
                   event.stopPropagation();
-                  setSelectedIds((current) => current.includes(row.id) ? current.filter((id) => id !== row.id) : [...current, row.id]);
+                  setSelectedIds((current) => {
+                    const isUnselecting = current.includes(row.id);
+                    const next = isUnselecting ? current.filter((id) => id !== row.id) : [...current, row.id];
+                    
+                    if (isUnselecting) {
+                      const groupKey = bookingGroupKey(row);
+                      if (groupKey) {
+                        setSelectedGroupKeys((gKeys) => gKeys.filter((key) => key !== groupKey));
+                      }
+                    } else {
+                      const groupKey = bookingGroupKey(row);
+                      if (groupKey) {
+                        const group = displayGroups.find((g) => g.key === groupKey);
+                        if (group && group.rows.every((r) => r.id === row.id || next.includes(r.id))) {
+                          setSelectedGroupKeys((gKeys) => gKeys.includes(groupKey) ? gKeys : [...gKeys, groupKey]);
+                        }
+                      }
+                    }
+                    return next;
+                  });
                 }}
                 className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl border text-[12px] font-black transition ${selectedIds.includes(row.id) ? "border-[#EA7188] bg-[#EA7188] text-white shadow-[0_0_0_4px_rgba(234,113,136,0.18)] scale-105" : "border-[#F4C7C4] bg-white text-[#EA7188]"}`}
               >
