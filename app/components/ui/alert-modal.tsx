@@ -5,6 +5,8 @@ import { AlertTriangle, CheckCircle2 } from "lucide-react";
 import { cn } from "@/app/utils/cn";
 import { Button } from "@/app/components/ui/button";
 
+import { createPortal } from "react-dom";
+
 interface AlertModalProps {
   isOpen: boolean;
   message: string;
@@ -37,7 +39,7 @@ export function AlertModal({ isOpen, message, onClose, title }: AlertModalProps)
   const isSuccess = /thành công|đã lưu|cập nhật|đã tạo|hoàn tất|đã xóa|thành công/i.test(message);
   const isError = /lỗi|không đúng|thất bại|không hợp lệ|trùng|chưa nhập|chưa chọn|chưa đăng nhập|phải có|không thể/i.test(message);
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in-0 duration-200">
       {/* Backdrop */}
       <div 
@@ -92,6 +94,7 @@ export function AlertModal({ isOpen, message, onClose, title }: AlertModalProps)
           </Button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

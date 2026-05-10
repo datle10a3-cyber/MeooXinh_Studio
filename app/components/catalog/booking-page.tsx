@@ -15,6 +15,7 @@ import { formatDate, formatMoney } from "@/app/utils/format";
 import { viOption } from "@/app/lib/vietnamese-labels";
 import { useUiStore } from "@/app/store/ui-store";
 import { AlertModal } from "@/app/components/ui/alert-modal";
+import { Portal } from "@/app/components/ui/portal";
 
 type CustomerItem = { id: string; name: string; phone?: string | null; avatarUrl?: string | null };
 type CustomerPage = { items: CustomerItem[] };
@@ -1363,29 +1364,31 @@ function ActionConfirmModal({
 }) {
   if (!open) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={onCancel}>
-      <div className="w-full max-w-md rounded-[2rem] border border-[#F4C7C4] bg-white p-5 shadow-[0_24px_80px_rgba(91,52,44,0.28)]" onClick={(event) => event.stopPropagation()}>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Xác nhận</p>
-            <h3 className="mt-1 text-2xl font-black text-[#5B342C]">{title}</h3>
+    <Portal>
+      <div className="fixed inset-0 z-[150] grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={onCancel}>
+        <div className="w-full max-w-md rounded-[2rem] border border-[#F4C7C4] bg-white p-5 shadow-[0_24px_80px_rgba(91,52,44,0.28)]" onClick={(event) => event.stopPropagation()}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Xác nhận</p>
+              <h3 className="mt-1 text-2xl font-black text-[#5B342C]">{title}</h3>
+            </div>
+            <button type="button" className="grid h-10 w-10 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C]" onClick={onCancel} disabled={loading}>
+              <X size={18} />
+            </button>
           </div>
-          <button type="button" className="grid h-10 w-10 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C]" onClick={onCancel} disabled={loading}>
-            <X size={18} />
-          </button>
-        </div>
-        <p className="mt-4 text-sm font-semibold leading-6 text-[#7B554D]">{description}</p>
-        <div className="mt-5 grid gap-2 sm:grid-cols-2">
-          <Button variant="secondary" className="min-h-11" onClick={onCancel} disabled={loading}>
-            Hủy
-          </Button>
-          <Button variant={danger ? "danger" : "accent"} className="min-h-11" onClick={onConfirm} disabled={loading}>
-            {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
-            {confirmLabel}
-          </Button>
+          <p className="mt-4 text-sm font-semibold leading-6 text-[#7B554D]">{description}</p>
+          <div className="mt-5 grid gap-2 sm:grid-cols-2">
+            <Button variant="secondary" className="min-h-11" onClick={onCancel} disabled={loading}>
+              Hủy
+            </Button>
+            <Button variant={danger ? "danger" : "accent"} className="min-h-11" onClick={onConfirm} disabled={loading}>
+              {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+              {confirmLabel}
+            </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </Portal>
   );
 }
 
@@ -1404,46 +1407,48 @@ function PaymentConfirmModal({
 }) {
   if (!booking) return null;
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={onCancel}>
-      <div className="w-full max-w-lg rounded-[2rem] border border-[#F4C7C4] bg-white p-5 shadow-[0_24px_80px_rgba(91,52,44,0.28)]" onClick={(event) => event.stopPropagation()}>
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Thanh toán</p>
-            <h3 className="mt-1 text-2xl font-black text-[#5B342C]">Bạn có chắc muốn thanh toán?</h3>
+    <Portal>
+      <div className="fixed inset-0 z-[150] grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={onCancel}>
+        <div className="w-full max-w-lg rounded-[2rem] border border-[#F4C7C4] bg-white p-5 shadow-[0_24px_80px_rgba(91,52,44,0.28)]" onClick={(event) => event.stopPropagation()}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Thanh toán</p>
+              <h3 className="mt-1 text-2xl font-black text-[#5B342C]">Bạn có chắc muốn thanh toán?</h3>
+            </div>
+            <button type="button" className="grid h-10 w-10 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C]" onClick={onCancel} disabled={loading}>
+              <X size={18} />
+            </button>
           </div>
-          <button type="button" className="grid h-10 w-10 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C]" onClick={onCancel} disabled={loading}>
-            <X size={18} />
-          </button>
-        </div>
-        <div className="mt-4 rounded-[1.5rem] bg-[#FFF3EC] p-4">
-          <div className="flex items-center gap-3">
-            <CustomerAvatar booking={booking} />
-            <PackageThumb booking={booking} />
-            <div className="min-w-0">
-              <p className="whitespace-normal break-words text-base font-black text-[#5B342C]">{booking.customerName || "Khách hàng"}</p>
-              <p className="mt-1 whitespace-normal break-words text-sm font-bold text-[#9B746B]">{booking.packageName || "Gói dịch vụ"}</p>
+          <div className="mt-4 rounded-[1.5rem] bg-[#FFF3EC] p-4">
+            <div className="flex items-center gap-3">
+              <CustomerAvatar booking={booking} />
+              <PackageThumb booking={booking} />
+              <div className="min-w-0">
+                <p className="whitespace-normal break-words text-base font-black text-[#5B342C]">{booking.customerName || "Khách hàng"}</p>
+                <p className="mt-1 whitespace-normal break-words text-sm font-bold text-[#9B746B]">{booking.packageName || "Gói dịch vụ"}</p>
+              </div>
+            </div>
+            <div className="mt-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3">
+              <span className="text-sm font-bold text-[#9B746B]">Tổng thanh toán</span>
+              <span className="text-xl font-black text-[#EA7188]">{formatMoney(booking.price)}</span>
             </div>
           </div>
-          <div className="mt-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3">
-            <span className="text-sm font-bold text-[#9B746B]">Tổng thanh toán</span>
-            <span className="text-xl font-black text-[#EA7188]">{formatMoney(booking.price)}</span>
+          <div className="mt-5 grid gap-2 sm:grid-cols-3">
+            <Button variant="secondary" className="min-h-11" onClick={onCancel} disabled={loading}>
+              Hủy
+            </Button>
+            <Button className="min-h-11" onClick={onPay} disabled={loading}>
+              {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+              Thanh toán
+            </Button>
+            <Button variant="accent" className="min-h-12 rounded-2xl bg-[#5B342C] text-white shadow-[0_16px_36px_rgba(91,52,44,0.22)] transition hover:-translate-y-0.5 hover:bg-[#3B221D]" onClick={onPayAndPrint} disabled={loading}>
+              {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : <Printer size={16} />}
+              Thanh toán + In
+            </Button>
           </div>
         </div>
-        <div className="mt-5 grid gap-2 sm:grid-cols-3">
-          <Button variant="secondary" className="min-h-11" onClick={onCancel} disabled={loading}>
-            Hủy
-          </Button>
-          <Button className="min-h-11" onClick={onPay} disabled={loading}>
-            {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
-            Thanh toán
-          </Button>
-          <Button variant="accent" className="min-h-12 rounded-2xl bg-[#5B342C] text-white shadow-[0_16px_36px_rgba(91,52,44,0.22)] transition hover:-translate-y-0.5 hover:bg-[#3B221D]" onClick={onPayAndPrint} disabled={loading}>
-            {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : <Printer size={16} />}
-            Thanh toán + In
-          </Button>
-        </div>
       </div>
-    </div>
+    </Portal>
   );
 }
 

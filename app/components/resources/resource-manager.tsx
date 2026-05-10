@@ -27,6 +27,7 @@ import { Button } from "@/app/components/ui/button";
 import { DetailModal } from "@/app/components/ui/detail-modal";
 import { Card, CardTitle } from "@/app/components/ui/card";
 import { DateTimeInput, Input, Textarea } from "@/app/components/ui/input";
+import { Portal } from "@/app/components/ui/portal";
 const MediaGalleryPicker = dynamic(() => import("@/app/components/media/media-picker").then((m) => m.MediaGalleryPicker), { ssr: false });
 const MediaPicker = dynamic(() => import("@/app/components/media/media-picker").then((m) => m.MediaPicker), { ssr: false });
 import { ImagePreview } from "@/app/components/media/image-preview";
@@ -1577,48 +1578,52 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       ) : null}
 
       {deleteTarget ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
-          <Card className="w-full max-w-lg rounded-[2rem]">
-            <CardTitle>Vui lòng lựa chọn</CardTitle>
-            <p className="mt-2 text-sm font-semibold text-[#9B746B]">Bạn muốn xử lý dữ liệu này như thế nào?</p>
-            <div className="mt-6 grid gap-3">
-              <Button variant="danger" disabled={submitting} onClick={() => void remove(deleteTarget, "hard")}>
-                {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
-                {submitting ? "Đang xóa..." : "Xóa"}
-              </Button>
-              <Button variant="secondary" disabled={submitting} onClick={() => void remove(deleteTarget, "trash")}>
-                {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
-                {submitting ? "Đang chuyển..." : "Chuyển vào thùng rác"}
-              </Button>
-              <Button variant="ghost" disabled={submitting} onClick={() => setDeleteTarget(null)}>
-                Không xóa
-              </Button>
-            </div>
-          </Card>
-        </div>
+        <Portal>
+          <div className="fixed inset-0 z-[150] grid place-items-center bg-slate-950/40 p-4" onClick={() => setDeleteTarget(null)}>
+            <Card className="w-full max-w-lg rounded-[2rem]" onClick={(event) => event.stopPropagation()}>
+              <CardTitle>Vui lòng lựa chọn</CardTitle>
+              <p className="mt-2 text-sm font-semibold text-[#9B746B]">Bạn muốn xử lý dữ liệu này như thế nào?</p>
+              <div className="mt-6 grid gap-3">
+                <Button variant="danger" disabled={submitting} onClick={() => void remove(deleteTarget, "hard")}>
+                  {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                  {submitting ? "Đang xóa..." : "Xóa"}
+                </Button>
+                <Button variant="secondary" disabled={submitting} onClick={() => void remove(deleteTarget, "trash")}>
+                  {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                  {submitting ? "Đang chuyển..." : "Chuyển vào thùng rác"}
+                </Button>
+                <Button variant="ghost" disabled={submitting} onClick={() => setDeleteTarget(null)}>
+                  Không xóa
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </Portal>
       ) : null}
       {bulkDeleteMode ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/40 p-4">
-          <Card className="w-full max-w-lg rounded-[2rem]">
-            <CardTitle>Vui lòng lựa chọn</CardTitle>
-            <p className="mt-2 whitespace-normal break-words text-sm font-semibold leading-6 text-[#9B746B]">
-              {bulkDeleteMode === "all" ? `Bạn có chắc chắn muốn xóa tất cả ${visibleRows.length} mục đang hiển thị?` : `Bạn có chắc chắn muốn xóa ${selectedIds.length} mục đã chọn?`}
-            </p>
-            <div className="mt-6 grid gap-3">
-              <Button variant="danger" disabled={submitting} onClick={() => void removeMany(bulkRows, "hard")}>
-                {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
-                {submitting ? "Đang xóa..." : "Xóa"}
-              </Button>
-              <Button variant="secondary" disabled={submitting} onClick={() => void removeMany(bulkRows, "trash")}>
-                {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
-                {submitting ? "Đang chuyển..." : "Chuyển vào thùng rác"}
-              </Button>
-              <Button variant="ghost" disabled={submitting} onClick={() => setBulkDeleteMode(null)}>
-                Không xóa
-              </Button>
-            </div>
-          </Card>
-        </div>
+        <Portal>
+          <div className="fixed inset-0 z-[150] grid place-items-center bg-slate-950/40 p-4" onClick={() => setBulkDeleteMode(null)}>
+            <Card className="w-full max-w-lg rounded-[2rem]" onClick={(event) => event.stopPropagation()}>
+              <CardTitle>Vui lòng lựa chọn</CardTitle>
+              <p className="mt-2 whitespace-normal break-words text-sm font-semibold leading-6 text-[#9B746B]">
+                {bulkDeleteMode === "all" ? `Bạn có chắc chắn muốn xóa tất cả ${visibleRows.length} mục đang hiển thị?` : `Bạn có chắc chắn muốn xóa ${selectedIds.length} mục đã chọn?`}
+              </p>
+              <div className="mt-6 grid gap-3">
+                <Button variant="danger" disabled={submitting} onClick={() => void removeMany(bulkRows, "hard")}>
+                  {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                  {submitting ? "Đang xóa..." : "Xóa"}
+                </Button>
+                <Button variant="secondary" disabled={submitting} onClick={() => void removeMany(bulkRows, "trash")}>
+                  {submitting ? <Loader2 className="animate-spin mr-2" size={16} /> : null}
+                  {submitting ? "Đang chuyển..." : "Chuyển vào thùng rác"}
+                </Button>
+                <Button variant="ghost" disabled={submitting} onClick={() => setBulkDeleteMode(null)}>
+                  Không xóa
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </Portal>
       ) : null}
       <ImagePreview
         images={preview?.images}
