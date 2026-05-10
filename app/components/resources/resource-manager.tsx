@@ -354,12 +354,45 @@ function printableInvoiceData(row: Row) {
   const title = String(snapshot?.packageName || item?.description || row.packageName || projectParts.packageName || row.title || row.code || "Gói dịch vụ");
   const amount = item?.total ?? row.total ?? row.paid ?? row.amount ?? 0;
   const code = String(row.code ?? snapshot?.invoiceCode ?? noteCode ?? "meoxinh--");
+  
+  let originalPrice = snapshot?.originalPrice ? Number(snapshot.originalPrice) : Number(amount);
+  let discountLabel = snapshot?.discountLabel ? String(snapshot.discountLabel) : "";
+  let discountPercent = snapshot?.discountPercent ? String(snapshot.discountPercent) : "";
+
+  // Fallback parsing from note for legacy transactions
+  if (!discountLabel && row.note) {
+    const match = /Giảm giá:\s*([^\n\r|]+)(?:\s*\((\d+%)\))?/.exec(String(row.note));
+    if (match) {
+      discountLabel = match[1].trim();
+      if (match[2]) discountPercent = match[2];
+      
+      // Try to calculate original price
+      if (discountPercent && Number(amount) > 0) {
+        const p = parseInt(discountPercent);
+        if (p > 0 && p < 100) {
+          originalPrice = Math.round(Number(amount) / (1 - p / 100));
+        }
+      } else {
+        const moneyMatch = /([\d.,]+)\s*đ/i.exec(discountLabel);
+        if (moneyMatch) {
+          const dAmount = Number(moneyMatch[1].replace(/[.,]/g, ""));
+          if (!isNaN(dAmount) && dAmount > 0) {
+            originalPrice = Number(amount) + dAmount;
+          }
+        }
+      }
+    }
+  }
+
   return {
     code,
     customerName,
     packageName: title.replace(/\s+-\s+Khách hàng$/i, ""),
     categoryName: String(snapshot?.categoryName ?? row.categoryName ?? "STUDIO"),
     amount,
+    originalPrice,
+    discountLabel,
+    discountPercent,
   };
 }
 
@@ -447,9 +480,20 @@ function printResourceInvoice(row: Row) {
     <div>[${receiptEscape(printable.categoryName)}] ${receiptEscape(printable.packageName)}</div>
     <div class="sep"></div>
     <div class="section">💰 CHI TIẾT</div>
-    <div class="item"><div>${receiptEscape(printable.packageName)}</div><div class="row qty"><span>x1</span><span class="right">${receiptEscape(formattedAmount)}</span></div></div>
+    <div class="item"><div>${receiptEscape(printable.packageName)}</div><div class="row qty"><span>x1</span><span class="right">${receiptEscape(formatMoney(printable.originalPrice as string | number | null))}</span></div></div>
     <div class="solid"></div>
-    <div class="row bold total"><span>TỔNG TIỀN</span><span class="right">${receiptEscape(formattedAmount)}</span></div>
+    ${printable.discountLabel ? `
+    <div class="row info" style="margin-bottom: 4px; font-size: 11px; color: #7a5750;">
+      <span>Giá gốc</span>
+      <span class="right">${receiptEscape(formatMoney(printable.originalPrice as string | number | null))}</span>
+    </div>
+    <div class="row info" style="margin-bottom: 6px; font-weight: bold; color: #e86b88;">
+      <span>🏷️ Giảm giá ${printable.discountPercent ? `(${receiptEscape(printable.discountPercent)})` : ""}</span>
+      <span class="right">-${receiptEscape(printable.discountLabel)}</span>
+    </div>
+    <div class="solid" style="margin: 4px 0;"></div>
+    ` : ""}
+    <div class="row bold total"><span>TỔNG THANH TOÁN</span><span class="right">${receiptEscape(formattedAmount)}</span></div>
     <div class="sep"></div>
     <div class="status">ĐÃ THANH TOÁN ✓</div>
     ${qrBlock}

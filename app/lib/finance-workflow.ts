@@ -232,11 +232,34 @@ async function nextStudioInvoiceCode(tx: Prisma.TransactionClient, studioId: str
 }
 
 function receiptSnapshot(booking: BookingLike, invoiceCode: string) {
+  const originalPrice = moneyNumber(booking.price);
+  const finalPrice = moneyNumber(booking.total) > 0 ? moneyNumber(booking.total) : originalPrice;
+  const discountAmount = Math.max(0, originalPrice - finalPrice);
+  
+  let discountLabel = "";
+  let discountPercent = "";
+  if (booking.note) {
+    const match = /Giảm giá:\s*([^\n\r()]+)(?:\s*\((\d+%)\))?/.exec(booking.note);
+    if (match) {
+      discountLabel = match[1].trim();
+      if (match[2]) {
+        discountPercent = match[2];
+      }
+    }
+  }
+
+  if (!discountLabel && discountAmount > 0) {
+    discountLabel = `${discountAmount.toLocaleString("vi-VN")} đ`;
+  }
+
   return `RECEIPT:${JSON.stringify({
     invoiceCode,
     customerName: booking.customerName || "Khách hàng",
     packageName: booking.packageName || booking.title,
     categoryName: booking.categoryName || "STUDIO",
+    originalPrice,
+    discountLabel,
+    discountPercent,
   })}`;
 }
 
