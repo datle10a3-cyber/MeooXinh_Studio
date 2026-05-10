@@ -1267,19 +1267,19 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                   ))}
                 </select>
                 <Textarea placeholder="Ghi chú" value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} />
-                <div className="studio-sticky-actions grid grid-cols-2 gap-2">
-                  {editingId ? (
-                    <Button variant="secondary" className="min-h-11" onClick={resetForm}>
-                      Hủy sửa
-                    </Button>
-                  ) : null}
-                  <Button className={`min-h-11 ${!editingId ? 'col-span-2' : ''}`} onClick={save} disabled={saving}>
-                    {saving ? <><Loader2 size={16} className="animate-spin mr-2" />{editingId ? "Đang cập nhật..." : "Đang lưu..."}</> : editingId ? "Cập nhật" : "Lưu booking"}
-                  </Button>
-                </div>
-                {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
-                <div className="h-20 sm:hidden" />
               </div>
+              <div className="studio-sticky-actions grid grid-cols-2 gap-2 mt-5">
+                {editingId ? (
+                  <Button variant="secondary" className="min-h-11" onClick={resetForm}>
+                    Hủy sửa
+                  </Button>
+                ) : null}
+                <Button className={`min-h-11 ${!editingId ? 'col-span-2' : ''}`} onClick={save} disabled={saving}>
+                  {saving ? <><Loader2 size={16} className="animate-spin mr-2" />{editingId ? "Đang cập nhật..." : "Đang lưu..."}</> : editingId ? "Cập nhật" : "Lưu booking"}
+                </Button>
+              </div>
+              {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
+              <div className="h-20 sm:hidden" />
             </Card>
           </div>
         );

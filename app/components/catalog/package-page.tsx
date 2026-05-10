@@ -855,15 +855,19 @@ function PackageForm({
           placeholder={"Khách nhận được\n10 ảnh chỉnh màu\nFile online"}
           onChange={(event) => setForm((current) => ({ ...current, deliverables: event.target.value }))}
         />
-        <Textarea
+         <Textarea
           value={form.customerNote}
           placeholder="Lưu ý cho khách"
           onChange={(event) => setForm((current) => ({ ...current, customerNote: event.target.value }))}
         />
-        <Button className="w-full" onClick={onSave}>
+      </div>
+      <div className="studio-sticky-actions mt-5">
+        <Button className="w-full min-h-11" onClick={onSave}>
           {editingId ? "Cập nhật" : "Tạo gói"}
         </Button>
       </div>
+      {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
+      <div className="h-20 sm:hidden" />
     </Card>
   );
 }
