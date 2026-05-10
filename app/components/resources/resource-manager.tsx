@@ -754,7 +754,7 @@ function FinancialPackageThumb({ row, resource, onOpenGallery }: { row: Row; res
 
 function printGroupMemberInvoice(grow: any, parentRow: any) {
   const parentInvoice = printableInvoiceData(parentRow);
-  const code = `${parentInvoice.code}-${String(grow.id || "").slice(-4).toUpperCase() || "SUB"}`;
+  const code = parentInvoice.code;
   const invoiceDate = parentRow.issueDate ?? parentRow.occurredAt ?? parentRow.createdAt;
   const originalPrice = Number(grow.price ?? 0);
   const finalPrice = Number(grow.total ?? grow.price ?? originalPrice);
