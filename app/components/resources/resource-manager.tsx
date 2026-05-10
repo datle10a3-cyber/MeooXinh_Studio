@@ -399,6 +399,13 @@ function printableInvoiceData(row: Row) {
     }
   }
 
+  const isLegacyGroup = !snapshot && (
+    note.includes("BOOKING_DONE:GROUP-") ||
+    note.includes("GROUP_CHECKOUT:GROUP-") ||
+    String(row.code ?? "").startsWith("GROUP-") ||
+    String(row.code ?? "").startsWith("GRP-")
+  );
+
   return {
     code,
     customerName,
@@ -409,6 +416,8 @@ function printableInvoiceData(row: Row) {
     discountLabel,
     discountPercent,
     snapshot,
+    isGroupInvoice: snapshot ? (snapshot.isGroupInvoice ?? true) : isLegacyGroup,
+    groupRows: snapshot?.groupRows ?? [],
   };
 }
 
@@ -912,8 +921,8 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
   const packageName = invoice.packageName || String(row.packageName ?? row.title ?? "Gói dịch vụ");
   const amount = invoice.amount ?? row.amount ?? row.total ?? 0;
 
-  const groupRows = Array.isArray(invoice.snapshot?.groupRows) ? invoice.snapshot.groupRows : [];
-  const isGroupInvoice = Boolean(invoice.snapshot?.isGroupInvoice || groupRows.length > 0);
+  const groupRows = Array.isArray(invoice.groupRows) ? invoice.groupRows : [];
+  const isGroupInvoice = Boolean(invoice.isGroupInvoice);
 
   function clearLongPress() {
     if (longPressTimer.current) {
