@@ -10,6 +10,8 @@ import {
   CalendarDays,
   CalendarClock,
   CreditCard,
+  Eye,
+  EyeOff,
   ImageIcon,
   Loader2,
   MoreHorizontal,
@@ -750,6 +752,124 @@ function FinancialPackageThumb({ row, resource, onOpenGallery }: { row: Row; res
   );
 }
 
+function printGroupMemberInvoice(grow: any, parentRow: any) {
+  const parentInvoice = printableInvoiceData(parentRow);
+  const code = `${parentInvoice.code}-${String(grow.id || "").slice(-4).toUpperCase() || "SUB"}`;
+  const invoiceDate = parentRow.issueDate ?? parentRow.occurredAt ?? parentRow.createdAt;
+  const originalPrice = Number(grow.price ?? 0);
+  const finalPrice = Number(grow.total ?? grow.price ?? originalPrice);
+  const discount = originalPrice - finalPrice;
+  const formattedAmount = formatMoney(finalPrice);
+  const paymentQrUrl = buildPaymentQrUrl(finalPrice, code);
+
+  const qrBlock = paymentQrUrl
+    ? `<div class="sep"></div><div class="center qr"><img src="${receiptEscape(paymentQrUrl)}" alt="QR thanh toán" /><div class="small bold">Quét mã để thanh toán</div><div class="small">Số tiền: ${receiptEscape(formattedAmount)}</div></div>`
+    : "";
+
+  const isIncome = String(parentRow.type ?? "") === "INCOME" || String(parentRow.type ?? "") === "income";
+  const isExpense = String(parentRow.type ?? "") === "EXPENSE" || String(parentRow.type ?? "") === "expense";
+  const invoiceHeader = isExpense ? "PHIẾU CHI TIỀN" : "HÓA ĐƠN THANH TOÁN";
+  const personLabel = isExpense ? "Người nhận" : "Khách";
+
+  const detailsBlock = `
+  <div class="section">📸 GÓI CHỤP</div>
+  <div>📸 ${receiptEscape(grow.packageName || "Gói dịch vụ")}</div>
+  <div class="sep"></div>
+  <div class="section">💰 CHI TIẾT</div>
+  <div class="item">
+    <div>${receiptEscape(grow.packageName || "Gói chụp")}</div>
+    <div class="row qty">
+      <span>x1</span>
+      <span class="right">${receiptEscape(formatMoney(originalPrice))}</span>
+    </div>
+  </div>
+  <div class="solid"></div>
+  ${discount > 0 ? `
+  <div class="row info" style="margin-bottom: 4px; font-size: 11px; color: #7a5750;">
+    <span>Giá gốc</span>
+    <span class="right">${receiptEscape(formatMoney(originalPrice))}</span>
+  </div>
+  <div class="row info" style="margin-bottom: 6px; font-weight: bold; color: #e86b88;">
+    <span>🏷️ Giảm giá</span>
+    <span class="right">-${receiptEscape(formatMoney(discount))}</span>
+  </div>
+  <div class="solid" style="margin: 4px 0;"></div>
+  ` : ""}
+  `;
+
+  const html = `<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>${receiptEscape(code)}</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#fff7fb;color:#4b2a25;font-family:Arial,"Helvetica Neue",sans-serif}
+    .receipt{width:80mm;max-width:310px;margin:0 auto;padding:10px 9px;font-size:12px;line-height:1.38;background:#fff;border:1px solid #f6c6d4}
+    .center{text-align:center}.bold{font-weight:700}
+    .brand-box{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;border-radius:14px;background:#fff0f5;border:1px solid #f5b8ca}
+    .logo{width:34px;height:34px;border-radius:50%;background:#fff;object-fit:contain;border:1px solid #f5b8ca}
+    .brand{font-size:15px;font-weight:900;letter-spacing:.9px;text-transform:uppercase;color:#e86b88}
+    .address{margin-top:3px;font-size:10.5px;line-height:1.35;color:#7a5750}
+    .title{margin:8px 0 6px;padding:7px 0;border-radius:12px;background:#e86b88;color:#fff;font-size:14px;font-weight:900;text-align:center;text-transform:uppercase;letter-spacing:.4px}
+    .sep{margin:8px 0;border-top:1px dashed #e9a8b8}.solid{margin:8px 0;border-top:1px solid #f0b4c1}
+    .row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
+    .left{flex:1;min-width:0;overflow-wrap:anywhere}.right{flex:0 0 auto;text-align:right;white-space:nowrap}
+    .info{margin-top:4px}.label{flex:0 0 86px}
+    .section{margin-top:4px;font-weight:800;text-transform:uppercase}
+    .item{margin-top:5px}.qty{padding-left:12px}
+    .total{padding:8px;border-radius:12px;background:#fff0f5;font-size:13px;color:#d94f73}
+    .status{text-align:center;font-weight:900;color:#0f9f6e}.thanks{margin-top:8px;line-height:1.45}
+    .small{font-size:11px}.qr{margin-top:8px;padding:8px;border-radius:14px;background:#fff;border:1px solid #cfcfcf;color:#222}
+    .qr img{width:128px;height:128px;object-fit:contain;margin:2px auto 4px;display:block}
+    @page{margin:0}
+    @media print{html,body{width:100%;background:#fff;color:#000}.receipt{width:100%;max-width:80mm;margin:0 auto;padding:8px 6px;border-color:#000;border:none!important;box-shadow:none!important}.brand-box,.total,.qr{background:#fff;border-color:#000;color:#000}.brand,.address,.title,.status{color:#000}.title{background:#fff;border:1px solid #000}.sep{border-top-color:#777}.solid{border-top-color:#000}.no-print{display:none!important}}
+    .toolbar{display:flex;justify-content:center;gap:10px;margin:0 auto 12px;max-width:310px;width:100%;padding:0 4px}
+    .btn{flex:1;padding:10px 14px;font-size:13px;font-weight:bold;border:none;border-radius:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 12px rgba(232,107,136,0.15);transition:all 0.2s ease;font-family:inherit}
+    .btn-print{background:#e86b88;color:white}
+    .btn-print:active{transform:scale(0.96);background:#d94f73}
+    .btn-close{background:#f3f4f6;color:#4b5563}
+    .btn-close:active{transform:scale(0.96);background:#e5e7eb}
+  </style>
+</head>
+<body>
+  <div class="no-print toolbar">
+    <button class="btn btn-print" onclick="window.print()">🖨️ In Hóa Đơn</button>
+    <button class="btn btn-close" onclick="window.close()">❌ Đóng</button>
+  </div>
+  <div class="receipt">
+    <div class="brand-box">
+      <img class="logo" src="/be-meo-studio-avatar.svg" alt="Mèoo Xinhh" />
+      <div>
+        <div class="brand">Mèoo Xinhh Studio</div>
+        <div class="address">make & photo</div>
+        <div class="address">☎ ${receiptEscape(STUDIO_PHONE)}</div>
+        <div class="address">⌂ ${receiptEscape(STUDIO_ADDRESS)}</div>
+      </div>
+    </div>
+    <div class="title">${receiptEscape(invoiceHeader)}</div>
+    <div class="info row"><span class="label">Mã số</span><span class="left">: ${receiptEscape(code)}</span></div>
+    <div class="info row"><span class="label">👤 ${receiptEscape(personLabel)}</span><span class="left">: ${receiptEscape(grow.customerName || "Khách hàng")}</span></div>
+    <div class="info row"><span class="label">⏰ Giờ</span><span class="left">: ${receiptEscape(formatDateTimeLabel(invoiceDate))}</span></div>
+    <div class="sep"></div>
+    ${detailsBlock}
+    <div class="row bold total"><span>TỔNG THANH TOÁN</span><span class="right">${receiptEscape(formattedAmount)}</span></div>
+    <div class="sep"></div>
+    <div class="status">ĐÃ THANH TOÁN ✓</div>
+    ${qrBlock}
+    <div class="sep"></div>
+    <div class="center thanks">Cảm ơn quý khách ♥<br/><span class="bold">MÈOO XINHH STUDIO 🐾</span></div>
+  </div>
+  <script>window.onload=()=>{try{window.print();}catch(e){console.error(e);}};</script>
+</body>
+</html>`;
+  const popup = window.open("", "_blank", "width=900,height=1000");
+  if (!popup) return;
+  popup.document.write(html);
+  popup.document.close();
+}
+
 const FinancialCompactCard = memo(function FinancialCompactCard({
   row,
   resource,
@@ -779,6 +899,7 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
   onOpenGallery: (row: Row, index: number) => void;
   focused?: boolean;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const longPressTimer = useRef<number | null>(null);
   const [longPressActivated, setLongPressActivated] = useState(false);
   const id = String(row.id ?? "");
@@ -790,6 +911,9 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
     : String(row.customerName ?? row.title ?? row.name ?? "Khách hàng");
   const packageName = invoice.packageName || String(row.packageName ?? row.title ?? "Gói dịch vụ");
   const amount = invoice.amount ?? row.amount ?? row.total ?? 0;
+
+  const groupRows = Array.isArray(invoice.snapshot?.groupRows) ? invoice.snapshot.groupRows : [];
+  const isGroupInvoice = Boolean(invoice.snapshot?.isGroupInvoice || groupRows.length > 0);
 
   function clearLongPress() {
     if (longPressTimer.current) {
@@ -807,6 +931,173 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
       setLongPressActivated(true);
       longPressTimer.current = null;
     }, 520);
+  }
+
+  if (isGroupInvoice) {
+    const isProject = resource === "projects";
+    const displayLabel = isProject ? "Dự án nhóm" : (resource === "invoices" ? "Hóa đơn nhóm" : "Khoản thu nhóm");
+    
+    return (
+      <div className="w-full">
+        <Card
+          data-row-id={id}
+          onClick={() => {
+            if (longPressActivated) {
+              setLongPressActivated(false);
+              return;
+            }
+            setExpanded(!expanded);
+          }}
+          onPointerDown={startLongPress}
+          onPointerUp={clearLongPress}
+          onPointerCancel={clearLongPress}
+          onPointerLeave={clearLongPress}
+          className={cn(
+            "relative cursor-pointer rounded-[1.75rem] border-[#F4C7C4] bg-[linear-gradient(135deg,#FFFFFF_0%,#FFF8F1_48%,#FFF0F4_100%)] px-4 pt-6 pb-5 shadow-sm transition hover:shadow-md active:scale-[0.99] min-w-0 w-full",
+            focused ? "ring-2 ring-[#EA7188]" : "",
+          )}
+        >
+          <div className="absolute -top-3 left-5 flex gap-1.5">
+            <span className="rounded-full border border-[#F4C7C4] bg-[#FFF0F4] px-3 py-1 text-[11px] font-black text-[#C14F69] shadow-sm">
+              {formatDateTimeLabel(row.occurredAt ?? row.issueDate ?? row.deadlineAt ?? row.createdAt)}
+            </span>
+            <span className="rounded-full border border-pink-200 bg-pink-50 px-3 py-1 text-[11px] font-black text-[#EA7188] shadow-sm">
+              {displayLabel}
+            </span>
+          </div>
+
+          <div className="flex min-w-0 items-start justify-between gap-3 w-full">
+            <div className="flex min-w-0 flex-1 items-center gap-3">
+              {canRemove && (selectionMode || selected) ? (
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    onToggleSelect(id);
+                  }}
+                  className={cn(
+                    "grid h-9 w-9 shrink-0 place-items-center rounded-xl border text-[12px] font-black transition",
+                    selected ? "border-[#EA7188] bg-[#EA7188] text-white shadow-[0_0_0_4px_rgba(234,113,136,0.18)] scale-105" : "border-[#F4C7C4] bg-white text-[#EA7188]",
+                  )}
+                  aria-label="Chọn mục"
+                >
+                  {selected ? "✓" : ""}
+                </button>
+              ) : (
+                <OrderBadge value={indexLabel} />
+              )}
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#FFE4EA] text-[#EA7188]">
+                <PawPrint size={22} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <h2 className="whitespace-normal break-words text-base sm:text-lg font-black leading-tight text-[#5B342C]">{title}</h2>
+                <p className="mt-1 truncate text-xs sm:text-sm font-bold text-[#9B746B]">
+                  {groupRows.length} khách · {packageName}
+                </p>
+              </div>
+            </div>
+
+            <div className="shrink-0 text-right">
+              <p className={cn("text-sm sm:text-base font-black", financialMoneyTone(resource, row))}>
+                {financialAmountPrefix(row)}{formatMoney(amount as string | number | null | undefined)}
+              </p>
+              <p className="text-[10px] font-bold text-[#9B746B]">{isProject ? "Dự án" : "Thanh toán"}</p>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div className="flex flex-1 justify-end gap-1.5 sm:gap-2">
+              {!isProject ? (
+                <button
+                  type="button"
+                  className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-[#FFF0F4] hover:bg-[#FFE2EA] px-3 py-1.5 text-xs font-black text-[#EA7188] transition active:scale-95 shadow-sm"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    printResourceInvoice(row);
+                  }}
+                >
+                  <Printer size={13} strokeWidth={2.5} />
+                  In bill tổng
+                </button>
+              ) : null}
+              {canEdit ? (
+                <Button variant="secondary" size="icon" className="h-10 w-10 shrink-0 rounded-2xl" aria-label="Sửa dữ liệu" onClick={(event) => { event.stopPropagation(); onEdit(row); }}>
+                  <Pencil size={16} className="text-[#EA7188]" />
+                </Button>
+              ) : null}
+              {canRemove ? (
+                <Button variant="danger" size="icon" className="h-10 w-10 shrink-0 rounded-2xl" aria-label="Xóa dữ liệu" onClick={(event) => { event.stopPropagation(); onDelete(row); }}>
+                  <Trash2 size={16} />
+                </Button>
+              ) : null}
+              <span className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-white hover:bg-[#FFF8F1] px-3 py-1.5 text-xs font-black text-[#A84E61] transition shadow-sm">
+                {expanded ? <EyeOff size={13} strokeWidth={2.5} /> : <Eye size={13} strokeWidth={2.5} />}
+                {expanded ? "Thu gọn" : "Xem"}
+              </span>
+            </div>
+          </div>
+        </Card>
+
+        {expanded ? (
+          <div className="mt-3 grid gap-2 pl-4 sm:pl-6 border-l-2 border-dashed border-[#F4C7C4]/80">
+            {groupRows.map((grow: any, growIdx: number) => {
+              const originalPrice = Number(grow.price ?? 0);
+              const finalPrice = Number(grow.total ?? grow.price ?? originalPrice);
+              const discount = originalPrice - finalPrice;
+
+              return (
+                <Card
+                  key={grow.id || growIdx}
+                  onClick={() => {
+                    onOpenDetail(grow);
+                  }}
+                  className="cursor-pointer relative rounded-2xl border-[#F4C7C4]/60 bg-white p-3.5 shadow-sm transition hover:shadow-md active:scale-[0.99] w-full"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-pink-100 bg-[#FFF8F1]">
+                        {grow.imageUrl ? (
+                          <img src={grow.imageUrl} alt="" className="h-full w-full object-cover" />
+                        ) : (
+                          <div className="grid h-full w-full place-items-center text-sm">👤</div>
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="whitespace-normal break-words text-sm sm:text-base font-black text-[#5B342C]">{grow.customerName || "Khách hàng"}</h3>
+                        <p className="text-xs font-bold text-[#9B746B] mt-0.5">{grow.packageName || "Gói dịch vụ"}</p>
+                      </div>
+                    </div>
+
+                    <div className="shrink-0 text-right">
+                      <p className="text-sm font-black text-[#EA7188]">{formatMoney(finalPrice)}</p>
+                      {discount > 0 ? (
+                        <p className="text-[9px] font-bold text-emerald-600">🏷️ Giảm: -{formatMoney(discount)}</p>
+                      ) : null}
+                    </div>
+                  </div>
+
+                  {!isProject ? (
+                    <div className="mt-3 flex justify-end">
+                      <button
+                        type="button"
+                        className="flex items-center gap-1 rounded-full border border-pink-200 bg-pink-50 hover:bg-pink-100 px-2.5 py-1 text-[11px] font-black text-[#EA7188] transition active:scale-95 shadow-sm"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          printGroupMemberInvoice(grow, row);
+                        }}
+                      >
+                        <Printer size={11} strokeWidth={2.5} />
+                        In bill lẻ
+                      </button>
+                    </div>
+                  ) : null}
+                </Card>
+              );
+            })}
+          </div>
+        ) : null}
+      </div>
+    );
   }
 
   return (
