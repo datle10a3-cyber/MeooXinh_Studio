@@ -188,6 +188,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const setActiveResource = useUiStore((state) => state.setActiveResource);
   const darkMode = useUiStore((state) => state.darkMode);
   const setDarkMode = useUiStore((state) => state.setDarkMode);
+
   const session = useUiStore((state) => state.session);
   const setSession = useUiStore((state) => state.setSession);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
@@ -201,35 +202,70 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [searchTo, setSearchTo] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
+  const [sessionLoading, setSessionLoading] = useState(true);
 
-  const loadSession = useCallback(async () => {
-    if (session || pathname === "/login") return;
+  // Sync session from localStorage instantly on client render
+  useEffect(() => {
+    if (pathname === "/login" || pathname === "/register" || pathname === "/forgot-password") {
+      setSessionLoading(false);
+      return;
+    }
     try {
-      const cached = sessionStorage.getItem("studio-session");
+      const cached = localStorage.getItem("studio-session");
       if (cached) {
         setSession(JSON.parse(cached));
-        return;
+        setSessionLoading(false);
+      }
+    } catch (err) {
+      console.error("Local session sync error:", err);
+    }
+  }, [pathname, setSession]);
+
+  const loadSession = useCallback(async () => {
+    if (pathname === "/login" || pathname === "/register" || pathname === "/forgot-password") {
+      setSessionLoading(false);
+      return;
+    }
+    try {
+      const cached = localStorage.getItem("studio-session");
+      let currentSession = session;
+      if (cached && !currentSession) {
+        currentSession = JSON.parse(cached);
+        setSession(currentSession);
+        setSessionLoading(false);
       }
       let res = await fetchWithTimeout("/api/auth/me", { credentials: "include" });
       if (res.status === 401) {
         const refreshed = await fetchWithTimeout("/api/auth/refresh", { method: "POST", credentials: "include" });
-        if (refreshed.ok) res = await fetchWithTimeout("/api/auth/me", { credentials: "include" });
+        if (refreshed.ok) {
+          res = await fetchWithTimeout("/api/auth/me", { credentials: "include" });
+        } else {
+          setSession(null);
+          localStorage.removeItem("studio-session");
+          setSessionLoading(false);
+          return;
+        }
       }
       if (!res.ok) {
         if (isDevBypassHost()) setSession(devSession);
+        setSessionLoading(false);
         return;
       }
       const result = await res.json().catch(() => null);
       if (result?.data) {
         setSession(result.data);
-        sessionStorage.setItem("studio-session", JSON.stringify(result.data));
+        localStorage.setItem("studio-session", JSON.stringify(result.data));
+      } else {
+        setSession(null);
+        localStorage.removeItem("studio-session");
       }
     } catch (err) {
       console.error("Session load error:", err);
       if (isDevBypassHost()) setSession(devSession);
+    } finally {
+      setSessionLoading(false);
     }
   }, [session, setSession, pathname]);
-
   // Sync activeResource với pathname thực tế
   useEffect(() => {
     if (!pathname) return;
@@ -306,12 +342,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     function updateSession(event: Event) {
       const next = (event as CustomEvent<CurrentSession>).detail;
-      if (next) setSession(next);
+      if (next) {
+        setSession(next);
+        try {
+          localStorage.setItem("studio-session", JSON.stringify(next));
+        } catch {}
+      }
     }
     window.addEventListener("studio-session-updated", updateSession);
     return () => window.removeEventListener("studio-session-updated", updateSession);
   }, [setSession]);
-
   useEffect(() => {
     if (window.matchMedia("(pointer: coarse)").matches) return;
 
@@ -333,6 +373,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   const isAiPage = pathname === "/ai";
   const shouldHideMobileNav = hideMobileNav || isAiPage;
+
+  if (sessionLoading && !session) {
+    return (
+      <main className="min-h-dvh bg-[#FFF3EC] px-4 py-6 text-[#5B342C]">
+        <div className="mx-auto grid min-h-[85dvh] w-full max-w-6xl place-items-center">
+          <div className="w-full max-w-md rounded-[2rem] border border-[#F4C7C4] bg-white/80 p-5 shadow-[0_22px_60px_rgba(184,95,108,0.16)]">
+            <div className="flex items-center gap-3">
+              <StudioCatMark compact />
+              <div>
+                <p className="text-sm font-black uppercase tracking-[0.22em] text-[#EA7188]">Mèoo Xinhh Studio</p>
+                <p className="mt-1 text-sm font-semibold text-[#9B746B]">Đang kiểm tra bảo mật...</p>
+              </div>
+            </div>
+            <div className="mt-5 space-y-3">
+              <div className="h-4 w-2/3 animate-pulse rounded-full bg-[#FFE1E8]" />
+              <div className="h-24 animate-pulse rounded-3xl bg-[#FFF0F4]" />
+              <div className="grid grid-cols-3 gap-2">
+                <div className="h-16 animate-pulse rounded-2xl bg-[#FFF0F4]" />
+                <div className="h-16 animate-pulse rounded-2xl bg-[#FFF0F4]" />
+                <div className="h-16 animate-pulse rounded-2xl bg-[#FFF0F4]" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <div className={darkMode ? "min-h-dvh bg-[#2B1C1A] text-white" : "min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
