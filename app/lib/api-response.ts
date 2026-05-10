@@ -19,5 +19,7 @@ export function serverError(error: unknown) {
     return fail("Database chưa chạy. Hãy chạy npm run db:up rồi mở lại web.", 503);
   }
 
-  return fail("Máy chủ đang gặp lỗi. Vui lòng thử lại sau.", 500);
+  const detailMsg = error instanceof Error ? `${error.message}\n${error.stack ?? ""}` : String(error);
+  return fail(`Máy chủ đang gặp lỗi: ${detailMsg}`, 500);
 }
+

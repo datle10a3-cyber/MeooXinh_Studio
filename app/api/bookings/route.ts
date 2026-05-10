@@ -228,7 +228,7 @@ export async function PUT(req: Request) {
         : appendBookingNote(body.note, discountInfo.label, bookingMode, body.groupLabel ? String(body.groupLabel) : undefined),
     };
 
-    let row: Awaited<ReturnType<typeof prisma.booking.update<{ where: { id: string }; data: typeof bookingData; include: ReturnType<typeof bookingSelect> }>>>;
+    let row: any;
     let invoiceSnapshot = null;
 
     if (isNewlyCompleting) {
