@@ -30,6 +30,10 @@ export function DetailModal({
 
   // Portal mount
   useEffect(() => setMounted(true), []);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   // Back gesture / browser back button history listener
   useEffect(() => {
@@ -40,7 +44,7 @@ export function DetailModal({
 
     const handlePopState = (event: PopStateEvent) => {
       if (event.state?.stateKey !== stateKey) {
-        onClose();
+        onCloseRef.current();
       }
     };
 
@@ -52,9 +56,7 @@ export function DetailModal({
         window.history.back();
       }
     };
-  }, [onClose]);
-
-  // Body scroll lock with stack counting to prevent losing scroll position on multiple modals
+  }, []);  // Body scroll lock with stack counting to prevent losing scroll position on multiple modals
   useEffect(() => {
     const html = document.documentElement;
     const body = document.body;

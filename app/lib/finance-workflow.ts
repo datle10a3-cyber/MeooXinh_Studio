@@ -414,7 +414,7 @@ export async function finalizeCompletedBooking(booking: BookingLike, actor?: Ses
           imageUrl: customerImage,
           galleryUrls: proofGallery,
           amount,
-          method: wallet?.type?.toUpperCase().includes("BANK") ? "BANK_TRANSFER" : "CASH",
+          method: wallet?.type?.toUpperCase()?.includes("BANK") ? "BANK_TRANSFER" : "CASH",
           approvalStatus: "APPROVED",
           occurredAt: new Date(),
           note: `${marker} | Hóa đơn: ${invoice.code} | ${snapshot} | Tự động cộng doanh thu khi booking hoàn tất.`,

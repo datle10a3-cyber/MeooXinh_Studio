@@ -352,24 +352,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     window.addEventListener("studio-session-updated", updateSession);
     return () => window.removeEventListener("studio-session-updated", updateSession);
   }, [setSession]);
-  useEffect(() => {
-    if (window.matchMedia("(pointer: coarse)").matches) return;
 
-    function handleGlobalWheel(event: WheelEvent) {
-      if (event.defaultPrevented || event.ctrlKey || Math.abs(event.deltaY) < 1) return;
-      if (!(event.target instanceof Element)) return;
-      if (event.target.closest("input,textarea,select,[contenteditable='true']")) return;
-      if (hasScrollableParent(event.target, event.deltaY)) return;
-
-      const page = document.scrollingElement;
-      if (!page) return;
-      event.preventDefault();
-      page.scrollBy({ top: event.deltaY, behavior: "auto" });
-    }
-
-    window.addEventListener("wheel", handleGlobalWheel, { passive: false });
-    return () => window.removeEventListener("wheel", handleGlobalWheel);
-  }, []);
 
   const isAiPage = pathname === "/ai";
   const shouldHideMobileNav = hideMobileNav || isAiPage;

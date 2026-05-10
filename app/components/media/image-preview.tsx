@@ -31,6 +31,10 @@ export function ImagePreview({
   useEffect(() => {
     setMounted(true);
   }, []);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   // Back gesture / browser back button history listener
   useEffect(() => {
@@ -41,7 +45,7 @@ export function ImagePreview({
 
     const handlePopState = (event: PopStateEvent) => {
       if (event.state?.stateKey !== stateKey) {
-        onClose();
+        onCloseRef.current();
       }
     };
 
@@ -53,9 +57,7 @@ export function ImagePreview({
         window.history.back();
       }
     };
-  }, [onClose]);
-
-  const list = images?.length ? images : src ? [src] : [];
+  }, []);  const list = images?.length ? images : src ? [src] : [];
   const currentIndex = Math.min(Math.max(index, 0), Math.max(list.length - 1, 0));
   const currentSrc = list[currentIndex];
   const canSlide = list.length > 1 && onIndexChange;
