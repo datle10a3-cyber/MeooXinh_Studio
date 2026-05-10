@@ -1596,7 +1596,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
                 </div>
               ) : null}
 
-              <div className="studio-sticky-actions mt-5 flex justify-end">
+              <div className="mt-5 flex justify-end">
                 <Button className="w-full sm:w-auto" onClick={save} disabled={submitting}>
                   {submitting ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
                   {submitting ? "Đang lưu..." : "Lưu dữ liệu"}

@@ -861,7 +861,7 @@ function PackageForm({
           onChange={(event) => setForm((current) => ({ ...current, customerNote: event.target.value }))}
         />
       </div>
-      <div className="studio-sticky-actions mt-5">
+      <div className="mt-5">
         <Button className="w-full min-h-11" onClick={onSave}>
           {editingId ? "Cập nhật" : "Tạo gói"}
         </Button>

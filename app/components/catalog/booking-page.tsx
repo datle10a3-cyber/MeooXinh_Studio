@@ -1268,7 +1268,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                 </select>
                 <Textarea placeholder="Ghi chú" value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} />
               </div>
-              <div className="studio-sticky-actions grid grid-cols-2 gap-2 mt-5">
+              <div className="grid grid-cols-2 gap-2 mt-5">
                 {editingId ? (
                   <Button variant="secondary" className="min-h-11" onClick={resetForm}>
                     Hủy sửa
