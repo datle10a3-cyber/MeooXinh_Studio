@@ -414,10 +414,20 @@ function printResourceInvoice(row: Row) {
     .small{font-size:11px}.qr{margin-top:8px;padding:8px;border-radius:14px;background:#fff;border:1px solid #cfcfcf;color:#222}
     .qr img{width:128px;height:128px;object-fit:contain;margin:2px auto 4px;display:block}
     @page{size:80mm auto;margin:0}
-    @media print{html,body{width:80mm;background:#fff;color:#000}.receipt{width:80mm;margin:0;padding:8px 6px;border-color:#000}.brand-box,.total,.qr{background:#fff;border-color:#000;color:#000}.brand,.address,.title,.status{color:#000}.title{background:#fff;border:1px solid #000}.sep{border-top-color:#777}.solid{border-top-color:#000}}
+    @media print{html,body{width:80mm;background:#fff;color:#000}.receipt{width:80mm;margin:0;padding:8px 6px;border-color:#000;border:none!important;box-shadow:none!important;max-width:none!important}.brand-box,.total,.qr{background:#fff;border-color:#000;color:#000}.brand,.address,.title,.status{color:#000}.title{background:#fff;border:1px solid #000}.sep{border-top-color:#777}.solid{border-top-color:#000}.no-print{display:none!important}}
+    .toolbar{display:flex;justify-content:center;gap:10px;margin:0 auto 12px;max-width:310px;width:100%;padding:0 4px}
+    .btn{flex:1;padding:10px 14px;font-size:13px;font-weight:bold;border:none;border-radius:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 12px rgba(232,107,136,0.15);transition:all 0.2s ease;font-family:inherit}
+    .btn-print{background:#e86b88;color:white}
+    .btn-print:active{transform:scale(0.96);background:#d94f73}
+    .btn-close{background:#f3f4f6;color:#4b5563}
+    .btn-close:active{transform:scale(0.96);background:#e5e7eb}
   </style>
 </head>
 <body>
+  <div class="no-print toolbar">
+    <button class="btn btn-print" onclick="window.print()">🖨️ In Hóa Đơn</button>
+    <button class="btn btn-close" onclick="window.close()">❌ Đóng</button>
+  </div>
   <div class="receipt">
     <div class="brand-box">
       <img class="logo" src="/be-meo-studio-avatar.svg" alt="Mèoo Xinhh" />
@@ -444,9 +454,9 @@ function printResourceInvoice(row: Row) {
     <div class="status">ĐÃ THANH TOÁN ✓</div>
     ${qrBlock}
     <div class="sep"></div>
-    <div class="center thanks">Cảm ơn quý khách ♥<br/><span class="bold">MÈOO XINHH STUDIO</span></div>
+    <div class="center thanks">Cảm ơn quý khách ♥<br/><span class="bold">MÈOO XINHH STUDIO 🐾</span></div>
   </div>
-  <script>window.onload=()=>{window.print();setTimeout(()=>window.close(),400);};</script>
+  <script>window.onload=()=>{try{window.print();}catch(e){console.error(e);}};</script>
 </body>
 </html>`;
   const popup = window.open("", "_blank", "width=900,height=1000");
