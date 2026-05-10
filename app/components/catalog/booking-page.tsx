@@ -1,11 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CalendarClock, CheckCircle2, Loader2, Printer, Pencil, Plus, Search, Trash2, X, CreditCard, Eye, EyeOff } from "lucide-react";
+import { CalendarClock, CheckCircle2, Loader2, Printer, Pencil, Plus, Search, Trash2, X, CreditCard, Eye, EyeOff, PawPrint } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { DetailModal } from "@/app/components/ui/detail-modal";
 import { Card, CardTitle } from "@/app/components/ui/card";
 import { DeleteConfirmation } from "@/app/components/ui/delete-confirmation";
+import { ImagePreview } from "@/app/components/media/image-preview";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 import { MediaPicker } from "@/app/components/media/media-picker";
 import { DateTimeInput, Input, Textarea } from "@/app/components/ui/input";
@@ -280,6 +281,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const [cancelTarget, setCancelTarget] = useState<BookingItem | null>(null);
   const [paymentTarget, setPaymentTarget] = useState<BookingItem | null>(null);
   const [groupPaymentTarget, setGroupPaymentTarget] = useState<{ key: string; title?: string; rows: BookingItem[] } | null>(null);
+  const [preview, setPreview] = useState<{ images: string[]; index: number; alt: string } | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleteMode, setBulkDeleteMode] = useState<"selected" | "all" | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -956,6 +958,23 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
               <OrderBadge value={total - index} />
             )}
             <CustomerAvatar booking={row} />
+            {row.package?.imageUrl ? (
+              <div
+                className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-pink-100 bg-[#FFF8F1]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  const urls = row.package?.galleryUrls;
+                  let parsedUrls: string[] = [];
+                  try {
+                    if (urls && urls.startsWith("[")) parsedUrls = JSON.parse(urls);
+                  } catch (e) {}
+                  const allImages = [row.package?.imageUrl, ...parsedUrls].filter(Boolean) as string[];
+                  if (allImages.length > 0) setPreview({ images: allImages, index: 0, alt: String(row.packageName || "Package") });
+                }}
+              >
+                <img src={row.package.imageUrl} alt="" className="h-full w-full object-cover" />
+              </div>
+            ) : null}
             <div className="min-w-0">
               <h2 className="whitespace-normal break-words text-lg font-black leading-tight text-[#5B342C]">{row.customerName || "Khách chưa đặt tên"}</h2>
               <div className="mt-1 flex items-center gap-1.5">
@@ -1120,20 +1139,9 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
               <div
                 key={group.key}
                 data-row-id={`booking-group-${group.key}`}
-                onPointerDown={(event) => startGroupLongPress(event, group.key)}
-                onPointerUp={clearLongPress}
-                onPointerCancel={clearLongPress}
-                onPointerLeave={clearLongPress}
-                onTouchStart={(event) => startGroupTouchLongPress(event, group.key)}
-                onTouchMove={moveTouchLongPress}
-                onTouchEnd={endTouchLongPress}
-                onTouchCancel={endTouchLongPress}
-                className={`rounded-[1.5rem] border p-3 shadow-sm transition ${selected ? "border-[#EA7188] bg-[#FFF0F4] shadow-[0_0_0_4px_rgba(234,113,136,0.13)]" : "border-[#F4C7C4] bg-[#FFF8F1]"}`}
+                className="w-full"
               >
-                <div
-                  role="button"
-                  tabIndex={0}
-                  className="flex flex-col sm:flex-row w-full cursor-pointer items-stretch sm:items-center justify-between gap-3 rounded-[1.25rem] bg-white px-3.5 py-3 text-left shadow-sm transition active:scale-[0.99]"
+                <Card
                   onClick={() => {
                     if (longPressActivated) {
                       setLongPressActivated(false);
@@ -1141,72 +1149,87 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                     }
                     setExpandedGroups((current) => current.includes(group.key) ? current.filter((item) => item !== group.key) : [...current, group.key]);
                   }}
-                  onKeyDown={(event) => {
-                    if (event.key !== "Enter" && event.key !== " ") return;
-                    event.preventDefault();
-                    setExpandedGroups((current) => current.includes(group.key) ? current.filter((item) => item !== group.key) : [...current, group.key]);
-                  }}
+                  onPointerDown={(event) => startGroupLongPress(event, group.key)}
+                  onPointerUp={clearLongPress}
+                  onPointerCancel={clearLongPress}
+                  onPointerLeave={clearLongPress}
+                  onTouchStart={(event) => startGroupTouchLongPress(event, group.key)}
+                  onTouchMove={moveTouchLongPress}
+                  onTouchEnd={endTouchLongPress}
+                  onTouchCancel={endTouchLongPress}
+                  className={`relative cursor-pointer rounded-[1.75rem] border-[#F4C7C4] bg-[linear-gradient(135deg,#FFFFFF_0%,#FFF8F1_48%,#FFF0F4_100%)] px-4 pt-6 pb-5 shadow-sm transition hover:shadow-md active:scale-[0.99] min-w-0 w-full ${selected ? "ring-2 ring-[#EA7188]" : ""}`}
                 >
-                  <div className="flex min-w-0 items-center gap-3">
-                    {showGroupCheckbox ? (
-                      <button
-                        type="button"
-                        aria-pressed={selected}
-                        aria-label={selected ? "Bỏ chọn nhóm" : "Chọn nhóm"}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          toggleGroupSelection(group.key);
-                        }}
-                        className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl border text-[12px] font-black transition ${selected ? "scale-105 border-[#EA7188] bg-[#EA7188] text-white shadow-[0_0_0_4px_rgba(234,113,136,0.18)]" : "border-[#F4C7C4] bg-white text-[#EA7188]"}`}
-                      >
-                        {selected ? "✓" : ""}
-                      </button>
-                    ) : null}
-                    <div className="min-w-0">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-[#EA7188]">Booking nhóm</p>
-                      <h2 className="mt-0.5 whitespace-normal break-words text-base sm:text-lg font-black text-[#5B342C]">{group.title}</h2>
-                      <p className="mt-0.5 whitespace-normal break-words text-xs sm:text-sm font-semibold text-[#9B746B]">
-                        {group.rows.length} khách · {packageNames.length <= 1 ? (packageNames[0] ?? "Chưa có gói") : `${packageNames.length} gói khác nhau`}
-                      </p>
-                    </div>
+                  <div className="absolute -top-3 left-5 flex gap-1.5">
+                     <span className="rounded-full border border-pink-200 bg-pink-50 px-3 py-1 text-[11px] font-black text-[#EA7188] shadow-sm">
+                       Booking nhóm{completedOnly ? " hoàn tất" : ""}
+                     </span>
                   </div>
-                  <div className="flex flex-wrap items-center justify-end gap-1.5 border-t border-dashed border-[#F4C7C4]/50 pt-2.5 sm:border-t-0 sm:pt-0 sm:gap-2 shrink-0">
-                    {!completedOnly ? (
-                      <>
-                        {uncompletedRows.length > 0 ? (
-                          <button
-                            type="button"
-                            className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-600 transition active:scale-95"
-                            onClick={(event) => {
-                              event.stopPropagation();
-                              setGroupPaymentTarget(group);
-                            }}
-                          >
-                            <CreditCard size={13} strokeWidth={2.5} />
-                            Thanh toán ({uncompletedRows.length})
-                          </button>
-                        ) : null}
+                  <div className="flex min-w-0 items-start justify-between gap-3 w-full">
+                    <div className="flex min-w-0 flex-1 items-center gap-3">
+                      {showGroupCheckbox ? (
                         <button
                           type="button"
-                          className="flex items-center gap-1 rounded-full border border-[#FCD34D] bg-[#FFF8F1] hover:bg-[#FFF3EC] px-3 py-1.5 text-xs font-black text-[#D97706] transition active:scale-95"
+                          aria-pressed={selected}
                           onClick={(event) => {
                             event.stopPropagation();
-                            void renameGroup(group);
+                            toggleGroupSelection(group.key);
                           }}
+                          className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl border text-[12px] font-black transition ${selected ? "scale-105 border-[#EA7188] bg-[#EA7188] text-white shadow-[0_0_0_4px_rgba(234,113,136,0.18)]" : "border-[#F4C7C4] bg-white text-[#EA7188]"}`}
                         >
-                          <Pencil size={13} strokeWidth={2.5} />
-                          Sửa tên
+                          {selected ? "✓" : ""}
                         </button>
-                      </>
-                    ) : null}
-                    <span className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-white hover:bg-[#FFF8F1] px-3 py-1.5 text-xs font-black text-[#A84E61] transition">
-                      {expanded ? <EyeOff size={13} strokeWidth={2.5} /> : <Eye size={13} strokeWidth={2.5} />}
-                      {expanded ? "Thu gọn" : "Xem"}
-                    </span>
+                      ) : (
+                        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#FFE4EA] text-[#EA7188]">
+                          <PawPrint size={22} />
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <h2 className="whitespace-normal break-words text-base sm:text-lg font-black leading-tight text-[#5B342C]">{group.title}</h2>
+                        <p className="mt-1 truncate text-xs sm:text-sm font-bold text-[#9B746B]">
+                          {group.rows.length} khách · {packageNames.length <= 1 ? (packageNames[0] ?? "Chưa có gói") : `${packageNames.length} gói khác nhau`}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
+                  <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
+                    <div className="flex flex-1 flex-wrap justify-end gap-1.5 sm:gap-2">
+                      {!completedOnly ? (
+                        <>
+                          {uncompletedRows.length > 0 ? (
+                            <button
+                              type="button"
+                              className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-600 transition active:scale-95 whitespace-nowrap shadow-sm"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setGroupPaymentTarget(group);
+                              }}
+                            >
+                              <CreditCard size={13} strokeWidth={2.5} />
+                              Thanh toán ({uncompletedRows.length})
+                            </button>
+                          ) : null}
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 rounded-full border border-[#FCD34D] bg-[#FFF8F1] hover:bg-[#FFF3EC] px-3 py-1.5 text-xs font-black text-[#D97706] transition active:scale-95 whitespace-nowrap shadow-sm"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void renameGroup(group);
+                            }}
+                          >
+                            <Pencil size={13} strokeWidth={2.5} />
+                            Sửa tên
+                          </button>
+                        </>
+                      ) : null}
+                      <span className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-white hover:bg-[#FFF8F1] px-3 py-1.5 text-xs font-black text-[#A84E61] transition shadow-sm whitespace-nowrap">
+                        {expanded ? <EyeOff size={13} strokeWidth={2.5} /> : <Eye size={13} strokeWidth={2.5} />}
+                        {expanded ? "Thu gọn" : "Xem"}
+                      </span>
+                    </div>
+                  </div>
+                </Card>
                 {expanded ? (
-                  <div className="mt-3 grid gap-2">
+                  <div className="mt-3 grid gap-2 pl-4 sm:pl-6 border-l-2 border-dashed border-[#F4C7C4]/80 pr-1">
                     {group.rows.map((row, index) => renderBookingRow(row, index, group.rows.length))}
                   </div>
                 ) : null}
@@ -1464,6 +1487,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         onCancel={() => deleting ? undefined : setBulkDeleteMode(null)}
         loading={deleting}
       />
+      {preview ? <ImagePreview {...preview} onClose={() => setPreview(null)} /> : null}
     </div>
   );
 }

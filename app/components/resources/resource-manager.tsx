@@ -1005,8 +1005,7 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
             </div>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <FinancialPackageThumb row={row} resource={resource} onOpenGallery={onOpenGallery} />
+          <div className="mt-4 flex flex-wrap items-center justify-end gap-2">
             <div className="flex flex-1 flex-wrap justify-end gap-1.5 sm:gap-2">
               {!isProject ? (
                 <button
@@ -1040,37 +1039,46 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
         </Card>
 
         {expanded ? (
-          <div className="mt-3 grid gap-2 pl-4 sm:pl-6 border-l-2 border-dashed border-[#F4C7C4]/80">
+          <div className="mt-3 grid gap-2 pl-4 sm:pl-6 border-l-2 border-dashed border-[#F4C7C4]/80 pr-1">
             {groupRows.map((grow: any, growIdx: number) => {
               const originalPrice = Number(grow.price ?? 0);
               const finalPrice = Number(grow.total ?? grow.price ?? originalPrice);
               const discount = originalPrice - finalPrice;
-
+              
+              // Render individual child card
               return (
                 <Card
                   key={grow.id || growIdx}
                   onClick={() => {
                     onOpenDetail(grow);
                   }}
-                  className="cursor-pointer relative rounded-2xl border-[#F4C7C4]/60 bg-white p-3.5 shadow-sm transition hover:shadow-md active:scale-[0.99] w-full"
+                  className="cursor-pointer relative rounded-2xl border-[#F4C7C4]/60 bg-white p-3.5 shadow-sm transition hover:shadow-md active:scale-[0.99]"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl border border-pink-100 bg-[#FFF8F1]">
-                        {grow.imageUrl ? (
+                  <div className="flex min-w-0 flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex min-w-0 items-center gap-3">
+                      {grow.imageUrl ? (
+                        <div 
+                          className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-pink-100 bg-[#FFF8F1]"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (grow.galleryUrls && onOpenGallery) onOpenGallery(grow as Row, 0);
+                          }}
+                        >
                           <img src={grow.imageUrl} alt="" className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="grid h-full w-full place-items-center text-sm">👤</div>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-pink-100 bg-[#FFF8F1] text-sm">
+                          👤
+                        </div>
+                      )}
                       <div className="min-w-0">
-                        <h3 className="whitespace-normal break-words text-sm sm:text-base font-black text-[#5B342C]">{grow.customerName || "Khách hàng"}</h3>
-                        <p className="text-xs font-bold text-[#9B746B] mt-0.5">{grow.packageName || "Gói dịch vụ"}</p>
+                        <h3 className="truncate text-sm sm:text-base font-black text-[#5B342C]">{grow.customerName || "Khách hàng"}</h3>
+                        <p className="mt-0.5 truncate text-xs font-bold text-[#9B746B]">{grow.packageName || "Gói dịch vụ"}</p>
                       </div>
                     </div>
 
-                    <div className="shrink-0 text-right">
-                      <p className="text-sm font-black text-[#EA7188]">{formatMoney(finalPrice)}</p>
+                    <div className="shrink-0 text-left sm:text-right mt-1 sm:mt-0">
+                      <p className="truncate text-sm font-black text-[#EA7188]">{formatMoney(finalPrice)}</p>
                       {discount > 0 ? (
                         <p className="text-[9px] font-bold text-emerald-600">🏷️ Giảm: -{formatMoney(discount)}</p>
                       ) : null}

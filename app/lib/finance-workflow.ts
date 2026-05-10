@@ -577,10 +577,13 @@ export async function finalizeGroupCompletedBookings(
       discountPercent: "",
       isGroupInvoice: true,
       groupRows: bookings.map(b => ({
+        id: b.id,
         customerName: b.customerName,
         packageName: b.packageName,
         price: moneyNumber(b.price),
         total: moneyNumber(b.total) > 0 ? moneyNumber(b.total) : moneyNumber(b.price),
+        imageUrl: b.package?.imageUrl || null,
+        galleryUrls: b.package?.galleryUrls || null,
       })),
     };
     const snapshot = `RECEIPT:${JSON.stringify(snapshotObj)}`;
