@@ -14,6 +14,7 @@ import { formatDate } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 import { AlertModal } from "@/app/components/ui/alert-modal";
+import { Portal } from "@/app/components/ui/portal";
 
 const emptyForm = { name: "", description: "" };
 
@@ -38,6 +39,13 @@ export function CategoryPage() {
   const role = useUiStore((state) => state.session?.user.role ?? null);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   async function loadRows() {
     const result = await fetch("/api/categories").then((res) => res.json() as Promise<ApiResult<CategoryItem[]>>);
@@ -283,26 +291,30 @@ export function CategoryPage() {
         </div>
       ) : null}
 
-      {showForm ? (
-        <div ref={formRef} className="scroll-mt-20">
-        <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => setShowForm(false)} />
-        <Card className="studio-mobile-form-sheet">
-          <div className="mb-4 flex items-center justify-between gap-3">
-            <CardTitle>{editingId ? "Sửa danh mục" : "Thêm danh mục"}</CardTitle>
-            <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => setShowForm(false)}>
-              <X size={16} />
-            </Button>
+      {(() => {
+        if (!showForm) return null;
+        const formElement = (
+          <div ref={formRef} className="scroll-mt-20">
+            <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => setShowForm(false)} />
+            <Card className="studio-mobile-form-sheet">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <CardTitle>{editingId ? "Sửa danh mục" : "Thêm danh mục"}</CardTitle>
+                <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => setShowForm(false)}>
+                  <X size={16} />
+                </Button>
+              </div>
+              <div className="grid gap-3 md:grid-cols-[1fr_1.5fr_auto] md:items-start">
+                <Input placeholder="Tên danh mục" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
+                <Textarea placeholder="Mô tả" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} />
+                <Button className="min-h-11" onClick={save}>{editingId ? "Cập nhật" : "Lưu"}</Button>
+              </div>
+              {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
+              <div className="h-20 sm:hidden" />
+            </Card>
           </div>
-          <div className="grid gap-3 md:grid-cols-[1fr_1.5fr_auto] md:items-start">
-            <Input placeholder="Tên danh mục" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
-            <Textarea placeholder="Mô tả" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} />
-            <Button className="min-h-11" onClick={save}>{editingId ? "Cập nhật" : "Lưu"}</Button>
-          </div>
-          {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
-          <div className="h-20 sm:hidden" />
-        </Card>
-        </div>
-      ) : null}
+        );
+        return isMobile ? <Portal>{formElement}</Portal> : formElement;
+      })()}
 
       <div className="grid gap-3">
         {progressiveRows.visibleItems.map((row, index) => (

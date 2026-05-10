@@ -30,6 +30,7 @@ import { formatMoney } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { PageSpinner } from "@/app/components/ui/skeleton";
+import { Portal } from "@/app/components/ui/portal";
 
 const emptyForm = {
   name: "",
@@ -93,6 +94,13 @@ export function PackagePage() {
   const focusedItemId = useUiStore((state) => state.focusedItemId);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   function clearLongPress() {
     if (longPressTimer.current) {
@@ -419,23 +427,27 @@ export function PackagePage() {
           ) : null}
         </div>
 
-        {showForm ? (
-          <div ref={formRef} className="scroll-mt-20">
-          <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm); setShowForm(false); }} />
-          <PackageForm
-            categories={categories}
-            form={form}
-            editingId={editingId}
-            setForm={setForm}
-            onSave={save}
-            onClose={() => {
-              setEditingId(null);
-              setForm(emptyForm);
-              setShowForm(false);
-            }}
-          />
-          </div>
-        ) : null}
+        {(() => {
+          if (!showForm) return null;
+          const formElement = (
+            <div ref={formRef} className="scroll-mt-20">
+              <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm); setShowForm(false); }} />
+              <PackageForm
+                categories={categories}
+                form={form}
+                editingId={editingId}
+                setForm={setForm}
+                onSave={save}
+                onClose={() => {
+                  setEditingId(null);
+                  setForm(emptyForm);
+                  setShowForm(false);
+                }}
+              />
+            </div>
+          );
+          return isMobile ? <Portal>{formElement}</Portal> : formElement;
+        })()}
       </div>
 
       {detail ? (

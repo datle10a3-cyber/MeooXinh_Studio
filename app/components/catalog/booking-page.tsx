@@ -283,6 +283,13 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const [selectedGroupKeys, setSelectedGroupKeys] = useState<string[]>([]);
   const [groupSelectionMode, setGroupSelectionMode] = useState(false);
   const role = useUiStore((state) => state.session?.user.role ?? null);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
   const focusedItemId = useUiStore((state) => state.focusedItemId);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
   const longPressTimer = useRef<number | null>(null);
@@ -1096,188 +1103,192 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
           <ProgressiveListSentinel refTarget={progressiveGroups.sentinelRef} hasMore={progressiveGroups.hasMore} />
       </div>
 
-      {!completedOnly && showForm ? (
-        <div ref={formRef} className="scroll-mt-20">
-        <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm); setShowForm(false); }} />
-        <Card className="studio-mobile-form-sheet h-fit xl:sticky xl:top-24">
-          <div className="mb-3 flex justify-end">
-            <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm); setShowForm(false); }}>
-              <X size={16} />
-            </Button>
-          </div>
-          <CardTitle>{editingId ? "Sửa booking" : "Thêm booking"}</CardTitle>
-          <div className="mt-4 space-y-4">
-            {!editingId ? (
-              <div className="grid grid-cols-2 gap-2 rounded-2xl bg-[#FFF3EC] p-2">
-                {[
-                  ["PERSONAL", "Booking cá nhân"],
-                  ["GROUP", "Booking nhóm"],
-                ].map(([value, label]) => (
-                  <button
-                    key={value}
-                    type="button"
-                    className={`min-h-11 rounded-xl px-3 text-sm font-black transition ${form.bookingMode === value ? "bg-[#EA7188] text-white shadow-sm" : "bg-white text-[#9B746B] hover:text-[#5B342C]"}`}
-                    onClick={() => setForm((current) => ({ ...current, bookingMode: value }))}
-                  >
-                    {label}
-                  </button>
-                ))}
+      {(() => {
+        if (completedOnly || !showForm) return null;
+        const formElement = (
+          <div ref={formRef} className="scroll-mt-20">
+            <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm); setShowForm(false); }} />
+            <Card className="studio-mobile-form-sheet h-fit xl:sticky xl:top-24">
+              <div className="mb-3 flex justify-end">
+                <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm); setShowForm(false); }}>
+                  <X size={16} />
+                </Button>
               </div>
-            ) : null}
-            <CustomerSearchPicker
-              customers={customers}
-              selectedId={form.customerId}
-              selectedName={form.customerName}
-              onPick={(customer) => setForm((current) => ({ ...current, customerId: customer.id, customerName: customer.name, imageUrl: "" }))}
-              onClear={() => setForm((current) => ({ ...current, customerId: "", customerName: "", imageUrl: "" }))}
-            />
-            <select
-              className="hidden h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm font-semibold text-[#5B342C]"
-              value=""
-              onChange={(event) => {
-                const customer = customers.find((item) => item.id === event.target.value);
-                if (customer) setForm((current) => ({ ...current, customerId: customer.id, customerName: customer.name, imageUrl: "" }));
-              }}
-            >
-              <option value="">Chọn khách CRM</option>
-              {customers.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name} {item.phone ? `- ${item.phone}` : ""}
-                </option>
-              ))}
-            </select>
-            {form.bookingMode === "GROUP" && !editingId ? (
-              <div className="space-y-3 rounded-2xl border border-[#F4C7C4] bg-[#FFF8F1] p-3">
-                <Input value={form.groupLabel} placeholder="Tên nhóm / đoàn (ví dụ: Nhóm bạn Linh)" onChange={(event) => setForm((current) => ({ ...current, groupLabel: event.target.value }))} />
-                <Textarea
-                  className="min-h-32"
-                  value={form.groupCustomers}
-                  placeholder={"Nhập mỗi khách một dòng:\nNguyễn Minh Anh\nTrần Bảo Ngọc\nLê Hoàng Nam"}
-                  onChange={(event) => {
-                    const nextNames = parseGroupCustomers(event.target.value);
-                    setGroupPackageIds((current) => nextNames.map((_, index) => current[index] ?? form.packageId));
-                    setForm((current) => ({ ...current, groupCustomers: event.target.value }));
-                  }}
-                />
-                {groupNames.length ? (
-                  <div className="space-y-2">
-                    <p className="text-xs font-black uppercase tracking-wide text-[#C87888]">Gói riêng từng khách</p>
-                    {groupNames.map((name, index) => (
-                      <div key={`${name}-${index}`} className="grid gap-2 rounded-2xl bg-white p-2 sm:grid-cols-[1fr_1.4fr] sm:items-center">
-                        <p className="min-w-0 whitespace-normal break-words text-sm font-black text-[#5B342C]">{index + 1}. {name}</p>
-                        <select
-                          className="h-11 w-full rounded-xl border border-[#F4C7C4] bg-white px-3 text-sm font-semibold text-[#5B342C]"
-                          value={groupPackageIds[index] || form.packageId}
-                          onChange={(event) => setGroupPackageIds((current) => {
-                            const next = [...current];
-                            next[index] = event.target.value;
-                            return next;
-                          })}
-                        >
-                          <option value="">Chọn gói cho khách này</option>
-                          {packages.map((item) => (
-                            <option key={item.id} value={item.id}>
-                              {item.name} - {formatMoney(item.price)}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
+              <CardTitle>{editingId ? "Sửa booking" : "Thêm booking"}</CardTitle>
+              <div className="mt-4 space-y-4">
+                {!editingId ? (
+                  <div className="grid grid-cols-2 gap-2 rounded-2xl bg-[#FFF3EC] p-2">
+                    {[
+                      ["PERSONAL", "Booking cá nhân"],
+                      ["GROUP", "Booking nhóm"],
+                    ].map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={`min-h-11 rounded-xl px-3 text-sm font-black transition ${form.bookingMode === value ? "bg-[#EA7188] text-white shadow-sm" : "bg-white text-[#9B746B] hover:text-[#5B342C]"}`}
+                        onClick={() => setForm((current) => ({ ...current, bookingMode: value }))}
+                      >
+                        {label}
+                      </button>
                     ))}
                   </div>
                 ) : null}
-                <p className="text-xs font-bold text-[#9B746B]">Mỗi tên sẽ tạo 1 booking riêng trong cùng nhóm. Có thể chọn gói khác nhau cho từng khách.</p>
+                <CustomerSearchPicker
+                  customers={customers}
+                  selectedId={form.customerId}
+                  selectedName={form.customerName}
+                  onPick={(customer) => setForm((current) => ({ ...current, customerId: customer.id, customerName: customer.name, imageUrl: "" }))}
+                  onClear={() => setForm((current) => ({ ...current, customerId: "", customerName: "", imageUrl: "" }))}
+                />
+                <select
+                  className="hidden h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm font-semibold text-[#5B342C]"
+                  value=""
+                  onChange={(event) => {
+                    const customer = customers.find((item) => item.id === event.target.value);
+                    if (customer) setForm((current) => ({ ...current, customerId: customer.id, customerName: customer.name, imageUrl: "" }));
+                  }}
+                >
+                  <option value="">Chọn khách CRM</option>
+                  {customers.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} {item.phone ? `- ${item.phone}` : ""}
+                    </option>
+                  ))}
+                </select>
+                {form.bookingMode === "GROUP" && !editingId ? (
+                  <div className="space-y-3 rounded-2xl border border-[#F4C7C4] bg-[#FFF8F1] p-3">
+                    <Input value={form.groupLabel} placeholder="Tên nhóm / đoàn (ví dụ: Nhóm bạn Linh)" onChange={(event) => setForm((current) => ({ ...current, groupLabel: event.target.value }))} />
+                    <Textarea
+                      className="min-h-32"
+                      value={form.groupCustomers}
+                      placeholder={"Nhập mỗi khách một dòng:\nNguyễn Minh Anh\nTrần Bảo Ngọc\nLê Hoàng Nam"}
+                      onChange={(event) => {
+                        const nextNames = parseGroupCustomers(event.target.value);
+                        setGroupPackageIds((current) => nextNames.map((_, index) => current[index] ?? form.packageId));
+                        setForm((current) => ({ ...current, groupCustomers: event.target.value }));
+                      }}
+                    />
+                    {groupNames.length ? (
+                      <div className="space-y-2">
+                        <p className="text-xs font-black uppercase tracking-wide text-[#C87888]">Gói riêng từng khách</p>
+                        {groupNames.map((name, index) => (
+                          <div key={`${name}-${index}`} className="grid gap-2 rounded-2xl bg-white p-2 sm:grid-cols-[1fr_1.4fr] sm:items-center">
+                            <p className="min-w-0 whitespace-normal break-words text-sm font-black text-[#5B342C]">{index + 1}. {name}</p>
+                            <select
+                              className="h-11 w-full rounded-xl border border-[#F4C7C4] bg-white px-3 text-sm font-semibold text-[#5B342C]"
+                              value={groupPackageIds[index] || form.packageId}
+                              onChange={(event) => setGroupPackageIds((current) => {
+                                const next = [...current];
+                                next[index] = event.target.value;
+                                return next;
+                              })}
+                            >
+                              <option value="">Chọn gói cho khách này</option>
+                              {packages.map((item) => (
+                                <option key={item.id} value={item.id}>
+                                  {item.name} - {formatMoney(item.price)}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        ))}
+                      </div>
+                    ) : null}
+                    <p className="text-xs font-bold text-[#9B746B]">Mỗi tên sẽ tạo 1 booking riêng trong cùng nhóm. Có thể chọn gói khác nhau cho từng khách.</p>
+                  </div>
+                ) : (
+                  <Input value={form.customerName} placeholder="Tên khách" onChange={(event) => setForm((current) => ({ ...current, customerId: "", customerName: event.target.value }))} />
+                )}
+                {form.bookingMode === "PERSONAL" && !form.customerId && form.customerName.trim() ? (
+                  <div className="rounded-2xl bg-[#FFF8F1] p-3">
+                    <p className="mb-2 text-sm font-black text-[#5B342C]">Ảnh khách lạ</p>
+                    <MediaPicker value={form.imageUrl} onChange={(value) => setForm((current) => ({ ...current, imageUrl: value }))} placeholder="Upload ảnh khách lạ" />
+                  </div>
+                ) : null}
+                <select
+                  className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm font-semibold text-[#5B342C]"
+                  value={form.packageId}
+                  onChange={(event) => {
+                    const nextPackage = packages.find((item) => item.id === event.target.value);
+                    if (form.bookingMode === "GROUP" && !editingId) setGroupPackageIds(groupNames.map(() => event.target.value));
+                    setForm((current) => ({
+                      ...current,
+                      packageId: event.target.value,
+                      packageName: nextPackage?.name ?? "",
+                      categoryName: nextPackage?.category.name ?? "",
+                      price: String(nextPackage?.price ?? 0),
+                    }));
+                  }}
+                >
+                  <option value="">Chọn gói</option>
+                  {packages.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} - {formatMoney(item.price)}
+                    </option>
+                  ))}
+                </select>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Input value={form.packageName} readOnly placeholder="Tên gói" />
+                  <Input value={form.categoryName} readOnly placeholder="Danh mục" />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Input value={formatMoney(form.price)} readOnly />
+                  <div className="rounded-xl border border-[#F4C7C4] bg-[#FFF8F1] px-4 py-3">
+                    <p className="text-xs font-black uppercase text-[#B98278]">Sau giảm</p>
+                    <p className="mt-1 text-base font-black text-[#5B342C]">{formatMoney(discountedTotal(form.price, form.discountType, form.discountValue).total)}</p>
+                  </div>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-[1fr_1.2fr]">
+                  <select
+                    className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm font-semibold text-[#5B342C]"
+                    value={form.discountType}
+                    onChange={(event) => setForm((current) => ({ ...current, discountType: event.target.value, discountValue: event.target.value === "NONE" ? "" : current.discountValue }))}
+                  >
+                    <option value="NONE">Không giảm giá</option>
+                    <option value="AMOUNT">Giảm tiền mặt</option>
+                    <option value="PERCENT">Giảm phần trăm</option>
+                  </select>
+                  <Input
+                    disabled={form.discountType === "NONE"}
+                    value={form.discountValue}
+                    placeholder={form.discountType === "PERCENT" ? "Ví dụ: 10 (%)" : "Ví dụ: 50000"}
+                    onChange={(event) => setForm((current) => ({ ...current, discountValue: event.target.value }))}
+                  />
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <DateTimeInput label="Giờ bắt đầu" value={form.startTime} onChange={(event) => setForm((current) => ({ ...current, startTime: event.target.value }))} />
+                  <DateTimeInput label="Giờ kết thúc" value={form.endTime} onChange={(event) => setForm((current) => ({ ...current, endTime: event.target.value }))} />
+                </div>
+                <select
+                  className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm font-semibold text-[#5B342C]"
+                  value={form.status}
+                  onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
+                >
+                  {["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED"].map((item) => (
+                    <option key={item} value={item}>
+                      {viOption(item)}
+                    </option>
+                  ))}
+                </select>
+                <Textarea placeholder="Ghi chú" value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} />
+                <div className="studio-sticky-actions grid grid-cols-2 gap-2">
+                  {editingId ? (
+                    <Button variant="secondary" className="min-h-11" onClick={resetForm}>
+                      Hủy sửa
+                    </Button>
+                  ) : null}
+                  <Button className={`min-h-11 ${!editingId ? 'col-span-2' : ''}`} onClick={save} disabled={saving}>
+                    {saving ? <><Loader2 size={16} className="animate-spin mr-2" />{editingId ? "Đang cập nhật..." : "Đang lưu..."}</> : editingId ? "Cập nhật" : "Lưu booking"}
+                  </Button>
+                </div>
+                {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
+                <div className="h-20 sm:hidden" />
               </div>
-            ) : (
-              <Input value={form.customerName} placeholder="Tên khách" onChange={(event) => setForm((current) => ({ ...current, customerId: "", customerName: event.target.value }))} />
-            )}
-            {form.bookingMode === "PERSONAL" && !form.customerId && form.customerName.trim() ? (
-              <div className="rounded-2xl bg-[#FFF8F1] p-3">
-                <p className="mb-2 text-sm font-black text-[#5B342C]">Ảnh khách lạ</p>
-                <MediaPicker value={form.imageUrl} onChange={(value) => setForm((current) => ({ ...current, imageUrl: value }))} placeholder="Upload ảnh khách lạ" />
-              </div>
-            ) : null}
-            <select
-              className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm font-semibold text-[#5B342C]"
-              value={form.packageId}
-              onChange={(event) => {
-                const nextPackage = packages.find((item) => item.id === event.target.value);
-                if (form.bookingMode === "GROUP" && !editingId) setGroupPackageIds(groupNames.map(() => event.target.value));
-                setForm((current) => ({
-                  ...current,
-                  packageId: event.target.value,
-                  packageName: nextPackage?.name ?? "",
-                  categoryName: nextPackage?.category.name ?? "",
-                  price: String(nextPackage?.price ?? 0),
-                }));
-              }}
-            >
-              <option value="">Chọn gói</option>
-              {packages.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name} - {formatMoney(item.price)}
-                </option>
-              ))}
-            </select>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input value={form.packageName} readOnly placeholder="Tên gói" />
-              <Input value={form.categoryName} readOnly placeholder="Danh mục" />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input value={formatMoney(form.price)} readOnly />
-              <div className="rounded-xl border border-[#F4C7C4] bg-[#FFF8F1] px-4 py-3">
-                <p className="text-xs font-black uppercase text-[#B98278]">Sau giảm</p>
-                <p className="mt-1 text-base font-black text-[#5B342C]">{formatMoney(discountedTotal(form.price, form.discountType, form.discountValue).total)}</p>
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-[1fr_1.2fr]">
-              <select
-                className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm font-semibold text-[#5B342C]"
-                value={form.discountType}
-                onChange={(event) => setForm((current) => ({ ...current, discountType: event.target.value, discountValue: event.target.value === "NONE" ? "" : current.discountValue }))}
-              >
-                <option value="NONE">Không giảm giá</option>
-                <option value="AMOUNT">Giảm tiền mặt</option>
-                <option value="PERCENT">Giảm phần trăm</option>
-              </select>
-              <Input
-                disabled={form.discountType === "NONE"}
-                value={form.discountValue}
-                placeholder={form.discountType === "PERCENT" ? "Ví dụ: 10 (%)" : "Ví dụ: 50000"}
-                onChange={(event) => setForm((current) => ({ ...current, discountValue: event.target.value }))}
-              />
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <DateTimeInput label="Giờ bắt đầu" value={form.startTime} onChange={(event) => setForm((current) => ({ ...current, startTime: event.target.value }))} />
-              <DateTimeInput label="Giờ kết thúc" value={form.endTime} onChange={(event) => setForm((current) => ({ ...current, endTime: event.target.value }))} />
-            </div>
-            <select
-              className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm font-semibold text-[#5B342C]"
-              value={form.status}
-              onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}
-            >
-              {["PENDING", "CONFIRMED", "IN_PROGRESS", "COMPLETED", "CANCELLED"].map((item) => (
-                <option key={item} value={item}>
-                  {viOption(item)}
-                </option>
-              ))}
-            </select>
-            <Textarea placeholder="Ghi chú" value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} />
-            <div className="studio-sticky-actions grid grid-cols-2 gap-2">
-              {editingId ? (
-                <Button variant="secondary" className="min-h-11" onClick={resetForm}>
-                  Hủy sửa
-                </Button>
-              ) : null}
-              <Button className={`min-h-11 ${!editingId ? 'col-span-2' : ''}`} onClick={save} disabled={saving}>
-                {saving ? <><Loader2 size={16} className="animate-spin mr-2" />{editingId ? "Đang cập nhật..." : "Đang lưu..."}</> : editingId ? "Cập nhật" : "Lưu booking"}
-              </Button>
-            </div>
-            {/* Thêm khoảng trống ở cuối để không bị che bởi menu/nav bar điện thoại */}
-            <div className="h-20 sm:hidden" />
+            </Card>
           </div>
-        </Card>
-        </div>
-        ) : null}
+        );
+        return isMobile ? <Portal>{formElement}</Portal> : formElement;
+      })()}
       </div>
 
       {detail ? (
