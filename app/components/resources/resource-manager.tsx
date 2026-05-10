@@ -3481,10 +3481,9 @@ function WalletAppView({
                       return (
                         <FinancialCompactCard
                           key={id || `${group.label}-${index}`}
-                          id={id}
                           row={row}
                           resource="transactions"
-                          indexLabel=""
+                          indexLabel={index}
                           selectionMode={false}
                           selected={false}
                           canEdit={false}
@@ -3493,9 +3492,7 @@ function WalletAppView({
                           onDelete={() => {}}
                           onToggleSelect={() => {}}
                           onOpenDetail={onOpenDetail}
-                          onOpenGallery={onOpenGallery}
-                          printResourceInvoice={printResourceInvoice}
-                          printGroupMemberInvoice={printGroupMemberInvoice}
+                          onOpenGallery={onOpenGallery || (() => {})}
                         />
                       );
                     })}
