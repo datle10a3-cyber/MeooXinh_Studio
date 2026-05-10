@@ -512,3 +512,200 @@ export async function finalizeCompletedBooking(booking: BookingLike, actor?: Ses
     timeout: 30000,
   });
 }
+
+function formatMoneyLocal(value: unknown) {
+  const num = Number(value ?? 0);
+  return num.toLocaleString("vi-VN") + " đ";
+}
+
+async function nextStudioGroupInvoiceCode(tx: Prisma.TransactionClient, studioId: string) {
+  const invoices = await tx.invoice.findMany({
+    where: { studioId, code: { startsWith: "GROUP-meoxinh" } },
+    select: { code: true },
+  });
+  const max = invoices.reduce((highest, invoice) => {
+    const match = /^GROUP-meoxinh(\d+)$/i.exec(invoice.code);
+    return match ? Math.max(highest, Number(match[1])) : highest;
+  }, 0);
+  return `GROUP-meoxinh${String(max + 1).padStart(2, "0")}`;
+}
+
+export async function finalizeGroupCompletedBookings(
+  bookings: BookingLike[],
+  groupKey: string,
+  groupTitle: string,
+  actor?: SessionUser
+) {
+  if (bookings.length === 0) return null;
+  const firstBooking = bookings[0];
+  const studioId = firstBooking.studioId;
+
+  // Aggregate total amount of all bookings in the group
+  const totalAmount = bookings.reduce((sum, b) => sum.add(decimal(b.total.gt(0) ? b.total : b.price)), decimal(0));
+  if (totalAmount.lte(0)) return null;
+
+  const { wallet, openShift: resolvedOpenShift } = await activeOpenShiftWallet(studioId);
+  const occurredAt = new Date();
+
+  // Group description / list of members
+  const detailsList = bookings.map(b => `- ${b.customerName}: ${b.packageName} (${moneyNumber(b.total) > 0 ? formatMoneyLocal(b.total) : formatMoneyLocal(b.price)})`).join("\n");
+  const projectNote = `Dự án nhóm gộp từ các booking:\n${detailsList}`;
+
+  // Get first booking images
+  const customerImage = firstBooking.customerId ? firstBooking.customer?.avatarUrl || null : firstBooking.imageUrl || null;
+  const packageImage = firstBooking.package?.imageUrl || null;
+  const proofGallery = JSON.stringify([packageImage, ...packageGalleryUrls(firstBooking.package?.galleryUrls)].filter(Boolean).slice(0, 5));
+
+  return prisma.$transaction(async (tx) => {
+    const openShift = resolvedOpenShift ?? await openShiftForWallet(tx, studioId, wallet?.id, occurredAt);
+
+    // 1. Create one unified Project for the group
+    const projectCode = `GRP-${groupKey.slice(0, 6).toUpperCase()}`;
+    const project = await tx.project.upsert({
+      where: { studioId_code: { studioId, code: projectCode } },
+      update: {
+        name: groupTitle,
+        coverUrl: customerImage,
+        galleryUrls: proofGallery,
+        amount: totalAmount,
+        dueAmount: new Prisma.Decimal(0),
+        status: "DELIVERED",
+        note: projectNote,
+      },
+      create: {
+        studioId,
+        code: projectCode,
+        name: groupTitle,
+        coverUrl: customerImage,
+        galleryUrls: proofGallery,
+        status: "DELIVERED",
+        amount: totalAmount,
+        dueAmount: new Prisma.Decimal(0),
+        deadlineAt: firstBooking.endAt,
+        note: projectNote,
+      },
+    });
+
+    // 2. Create/Update group invoice: GROUP-meoxinh01, etc.
+    const existingInvoice = await tx.invoice.findFirst({
+      where: {
+        studioId,
+        deletedAt: null,
+        projectId: project.id,
+      },
+    });
+
+    const invoiceCode = existingInvoice?.code && /^GROUP-meoxinh\d+$/i.test(existingInvoice.code)
+      ? existingInvoice.code
+      : await nextStudioGroupInvoiceCode(tx, studioId);
+
+    // Snapshot structure to represent group elements
+    const snapshotObj = {
+      invoiceCode,
+      customerName: groupTitle,
+      packageName: `Thanh toán nhóm (${bookings.length} khách)`,
+      categoryName: "STUDIO",
+      originalPrice: bookings.reduce((sum, b) => sum + moneyNumber(b.price), 0),
+      discountLabel: formatMoneyLocal(bookings.reduce((sum, b) => sum + (moneyNumber(b.price) - (moneyNumber(b.total) > 0 ? moneyNumber(b.total) : moneyNumber(b.price))), 0)),
+      discountPercent: "",
+      isGroupInvoice: true,
+      groupRows: bookings.map(b => ({
+        customerName: b.customerName,
+        packageName: b.packageName,
+        price: moneyNumber(b.price),
+        total: moneyNumber(b.total) > 0 ? moneyNumber(b.total) : moneyNumber(b.price),
+      })),
+    };
+    const snapshot = `RECEIPT:${JSON.stringify(snapshotObj)}`;
+
+    const invoice = existingInvoice
+      ? await tx.invoice.update({
+        where: { id: existingInvoice.id },
+        data: {
+          code: invoiceCode,
+          projectId: project.id,
+          imageUrl: customerImage,
+          galleryUrls: proofGallery,
+          total: totalAmount,
+          paid: totalAmount,
+          due: new Prisma.Decimal(0),
+          status: "PAID",
+          note: `${snapshot}\n${projectNote}`,
+        },
+      })
+      : await tx.invoice.create({
+        data: {
+          studioId,
+          projectId: project.id,
+          code: invoiceCode,
+          status: "PAID",
+          imageUrl: customerImage,
+          galleryUrls: proofGallery,
+          issueDate: new Date(),
+          total: totalAmount,
+          paid: totalAmount,
+          due: new Prisma.Decimal(0),
+          note: `${snapshot}\n${projectNote}`,
+        },
+      });
+
+    // 3. Create invoice items for each booking inside the group!
+    await tx.invoiceItem.deleteMany({ where: { invoiceId: invoice.id } });
+    for (const b of bookings) {
+      const rowPrice = moneyNumber(b.total) > 0 ? moneyNumber(b.total) : moneyNumber(b.price);
+      await tx.invoiceItem.create({
+        data: {
+          invoiceId: invoice.id,
+          description: `${b.customerName} - ${b.packageName}`,
+          quantity: 1,
+          unitPrice: new Prisma.Decimal(rowPrice),
+          total: new Prisma.Decimal(rowPrice),
+        },
+      });
+    }
+
+    // 4. Log one consolidated income Transaction into the open wallet shift!
+    const transactionTitle = `Thanh toán nhóm: ${groupTitle}`;
+    await tx.transaction.deleteMany({
+      where: {
+        studioId,
+        walletShiftId: openShift?.id,
+        note: { startsWith: `GROUP_CHECKOUT:${groupKey}` },
+      },
+    });
+
+    await tx.transaction.create({
+      data: {
+        studioId,
+        walletId: wallet?.id,
+        walletShiftId: openShift?.id,
+        projectId: project.id,
+        type: "INCOME",
+        title: transactionTitle,
+        amount: totalAmount,
+        method: wallet?.type?.toUpperCase()?.includes("BANK") ? "BANK_TRANSFER" : "CASH",
+        approvalStatus: "APPROVED",
+        note: `GROUP_CHECKOUT:${groupKey}\nThao tác bởi: ${actor?.name || "Hệ thống"}.\n${projectNote}`,
+      },
+    });
+
+    // Apply wallet delta
+    if (wallet) {
+      await tx.wallet.update({
+        where: { id: wallet.id },
+        data: { balance: { increment: totalAmount } },
+      });
+    }
+
+    if (openShift?.id) await recalculateWalletShiftSnapshot(tx, studioId, openShift.id);
+
+    return {
+      invoiceCode,
+      invoiceId: invoice.id,
+    };
+  }, {
+    maxWait: 15000,
+    timeout: 30000,
+  });
+}
+

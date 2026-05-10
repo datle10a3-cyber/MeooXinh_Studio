@@ -1,7 +1,7 @@
 import { created, fail, ok, serverError } from "@/app/lib/api-response";
 import { writeAuditLog } from "@/app/lib/audit";
 import { canCreate, canUpdate, requireUser, verifyStudioEditPassword } from "@/app/lib/auth";
-import { finalizeCompletedBooking } from "@/app/lib/finance-workflow";
+import { finalizeCompletedBooking, finalizeGroupCompletedBookings } from "@/app/lib/finance-workflow";
 import { prisma } from "@/app/lib/prisma";
 
 function parseDate(value: unknown) {
@@ -177,6 +177,41 @@ export async function PUT(req: Request) {
     if (!canUpdate(user.role)) return fail("Bạn không có quyền sửa booking.", 403);
 
     const body = await req.json();
+    if (body.isGroupCheckout) {
+      if (!(await verifyStudioEditPassword(user, body.studioPassword))) {
+        return fail("Mật khẩu studio không đúng. Nhân viên cần nhập mật khẩu studio để sửa booking.", 401);
+      }
+      const shiftError = await ensureOpenPaymentShift(user.studioId);
+      if (shiftError) return fail(shiftError, 409);
+
+      const bookings = await prisma.booking.findMany({
+        where: {
+          id: { in: body.bookingIds },
+          studioId: user.studioId,
+          deletedAt: null,
+        },
+        include: bookingSelect(),
+      });
+      if (bookings.length === 0) return fail("Không tìm thấy các booking để thanh toán.", 404);
+
+      const groupSnapshot = await finalizeGroupCompletedBookings(bookings, body.groupKey, body.groupTitle, user);
+      await prisma.booking.updateMany({
+        where: {
+          id: { in: body.bookingIds },
+          studioId: user.studioId,
+        },
+        data: {
+          status: "COMPLETED",
+        },
+      });
+
+      for (const b of bookings) {
+        await writeAuditLog(user, "UPDATE", "Booking", b.id, { customerName: b.customerName, name: b.packageName });
+      }
+
+      return ok({ success: true, groupCheckout: true, ...(groupSnapshot ?? {}) });
+    }
+
     if (!body.id) return fail("Thiếu mã booking.", 422);
     if (!(await verifyStudioEditPassword(user, body.studioPassword))) return fail("Mật khẩu studio không đúng. Nhân viên cần nhập mật khẩu studio để sửa booking.", 401);
     if (!String(body.customerName ?? "").trim()) return fail("Tên khách hàng là bắt buộc.", 422);

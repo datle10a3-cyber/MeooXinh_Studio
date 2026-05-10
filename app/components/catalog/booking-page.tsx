@@ -630,41 +630,37 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     setProcessingStatus(true);
     try {
       const targetRows = group.rows.filter(row => row.status !== "COMPLETED" && row.status !== "CANCELLED");
-      const updatedRows: BookingItem[] = [];
 
-      for (const row of targetRows) {
-        const result = await fetch("/api/bookings", {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: row.id,
-            customerId: row.customerId ?? "",
-            customerName: row.customerName ?? "",
-            imageUrl: row.imageUrl ?? "",
-            packageId: row.packageId ?? "",
-            startTime: row.startTime,
-            endTime: row.endTime,
-            note: row.note ?? "",
-            status,
-            ...(role === "STAFF" ? { studioPassword } : {}),
-          }),
-        }).then((res) => res.json() as Promise<ApiResult<BookingItem>>);
+      const result = await fetch("/api/bookings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          isGroupCheckout: true,
+          groupKey: group.key,
+          groupTitle: group.title || "Booking nhóm",
+          bookingIds: targetRows.map(row => row.id),
+          status,
+          ...(role === "STAFF" ? { studioPassword } : {}),
+        }),
+      }).then((res) => res.json() as Promise<ApiResult<{ success: boolean; invoiceCode: string }>>);
 
-        if (result.error) {
-          printWindow?.close();
-          return setMessage(`Lỗi khi thanh toán cho khách ${row.customerName}: ${result.error.message}`);
-        }
-        updatedRows.push(result.data ?? row);
+      if (result.error) {
+        printWindow?.close();
+        return setMessage(`Lỗi khi thanh toán nhóm: ${result.error.message}`);
       }
 
       setCancelTarget(null);
       setPaymentTarget(null);
       setGroupPaymentTarget(null);
       setDetail(null);
-      setMessage("Đã thanh toán nhóm thành công, lưu hóa đơn và chuyển vào Booking hoàn tất.");
+      setMessage("Đã thanh toán nhóm thành công, lưu hóa đơn gộp và chuyển vào Booking hoàn tất.");
+
       if (printAfter) {
-        const printedGroup = { ...group, rows: group.rows.map(row => updatedRows.find(u => u.id === row.id) || row) };
-        printBookingGroupInvoice(printedGroup, printWindow);
+        const printedGroup = {
+          ...group,
+          rows: group.rows.map(row => targetRows.some(tr => tr.id === row.id) ? { ...row, status: "COMPLETED" as const } : row)
+        };
+        printBookingGroupInvoice(printedGroup, printWindow, result.data?.invoiceCode);
       }
       await loadData();
     } catch (err) {
@@ -954,8 +950,27 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
             </Button>
           </div>
         ) : (
-          <div className="mt-4">
-            <Button variant="danger" size="sm" className="h-9 w-full rounded-xl text-xs font-bold gap-1 px-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 hover:text-rose-800" onClick={(event) => { event.stopPropagation(); setDeleteTarget(row); }}>
+          <div className="mt-4 grid grid-cols-2 gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="h-9 rounded-xl text-xs font-bold gap-1 px-1.5 border border-[#F4C7C4]/60 bg-white hover:bg-[#FFF8F1] text-[#A84E61]"
+              onClick={(event) => {
+                event.stopPropagation();
+                printBookingInvoice(row);
+              }}
+            >
+              🖨️ In bill riêng lẻ
+            </Button>
+            <Button
+              variant="danger"
+              size="sm"
+              className="h-9 rounded-xl text-xs font-bold gap-1 px-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 hover:text-rose-800"
+              onClick={(event) => {
+                event.stopPropagation();
+                setDeleteTarget(row);
+              }}
+            >
               <Trash2 size={13} className="shrink-0" />
               Xóa lịch sử
             </Button>
@@ -1096,7 +1111,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                 <div
                   role="button"
                   tabIndex={0}
-                  className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-[1.25rem] bg-white px-3 py-3 text-left shadow-sm transition active:scale-[0.99]"
+                  className="flex flex-col sm:flex-row w-full cursor-pointer items-stretch sm:items-center justify-between gap-3 rounded-[1.25rem] bg-white px-3.5 py-3 text-left shadow-sm transition active:scale-[0.99]"
                   onClick={() => {
                     if (longPressActivated) {
                       setLongPressActivated(false);
@@ -1126,14 +1141,26 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                       </button>
                     ) : null}
                     <div className="min-w-0">
-                      <p className="text-xs font-black uppercase tracking-wide text-[#EA7188]">Booking nhóm</p>
-                      <h2 className="mt-1 whitespace-normal break-words text-lg font-black text-[#5B342C]">{group.title}</h2>
-                      <p className="mt-1 whitespace-normal break-words text-sm font-semibold text-[#9B746B]">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-[#EA7188]">Booking nhóm</p>
+                      <h2 className="mt-0.5 whitespace-normal break-words text-base sm:text-lg font-black text-[#5B342C]">{group.title}</h2>
+                      <p className="mt-0.5 whitespace-normal break-words text-xs sm:text-sm font-semibold text-[#9B746B]">
                         {group.rows.length} khách · {packageNames.length <= 1 ? (packageNames[0] ?? "Chưa có gói") : `${packageNames.length} gói khác nhau`}
                       </p>
                     </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="flex items-center justify-end gap-1.5 border-t border-dashed border-[#F4C7C4]/50 pt-2.5 sm:border-t-0 sm:pt-0 sm:gap-2 shrink-0">
+                    {completedOnly ? (
+                      <button
+                        type="button"
+                        className="rounded-full bg-[#FFF0F4] hover:bg-[#FFE2EA] px-3 py-1.5 text-xs font-black text-[#EA7188] transition"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          printBookingGroupInvoice(group);
+                        }}
+                      >
+                        🖨️ In bill tổng
+                      </button>
+                    ) : null}
                     {!completedOnly && uncompletedRows.length > 0 ? (
                       <button
                         type="button"
@@ -1913,8 +1940,12 @@ function GroupPaymentConfirmModal({
   );
 }
 
-function printBookingGroupInvoice(group: { key: string; title?: string; rows: BookingItem[] }, targetWindow?: Window | null) {
-  const invoiceCode = `GROUP-${group.key.slice(0, 8).toUpperCase()}`;
+function printBookingGroupInvoice(
+  group: { key: string; title?: string; rows: BookingItem[] },
+  targetWindow?: Window | null,
+  invoiceCodeOverride?: string
+) {
+  const invoiceCode = invoiceCodeOverride || `GROUP-meoxinh-${group.key.slice(0, 4).toUpperCase()}`;
   const groupTitle = group.title || "Nhóm khách hàng";
   const invoiceTime = new Date();
 
