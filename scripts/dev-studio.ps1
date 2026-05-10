@@ -7,5 +7,4 @@ powershell -ExecutionPolicy Bypass -File (Join-Path $PSScriptRoot "start-postgre
 if ($LASTEXITCODE -ne 0) {
   exit $LASTEXITCODE
 }
-
-npx next dev -H 0.0.0.0
+npx next dev --webpack -H 0.0.0.0
