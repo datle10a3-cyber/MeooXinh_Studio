@@ -399,9 +399,10 @@ function printableInvoiceData(row: Row) {
     }
   }
 
+  const noteStr = String(row.note ?? "");
   const isLegacyGroup = !snapshot && (
-    note.includes("BOOKING_DONE:GROUP-") ||
-    note.includes("GROUP_CHECKOUT:GROUP-") ||
+    noteStr.includes("BOOKING_DONE:GROUP-") ||
+    noteStr.includes("GROUP_CHECKOUT:GROUP-") ||
     String(row.code ?? "").startsWith("GROUP-") ||
     String(row.code ?? "").startsWith("GRP-")
   );
@@ -993,11 +994,10 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
                   {selected ? "✓" : ""}
                 </button>
               ) : (
-                <OrderBadge value={indexLabel} />
+                <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#FFE4EA] text-[#EA7188]">
+                  <PawPrint size={22} />
+                </div>
               )}
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#FFE4EA] text-[#EA7188]">
-                <PawPrint size={22} />
-              </div>
               <div className="min-w-0 flex-1">
                 <h2 className="whitespace-normal break-words text-base sm:text-lg font-black leading-tight text-[#5B342C]">{isProject ? String(row.name || title) : title}</h2>
                 <p className="mt-1 truncate text-xs sm:text-sm font-bold text-[#9B746B]">
@@ -1054,17 +1054,33 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
               const finalPrice = Number(grow.total ?? grow.price ?? originalPrice);
               const discount = originalPrice - finalPrice;
               
-              // Render individual child card
+              // Render individual child card matching BookingPage renderBookingRow
               return (
                 <Card
                   key={grow.id || growIdx}
                   onClick={() => {
                     onOpenDetail(grow);
                   }}
-                  className="cursor-pointer relative rounded-2xl border-[#F4C7C4]/60 bg-white p-3.5 shadow-sm transition hover:shadow-md active:scale-[0.99]"
+                  className="cursor-pointer relative mt-6 rounded-[1.75rem] border border-[#F4C7C4] bg-white p-4 shadow-sm transition hover:shadow-md active:scale-[0.99]"
                 >
+                  {grow.startTime ? (
+                    <span className="absolute -top-3 left-5 rounded-full border border-[#F4C7C4] bg-[#FFF0F4] px-3 py-1 text-[11px] font-black text-[#C14F69] shadow-sm">
+                      {formatDateTimeLabel(grow.startTime)}
+                    </span>
+                  ) : null}
                   <div className="flex min-w-0 flex-col sm:flex-row sm:items-center justify-between gap-3">
                     <div className="flex min-w-0 items-center gap-3">
+                      {/* Customer Avatar Mirror */}
+                      {grow.avatarUrl ? (
+                        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-2xl border border-[#F4C7C4] bg-[#FFF3EC] shadow-sm">
+                          <img src={grow.avatarUrl} alt={grow.customerName || "Khách"} className="h-full w-full object-cover" />
+                        </div>
+                      ) : (
+                        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#FFF3EC] text-[#5B342C]">
+                          <CalendarClock size={22} />
+                        </div>
+                      )}
+
                       {grow.imageUrl ? (
                         <div 
                           className="h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-pink-100 bg-[#FFF8F1]"
@@ -1075,21 +1091,20 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
                         >
                           <img src={grow.imageUrl} alt="" className="h-full w-full object-cover" />
                         </div>
-                      ) : (
-                        <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border border-pink-100 bg-[#FFF8F1] text-sm">
-                          👤
-                        </div>
-                      )}
+                      ) : null}
                       <div className="min-w-0">
-                        <h3 className="truncate text-sm sm:text-base font-black text-[#5B342C]">{grow.customerName || "Khách hàng"}</h3>
-                        <p className="mt-0.5 truncate text-xs font-bold text-[#9B746B]">{grow.packageName || "Gói dịch vụ"}</p>
+                        <h3 className="whitespace-normal break-words text-lg font-black leading-tight text-[#5B342C]">{grow.customerName || "Khách hàng"}</h3>
+                        <div className="mt-1 flex items-center gap-1.5">
+                          <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#EA7188]" />
+                          <p className="truncate text-sm font-bold text-[#9B746B]">{grow.packageName || "Gói dịch vụ"}</p>
+                        </div>
                       </div>
                     </div>
 
                     <div className="shrink-0 text-left sm:text-right mt-1 sm:mt-0">
-                      <p className="truncate text-sm font-black text-[#EA7188]">{formatMoney(finalPrice)}</p>
+                      <p className="truncate text-base font-black text-[#EA7188]">{formatMoney(finalPrice)}</p>
                       {discount > 0 ? (
-                        <p className="text-[9px] font-bold text-emerald-600">🏷️ Giảm: -{formatMoney(discount)}</p>
+                        <p className="truncate text-[10px] font-bold text-emerald-600">🏷️ Giảm: -{formatMoney(discount)}</p>
                       ) : null}
                     </div>
                   </div>

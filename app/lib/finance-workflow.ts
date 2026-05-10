@@ -584,6 +584,8 @@ export async function finalizeGroupCompletedBookings(
         total: moneyNumber(b.total) > 0 ? moneyNumber(b.total) : moneyNumber(b.price),
         imageUrl: b.package?.imageUrl || null,
         galleryUrls: b.package?.galleryUrls || null,
+        avatarUrl: b.customer?.avatarUrl || b.imageUrl || null,
+        startTime: b.startAt,
       })),
     };
     const snapshot = `RECEIPT:${JSON.stringify(snapshotObj)}`;
