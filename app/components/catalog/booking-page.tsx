@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CalendarClock, CheckCircle2, Loader2, Printer, Pencil, Plus, Search, Trash2, X, CreditCard, Eye, EyeOff, PawPrint } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
@@ -266,6 +267,10 @@ function CustomerSearchPicker({
 
 export function BookingPage({ completedOnly = false }: { completedOnly?: boolean }) {
   const [loadingData, setLoadingData] = useState(true);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [packages, setPackages] = useState<PackageItem[]>([]);
   const [rows, setRows] = useState<BookingItem[]>([]);
@@ -301,6 +306,24 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     window.addEventListener("resize", checkMobile);
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
+
+  // Auto-open specific detail from URL if query param ?detail=ID exists
+  useEffect(() => {
+    if (!loadingData && rows.length > 0) {
+      const detailId = searchParams.get("detail");
+      if (detailId) {
+        const match = rows.find(r => r.id === detailId);
+        if (match) {
+          setDetail(match);
+          // Strip from URL after match to prevent loops if user manually closes
+          const nextParams = new URLSearchParams(searchParams.toString());
+          nextParams.delete("detail");
+          const search = nextParams.toString();
+          window.history.replaceState(null, "", search ? `${pathname}?${search}` : pathname);
+        }
+      }
+    }
+  }, [loadingData, rows, searchParams, pathname]);
   const focusedItemId = useUiStore((state) => state.focusedItemId);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
   const longPressTimer = useRef<number | null>(null);

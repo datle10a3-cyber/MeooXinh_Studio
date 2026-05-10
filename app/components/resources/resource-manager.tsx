@@ -910,6 +910,7 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
   focused?: boolean;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const router = useRouter();
   const longPressTimer = useRef<number | null>(null);
   const [longPressActivated, setLongPressActivated] = useState(false);
   const id = String(row.id ?? "");
@@ -1059,7 +1060,9 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
                 <Card
                   key={grow.id || growIdx}
                   onClick={() => {
-                    onOpenDetail(grow);
+                    if (grow.id) {
+                      router.push(`/completed-bookings?detail=${grow.id}`);
+                    }
                   }}
                   className="cursor-pointer relative mt-6 rounded-[1.75rem] border border-[#F4C7C4] bg-white p-4 shadow-sm transition hover:shadow-md active:scale-[0.99]"
                 >
@@ -1917,6 +1920,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
                 onTransfer={() => goToResource("transactions")}
                 onWalletCreated={loadRows}
                 onOpenDetail={setDetailRow}
+                onOpenGallery={openRowGallery}
               />
             ) : (
               <ResourceListWithProgressive
@@ -2693,6 +2697,7 @@ function WalletAppView({
   onTransfer,
   onWalletCreated,
   onOpenDetail,
+  onOpenGallery,
 }: {
   rows: Row[];
   transactions: Row[];
@@ -2704,6 +2709,7 @@ function WalletAppView({
   onTransfer: () => void;
   onWalletCreated: () => void | Promise<void>;
   onOpenDetail: (row: Row) => void;
+  onOpenGallery?: (row: Row, index: number) => void;
 }) {
   const [activeWalletId, setActiveWalletId] = useState(() => String(rows[0]?.id ?? ""));
   const [shiftData, setShiftData] = useState<ShiftData>({ openShift: null, shifts: [] });
@@ -3473,30 +3479,24 @@ function WalletAppView({
                       const id = String(row.id ?? "");
                       const isIncome = String(row.type ?? "") === "INCOME";
                       return (
-                        <div
+                        <FinancialCompactCard
                           key={id || `${group.label}-${index}`}
-                          className="flex cursor-pointer items-start gap-3 rounded-[1.35rem] bg-[#F6F7FB] p-3 transition hover:bg-white hover:shadow-sm"
-                          onClick={() => onOpenDetail(row)}
-                        >
-                          <div className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-2xl", isIncome ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>
-                            {isIncome ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
-                          </div>
-                          <div className="min-w-0 flex-1">
-                            <span className="inline-flex rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-[#9B746B] shadow-sm">
-                              {formatDateTimeLabel(row.occurredAt ?? row.createdAt)}
-                            </span>
-                            <p className="whitespace-normal break-words text-sm font-black leading-5 text-[#2F2F2F]">{String(row.title ?? "Giao dịch")}</p>
-                            <p className="mt-0.5 text-xs font-bold text-[#7A7A7A]">
-                              Tạo: {formatDateTimeLabel(row.createdAt)} · Phát sinh: {formatDateTimeLabel(row.occurredAt)} · {viOption(row.approvalStatus)}
-                            </p>
-                          </div>
-                          <div className="flex shrink-0 items-center gap-2">
-                            <p className={cn("text-right text-sm font-black", isIncome ? "text-emerald-700" : "text-rose-700")}>
-                              {isIncome ? "+" : "-"}{formatMoney(row.amount as string | number | null | undefined)}
-                            </p>
-                            <PrintInvoiceMenu row={row} />
-                          </div>
-                        </div>
+                          id={id}
+                          row={row}
+                          resource="transactions"
+                          indexLabel=""
+                          selectionMode={false}
+                          selected={false}
+                          canEdit={false}
+                          canRemove={false}
+                          onEdit={() => {}}
+                          onDelete={() => {}}
+                          onToggleSelect={() => {}}
+                          onOpenDetail={onOpenDetail}
+                          onOpenGallery={onOpenGallery}
+                          printResourceInvoice={printResourceInvoice}
+                          printGroupMemberInvoice={printGroupMemberInvoice}
+                        />
                       );
                     })}
                   </div>
