@@ -271,6 +271,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const [deleteTarget, setDeleteTarget] = useState<BookingItem | null>(null);
   const [cancelTarget, setCancelTarget] = useState<BookingItem | null>(null);
   const [paymentTarget, setPaymentTarget] = useState<BookingItem | null>(null);
+  const [groupPaymentTarget, setGroupPaymentTarget] = useState<{ key: string; title?: string; rows: BookingItem[] } | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleteMode, setBulkDeleteMode] = useState<"selected" | "all" | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -611,6 +612,64 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     } catch (err) {
       printWindow?.close();
       console.error("Change status error:", err);
+    } finally {
+      setProcessingStatus(false);
+    }
+  }
+
+  async function changeGroupStatus(group: { key: string; title?: string; rows: BookingItem[] }, status: "COMPLETED", printAfter = false, printWindow?: Window | null) {
+    let studioPassword = "";
+    if (role === "STAFF") {
+      studioPassword = window.prompt("Nhập mật khẩu studio 6 số để cập nhật thanh toán nhóm.")?.trim() ?? "";
+      if (!/^\d{6}$/.test(studioPassword)) {
+        printWindow?.close();
+        setMessage("Nhân viên cần nhập đúng mật khẩu studio 6 số để cập nhật thanh toán nhóm.");
+        return;
+      }
+    }
+    setProcessingStatus(true);
+    try {
+      const targetRows = group.rows.filter(row => row.status !== "COMPLETED" && row.status !== "CANCELLED");
+      const updatedRows: BookingItem[] = [];
+
+      for (const row of targetRows) {
+        const result = await fetch("/api/bookings", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: row.id,
+            customerId: row.customerId ?? "",
+            customerName: row.customerName ?? "",
+            imageUrl: row.imageUrl ?? "",
+            packageId: row.packageId ?? "",
+            startTime: row.startTime,
+            endTime: row.endTime,
+            note: row.note ?? "",
+            status,
+            ...(role === "STAFF" ? { studioPassword } : {}),
+          }),
+        }).then((res) => res.json() as Promise<ApiResult<BookingItem>>);
+
+        if (result.error) {
+          printWindow?.close();
+          return setMessage(`Lỗi khi thanh toán cho khách ${row.customerName}: ${result.error.message}`);
+        }
+        updatedRows.push(result.data ?? row);
+      }
+
+      setCancelTarget(null);
+      setPaymentTarget(null);
+      setGroupPaymentTarget(null);
+      setDetail(null);
+      setMessage("Đã thanh toán nhóm thành công, lưu hóa đơn và chuyển vào Booking hoàn tất.");
+      if (printAfter) {
+        const printedGroup = { ...group, rows: group.rows.map(row => updatedRows.find(u => u.id === row.id) || row) };
+        printBookingGroupInvoice(printedGroup, printWindow);
+      }
+      await loadData();
+    } catch (err) {
+      printWindow?.close();
+      console.error("Change group status error:", err);
     } finally {
       setProcessingStatus(false);
     }
@@ -1018,6 +1077,8 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
             const packageNames = [...new Set(group.rows.map((row) => row.packageName).filter(Boolean))];
             const selected = selectedGroupKeys.includes(group.key);
             const showGroupCheckbox = groupSelectionMode || selectedGroupKeys.length > 0 || selected;
+            const uncompletedRows = group.rows.filter((row) => row.status !== "COMPLETED" && row.status !== "CANCELLED");
+
             return (
               <div
                 key={group.key}
@@ -1073,9 +1134,21 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
+                    {!completedOnly && uncompletedRows.length > 0 ? (
+                      <button
+                        type="button"
+                        className="rounded-full bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-600 transition"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setGroupPaymentTarget(group);
+                        }}
+                      >
+                        Thanh toán ({uncompletedRows.length})
+                      </button>
+                    ) : null}
                     <button
                       type="button"
-                      className="rounded-full bg-[#FFF0F4] px-3 py-1 text-xs font-black text-[#A84E61] transition hover:bg-[#FFE2EA]"
+                      className="rounded-full bg-[#FFF0F4] px-3 py-1.5 text-xs font-black text-[#A84E61] transition hover:bg-[#FFE2EA]"
                       onClick={(event) => {
                         event.stopPropagation();
                         void renameGroup(group);
@@ -1083,7 +1156,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                     >
                       Sửa tên
                     </button>
-                    <span className="rounded-full bg-[#FFF0F4] px-3 py-1 text-xs font-black text-[#A84E61]">
+                    <span className="rounded-full bg-[#FFF0F4] px-3 py-1.5 text-xs font-black text-[#A84E61]">
                       {expanded ? "Thu gọn" : "Xem"}
                     </span>
                   </div>
@@ -1317,6 +1390,17 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
           if (!paymentTarget) return;
           const printWindow = window.open("", "_blank", "width=900,height=1000");
           void changeStatus(paymentTarget, "COMPLETED", true, printWindow);
+        }}
+        loading={processingStatus}
+      />
+      <GroupPaymentConfirmModal
+        group={groupPaymentTarget}
+        onCancel={() => setGroupPaymentTarget(null)}
+        onPay={() => groupPaymentTarget ? void changeGroupStatus(groupPaymentTarget, "COMPLETED") : undefined}
+        onPayAndPrint={() => {
+          if (!groupPaymentTarget) return;
+          const printWindow = window.open("", "_blank", "width=900,height=1000");
+          void changeGroupStatus(groupPaymentTarget, "COMPLETED", true, printWindow);
         }}
         loading={processingStatus}
       />
@@ -1729,6 +1813,232 @@ function printBookingInvoice(booking: BookingItem, targetWindow?: Window | null)
     <div class="row bold total"><span>TỔNG THANH TOÁN</span><span class="right">${receiptEscape(formatMoney(finalPrice))}</span></div>
     <div class="sep"></div>
     <div class="status">ĐÃ THANH TOÁN ✔</div>
+    ${qrBlock}
+    <div class="sep"></div>
+    <div class="center thanks">Cảm ơn quý khách ♥<br/><span class="bold">MÈOO XINHH STUDIO 🐾</span></div>
+  </div>
+  <script>
+    window.onload = () => {
+      try {
+        window.print();
+      } catch (e) {
+        console.error("Auto print blocked:", e);
+      }
+    };
+  </script>
+</body>
+</html>`;
+  const popup = targetWindow ?? window.open("", "_blank", "width=900,height=1000");
+  if (!popup) return;
+  popup.document.write(html);
+  popup.document.close();
+}
+
+function GroupPaymentConfirmModal({
+  group,
+  onCancel,
+  onPay,
+  onPayAndPrint,
+  loading = false,
+}: {
+  group: { key: string; title?: string; rows: BookingItem[] } | null;
+  onCancel: () => void;
+  onPay: () => void;
+  onPayAndPrint: () => void;
+  loading?: boolean;
+}) {
+  if (!group) return null;
+  const targetRows = group.rows.filter(row => row.status !== "COMPLETED" && row.status !== "CANCELLED");
+  const totalAmount = targetRows.reduce((sum, row) => sum + Number(row.total ?? row.price ?? 0), 0);
+
+  return (
+    <Portal>
+      <div className="fixed inset-0 z-[150] grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={onCancel}>
+        <div className="w-full max-w-xl rounded-[2rem] border border-[#F4C7C4] bg-white p-5 shadow-[0_24px_80px_rgba(91,52,44,0.28)]" onClick={(event) => event.stopPropagation()}>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Thanh toán nhóm</p>
+              <h3 className="mt-1 text-2xl font-black text-[#5B342C]">Xác nhận thanh toán cả nhóm?</h3>
+              <p className="mt-1 text-sm font-semibold text-[#9B746B]">{group.title}</p>
+            </div>
+            <button type="button" className="grid h-10 w-10 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C]" onClick={onCancel} disabled={loading}>
+              <X size={18} />
+            </button>
+          </div>
+          
+          <div className="mt-4 max-h-[320px] overflow-y-auto rounded-[1.5rem] bg-[#FFF3EC] p-4 space-y-2">
+            <p className="text-xs font-black uppercase tracking-wide text-[#EA7188] mb-1">Danh sách thanh toán ({targetRows.length} khách)</p>
+            {targetRows.map((row) => {
+              const originalPrice = Number(row.price ?? 0);
+              const finalPrice = Number(row.total ?? row.price ?? 0);
+              const discount = originalPrice - finalPrice;
+              return (
+                <div key={row.id} className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2 shadow-sm">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-black text-[#5B342C]">{row.customerName || "Khách hàng"}</p>
+                    <p className="truncate text-xs font-bold text-[#9B746B]">{row.packageName || "Chưa chọn gói"}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-sm font-black text-[#EA7188]">{formatMoney(finalPrice)}</p>
+                    {discount > 0 ? (
+                      <p className="text-[10px] font-bold text-red-500 line-through">-{formatMoney(discount)}</p>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="mt-4 flex items-center justify-between rounded-2xl bg-[#FFF0F4] px-4 py-3 border border-[#F4C7C4]">
+            <span className="text-sm font-black text-[#5B342C]">TỔNG CỘNG ({targetRows.length} khách)</span>
+            <span className="text-2xl font-black text-[#EA7188]">{formatMoney(totalAmount)}</span>
+          </div>
+
+          <div className="mt-5 grid gap-2 sm:grid-cols-3">
+            <Button variant="secondary" className="min-h-11" onClick={onCancel} disabled={loading}>
+              Hủy
+            </Button>
+            <Button className="min-h-11" onClick={onPay} disabled={loading}>
+              {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
+              Thanh toán nhóm
+            </Button>
+            <Button variant="accent" className="min-h-12 rounded-2xl bg-[#5B342C] text-white shadow-[0_16px_36px_rgba(91,52,44,0.22)] transition hover:-translate-y-0.5 hover:bg-[#3B221D]" onClick={onPayAndPrint} disabled={loading}>
+              {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : <Printer size={16} />}
+              Thanh toán + In
+            </Button>
+          </div>
+        </div>
+      </div>
+    </Portal>
+  );
+}
+
+function printBookingGroupInvoice(group: { key: string; title?: string; rows: BookingItem[] }, targetWindow?: Window | null) {
+  const invoiceCode = `GROUP-${group.key.slice(0, 8).toUpperCase()}`;
+  const groupTitle = group.title || "Nhóm khách hàng";
+  const invoiceTime = new Date();
+
+  const targetRows = group.rows.filter(row => row.status === "COMPLETED");
+  const totalOriginalAmount = targetRows.reduce((sum, row) => sum + Number(row.price ?? 0), 0);
+  const totalFinalAmount = targetRows.reduce((sum, row) => sum + Number(row.total ?? row.price ?? 0), 0);
+  const totalDiscountAmount = Math.max(0, totalOriginalAmount - totalFinalAmount);
+
+  const paymentQrUrl = buildPaymentQrUrl(totalFinalAmount, invoiceCode);
+  const qrBlock = paymentQrUrl
+    ? `<div class="sep"></div><div class="center qr"><img src="${receiptEscape(paymentQrUrl)}" alt="QR thanh toán" /><div class="small bold">Quét mã để thanh toán</div><div class="small">Số tiền: ${receiptEscape(formatMoney(totalFinalAmount))}</div></div>`
+    : "";
+
+  const rowsHtml = targetRows.map((row) => {
+    const originalPrice = Number(row.price ?? 0);
+    const finalPrice = Number(row.total ?? row.price ?? originalPrice);
+    const discount = originalPrice - finalPrice;
+    
+    return `
+    <div class="item" style="margin-bottom: 8px;">
+      <div class="bold" style="font-size: 11.5px; color: #4b2a25;">👤 ${receiptEscape(row.customerName)}</div>
+      <div class="small" style="color: #7a5750; padding-left: 12px; margin-top: 1px;">📸 Gói: ${receiptEscape(row.packageName || "Chưa có gói")}</div>
+      <div class="row qty" style="padding-left: 12px; font-size: 11px;">
+        <span>Đơn giá: ${receiptEscape(formatMoney(originalPrice))}</span>
+        ${discount > 0 ? `<span style="color: #e86b88; font-weight: bold;">Giảm: -${receiptEscape(formatMoney(discount))}</span>` : ""}
+        <span class="right bold">${receiptEscape(formatMoney(finalPrice))}</span>
+      </div>
+    </div>
+    `;
+  }).join('<div class="solid" style="margin: 4px 0; border-top-color: #f7d5dd;"></div>');
+
+  const html = `<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Hóa đơn ${invoiceCode}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #fff7fb; color: #4b2a25; font-family: Arial, "Helvetica Neue", sans-serif; padding-top: 10px; }
+    .receipt { width: 80mm; max-width: 310px; margin: 0 auto; padding: 10px 9px; font-size: 12px; line-height: 1.38; background: #fff; border: 1px solid #f6c6d4; }
+    .center { text-align: center; }
+    .bold { font-weight: 700; }
+    .brand-box { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; padding: 8px; border-radius: 14px; background: #fff0f5; border: 1px solid #f5b8ca; } .logo { width: 34px; height: 34px; border-radius: 50%; background: #fff; object-fit: contain; border: 1px solid #f5b8ca; } .brand { font-size: 15px; font-weight: 900; letter-spacing: .9px; text-transform: uppercase; color: #e86b88; }
+    .address { margin-top: 3px; font-size: 10.5px; line-height: 1.35; color: #7a5750; }
+    .title { margin: 8px 0 6px; padding: 7px 0; border-radius: 12px; background: #e86b88; color: #fff; font-size: 14px; font-weight: 900; text-align: center; text-transform: uppercase; letter-spacing: .4px; }
+    .sep { margin: 8px 0; border-top: 1px dashed #e9a8b8; }
+    .solid { margin: 8px 0; border-top: 1px solid #f0b4c1; }
+    .row { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+    .left { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+    .right { flex: 0 0 auto; text-align: right; white-space: nowrap; }
+    .info { margin-top: 4px; }
+    .label { flex: 0 0 86px; }
+    .section { margin-top: 4px; font-weight: 800; text-transform: uppercase; }
+    .item { margin-top: 5px; }
+    .qty { padding-left: 12px; }
+    .total { padding: 8px; border-radius: 12px; background: #fff0f5; font-size: 13px; color: #d94f73; }
+    .status { text-align: center; font-weight: 900; color: #0f9f6e; }
+    .thanks { margin-top: 8px; line-height: 1.45; }
+    .small { font-size: 11px; }
+    .qr { margin-top: 8px; padding: 8px; border-radius: 14px; background: #fff; border: 1px solid #cfcfcf; color: #222; } .qr img { width: 128px; height: 128px; object-fit: contain; margin: 2px auto 4px; display: block; }
+    
+    /* Toolbar styles */
+    .toolbar { display: flex; justify-content: center; gap: 10px; margin: 0 auto 12px; max-width: 310px; width: 100%; padding: 0 4px; }
+    .btn { flex: 1; padding: 10px 14px; font-size: 13px; font-weight: bold; border: none; border-radius: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 4px 12px rgba(232,107,136,0.15); transition: all 0.2s ease; font-family: inherit; }
+    .btn-print { background: #e86b88; color: white; }
+    .btn-print:active { transform: scale(0.96); background: #d94f73; }
+    .btn-close { background: #f3f4f6; color: #4b5563; }
+    .btn-close:active { transform: scale(0.96); background: #e5e7eb; }
+
+    @page { margin: 0; }
+    @media print {
+      .no-print { display: none !important; }
+      body { background: #fff; margin: 0; padding-top: 0; }
+      body { color: #000; }
+      .receipt { width: 100%; max-width: 80mm; margin: 0 auto; padding: 8px 6px; border-color: #000; border: none !important; box-shadow: none !important; }
+      .brand-box, .total, .qr { background: #fff; border-color: #000; color: #000; }
+      .brand, .address, .title, .status { color: #000; }
+      .title { background: #fff; border: 1px solid #000; }
+      .sep { border-top-color: #777; }
+      .solid { border-top-color: #000; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print toolbar">
+    <button class="btn btn-print" onclick="window.print()">🖨️ In Hóa Đơn</button>
+    <button class="btn btn-close" onclick="window.close()">❌ Đóng</button>
+  </div>
+  <div class="receipt">
+    <div class="brand-box">
+      <img class="logo" src="/be-meo-studio-avatar.svg" alt="Mèoo Xinhh" />
+      <div>
+        <div class="brand">Mèoo Xinhh Studio</div>
+        <div class="address">make & photo</div>
+        <div class="address">☎ ${receiptEscape(STUDIO_PHONE)}</div>
+        <div class="address">⌂ ${receiptEscape(STUDIO_ADDRESS)}</div>
+      </div>
+    </div>
+    <div class="title">HÓA ĐƠN NHÓM</div>
+    <div class="info row"><span class="label">🧾 Mã HĐ</span><span class="left">: ${receiptEscape(invoiceCode)}</span></div>
+    <div class="info row"><span class="label">👥 Nhóm</span><span class="left">: ${receiptEscape(groupTitle)}</span></div>
+    <div class="info row"><span class="label">⏰ Giờ</span><span class="left">: ${formatReceiptDateTime(invoiceTime)}</span></div>
+    <div class="sep"></div>
+    <div class="section" style="margin-bottom: 6px;">📸 CHI TIẾT ĐOÀN KHÁCH</div>
+    
+    ${rowsHtml}
+    
+    <div class="sep"></div>
+    <div class="section">💰 TỔNG CỘNG ĐOÀN</div>
+    <div class="row info" style="margin-bottom: 4px; font-size: 11px; color: #7a5750;">
+      <span>Giá gốc cả nhóm</span>
+      <span class="right">${receiptEscape(formatMoney(totalOriginalAmount))}</span>
+    </div>
+    ${totalDiscountAmount > 0 ? `
+    <div class="row info" style="margin-bottom: 6px; font-weight: bold; color: #e86b88;">
+      <span>🏷️ Tổng giảm giá</span>
+      <span class="right">-${receiptEscape(formatMoney(totalDiscountAmount))}</span>
+    </div>
+    ` : ""}
+    <div class="solid" style="margin: 4px 0;"></div>
+    <div class="row bold total"><span>TỔNG THANH TOÁN</span><span class="right">${receiptEscape(formatMoney(totalFinalAmount))}</span></div>
+    <div class="sep"></div>
+    <div class="status">ĐÃ THANH TOÁN ✔</div>
     ${qrBlock}
     <div class="sep"></div>
     <div class="center thanks">Cảm ơn quý khách ♥<br/><span class="bold">MÈOO XINHH STUDIO 🐾</span></div>
