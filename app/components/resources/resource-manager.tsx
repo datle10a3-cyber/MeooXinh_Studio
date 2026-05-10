@@ -446,8 +446,8 @@ function printResourceInvoice(row: Row) {
     .status{text-align:center;font-weight:900;color:#0f9f6e}.thanks{margin-top:8px;line-height:1.45}
     .small{font-size:11px}.qr{margin-top:8px;padding:8px;border-radius:14px;background:#fff;border:1px solid #cfcfcf;color:#222}
     .qr img{width:128px;height:128px;object-fit:contain;margin:2px auto 4px;display:block}
-    @page{size:80mm auto;margin:0}
-    @media print{html,body{width:80mm;background:#fff;color:#000}.receipt{width:80mm;margin:0;padding:8px 6px;border-color:#000;border:none!important;box-shadow:none!important;max-width:none!important}.brand-box,.total,.qr{background:#fff;border-color:#000;color:#000}.brand,.address,.title,.status{color:#000}.title{background:#fff;border:1px solid #000}.sep{border-top-color:#777}.solid{border-top-color:#000}.no-print{display:none!important}}
+    @page{margin:0}
+    @media print{html,body{width:100%;background:#fff;color:#000}.receipt{width:100%;max-width:80mm;margin:0 auto;padding:8px 6px;border-color:#000;border:none!important;box-shadow:none!important}.brand-box,.total,.qr{background:#fff;border-color:#000;color:#000}.brand,.address,.title,.status{color:#000}.title{background:#fff;border:1px solid #000}.sep{border-top-color:#777}.solid{border-top-color:#000}.no-print{display:none!important}}
     .toolbar{display:flex;justify-content:center;gap:10px;margin:0 auto 12px;max-width:310px;width:100%;padding:0 4px}
     .btn{flex:1;padding:10px 14px;font-size:13px;font-weight:bold;border:none;border-radius:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;box-shadow:0 4px 12px rgba(232,107,136,0.15);transition:all 0.2s ease;font-family:inherit}
     .btn-print{background:#e86b88;color:white}

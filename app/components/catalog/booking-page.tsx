@@ -1561,12 +1561,12 @@ function printBookingInvoice(booking: BookingItem, targetWindow?: Window | null)
     .btn-close { background: #f3f4f6; color: #4b5563; }
     .btn-close:active { transform: scale(0.96); background: #e5e7eb; }
 
-    @page { size: 80mm auto; margin: 0; }
+    @page { margin: 0; }
     @media print {
       .no-print { display: none !important; }
       body { background: #fff; margin: 0; padding-top: 0; }
       body { color: #000; }
-      .receipt { width: 80mm; margin: 0; padding: 8px 6px; border-color: #000; border: none !important; box-shadow: none !important; max-width: none !important; }
+      .receipt { width: 100%; max-width: 80mm; margin: 0 auto; padding: 8px 6px; border-color: #000; border: none !important; box-shadow: none !important; }
       .brand-box, .total, .qr { background: #fff; border-color: #000; color: #000; }
       .brand, .address, .title, .status { color: #000; }
       .title { background: #fff; border: 1px solid #000; }
