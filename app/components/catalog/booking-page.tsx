@@ -814,7 +814,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     for (const row of filteredRows) {
       const title = bookingGroupName(row.note);
       const key = bookingGroupKey(row);
-      if (!title || !key || completedOnly) {
+      if (!title || !key) {
         groups.push({ key: row.id, rows: [row] });
         continue;
       }
@@ -997,33 +997,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
               Xong
             </Button>
           </div>
-        ) : (
-          <div className="mt-4 grid grid-cols-2 gap-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              className="h-9 rounded-xl text-xs font-bold gap-1 px-1.5 border border-[#F4C7C4]/60 bg-white hover:bg-[#FFF8F1] text-[#A84E61]"
-              onClick={(event) => {
-                event.stopPropagation();
-                printBookingInvoice(row);
-              }}
-            >
-              🖨️ In bill riêng lẻ
-            </Button>
-            <Button
-              variant="danger"
-              size="sm"
-              className="h-9 rounded-xl text-xs font-bold gap-1 px-1.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 hover:text-rose-800"
-              onClick={(event) => {
-                event.stopPropagation();
-                setDeleteTarget(row);
-              }}
-            >
-              <Trash2 size={13} className="shrink-0" />
-              Xóa lịch sử
-            </Button>
-          </div>
-        )}
+        ) : null}
       </div>
     );
   }
@@ -1197,43 +1171,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center justify-end gap-1.5 border-t border-dashed border-[#F4C7C4]/50 pt-2.5 sm:border-t-0 sm:pt-0 sm:gap-2 shrink-0">
-                    {completedOnly ? (
-                      <>
-                        <button
-                          type="button"
-                          className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-[#FFF0F4] hover:bg-[#FFE2EA] px-3 py-1.5 text-xs font-black text-[#EA7188] transition active:scale-95"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            printBookingGroupInvoice(group);
-                          }}
-                        >
-                          <Printer size={13} strokeWidth={2.5} />
-                          In bill tổng
-                        </button>
-                        <button
-                          type="button"
-                          className="flex items-center gap-1 rounded-full border border-[#FCD34D] bg-[#FFF8F1] hover:bg-[#FFF3EC] px-3 py-1.5 text-xs font-black text-[#D97706] transition active:scale-95"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void renameGroup(group);
-                          }}
-                        >
-                          <Pencil size={13} strokeWidth={2.5} />
-                          Sửa tên
-                        </button>
-                        <button
-                          type="button"
-                          className="flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 text-xs font-black text-rose-600 transition active:scale-95"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void removeGroup(group, "trash");
-                          }}
-                        >
-                          <Trash2 size={13} strokeWidth={2.5} />
-                          Xóa nhóm
-                        </button>
-                      </>
-                    ) : (
+                    {!completedOnly ? (
                       <>
                         {uncompletedRows.length > 0 ? (
                           <button
@@ -1260,7 +1198,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                           Sửa tên
                         </button>
                       </>
-                    )}
+                    ) : null}
                     <span className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-white hover:bg-[#FFF8F1] px-3 py-1.5 text-xs font-black text-[#A84E61] transition">
                       {expanded ? <EyeOff size={13} strokeWidth={2.5} /> : <Eye size={13} strokeWidth={2.5} />}
                       {expanded ? "Thu gọn" : "Xem"}
