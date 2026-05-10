@@ -388,7 +388,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className={darkMode ? "min-h-dvh bg-[#2B1C1A] text-white" : "min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
       <div className="flex min-h-dvh">
         <Sidebar session={session} />
-        <main className="min-w-0 flex-1 touch-pan-y">
+        <main className="min-w-0 flex-1 touch-pan-y overflow-x-hidden max-w-full">
           <header className="sticky top-0 z-30 border-b border-[#F4C7C4] bg-[#FFF3EC]/95 px-2.5 py-2 backdrop-blur supports-[backdrop-filter]:bg-[#FFF3EC]/86 sm:px-4 lg:py-3 xl:px-8" style={{ transform: "translateZ(0)" }}>
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">

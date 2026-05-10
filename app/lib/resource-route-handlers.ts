@@ -34,6 +34,16 @@ function resourceInclude(resource: ResourceKey) {
       code: true,
       name: true,
       status: true,
+      invoices: {
+        where: { deletedAt: null },
+        select: {
+          id: true,
+          code: true,
+          note: true,
+          total: true,
+          paid: true
+        }
+      },
       booking: {
         select: {
           id: true,

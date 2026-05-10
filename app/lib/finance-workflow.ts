@@ -685,7 +685,7 @@ export async function finalizeGroupCompletedBookings(
         amount: totalAmount,
         method: wallet?.type?.toUpperCase()?.includes("BANK") ? "BANK_TRANSFER" : "CASH",
         approvalStatus: "APPROVED",
-        note: `GROUP_CHECKOUT:${groupKey}\nThao tác bởi: ${actor?.name || "Hệ thống"}.\n${projectNote}`,
+        note: `${snapshot}\nGROUP_CHECKOUT:${groupKey}\nThao tác bởi: ${actor?.name || "Hệ thống"}.\n${projectNote}`,
       },
     });
 

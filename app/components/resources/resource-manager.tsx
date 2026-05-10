@@ -347,12 +347,24 @@ function printableInvoiceData(row: Row) {
   const item = firstInvoiceItem(row);
   const noteCode = /Hóa đơn:\s*(meoxinh\d+)/i.exec(String(row.note ?? ""))?.[1];
   const projectName = nestedName(row.project);
-  const snapshot = receiptSnapshotFromNote(row.note);
+  
+  let snapshot = receiptSnapshotFromNote(row.note);
+  if (!snapshot && row.project) {
+    const invoices = Array.isArray((row.project as any).invoices) ? (row.project as any).invoices : [];
+    for (const inv of invoices) {
+      const snap = receiptSnapshotFromNote(inv.note);
+      if (snap) {
+        snapshot = snap;
+        break;
+      }
+    }
+  }
+
   const projectParts = splitBookingProjectName(projectName);
   const isIncome = String(row.type ?? "") === "INCOME" || String(row.type ?? "") === "income" || Number(row.amount ?? row.total ?? 0) >= 0;
   const customerName = String(snapshot?.customerName || nestedName(row.customer) || row.customerName || projectParts.customerName || (isIncome ? "Người nộp tiền" : "Người nhận tiền"));
   const title = String(snapshot?.packageName || item?.description || row.packageName || projectParts.packageName || row.title || row.code || "Gói dịch vụ");
-  const amount = item?.total ?? row.total ?? row.paid ?? row.amount ?? 0;
+  const amount = row.total ?? row.paid ?? row.amount ?? item?.total ?? 0;
   const code = String(row.code ?? snapshot?.invoiceCode ?? noteCode ?? (row.id ? `GD-${String(row.id).slice(-6).toUpperCase()}` : "meoxinh--"));
   
   let originalPrice = snapshot?.originalPrice ? Number(snapshot.originalPrice) : Number(amount);
@@ -423,13 +435,13 @@ function printResourceInvoice(row: Row) {
     ? `<div class="sep"></div><div class="center qr"><img src="${receiptEscape(paymentQrUrl)}" alt="QR thanh toán" /><div class="small bold">Quét mã để thanh toán</div><div class="small">Số tiền: ${receiptEscape(formattedAmount)}</div></div>`
     : "";
 
-  const isIncome = String(row.type ?? "") === "INCOME" || String(row.type ?? "") === "income";
-  const isExpense = String(row.type ?? "") === "EXPENSE" || String(row.type ?? "") === "expense";
-  const invoiceHeader = isExpense ? "PHIẾU CHI TIỀN" : (isIncome && !row.code ? "PHIẾU THU TIỀN" : "HÓA ĐƠN THANH TOÁN");
-  const personLabel = isExpense ? "Người nhận" : "Khách";
-
   const snapshot = printable.snapshot;
   const isGroupInvoice = Boolean(snapshot?.isGroupInvoice || snapshot?.groupRows);
+  const isIncome = String(row.type ?? "") === "INCOME" || String(row.type ?? "") === "income";
+  const isExpense = String(row.type ?? "") === "EXPENSE" || String(row.type ?? "") === "expense";
+  
+  const invoiceHeader = isGroupInvoice ? "HÓA ĐƠN THANH TOÁN" : (isExpense ? "PHIẾU CHI TIỀN" : (isIncome && !row.code ? "PHIẾU THU TIỀN" : "HÓA ĐƠN THANH TOÁN"));
+  const personLabel = isGroupInvoice ? "Khách hàng (Nhóm)" : (isExpense ? "Người nhận" : "Khách");
   const groupRows = Array.isArray(snapshot?.groupRows) ? snapshot.groupRows : [];
 
   let detailsBlock = "";
@@ -779,7 +791,7 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
       onPointerCancel={clearLongPress}
       onPointerLeave={clearLongPress}
       className={cn(
-        "relative mt-6 cursor-pointer rounded-[1.75rem] border-[#F4C7C4] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]",
+        "relative mt-6 cursor-pointer rounded-[1.75rem] border-[#F4C7C4] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99] min-w-0 w-full overflow-hidden",
         focused ? "ring-2 ring-[#EA7188]" : "",
       )}
     >
