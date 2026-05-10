@@ -791,7 +791,7 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
       onPointerCancel={clearLongPress}
       onPointerLeave={clearLongPress}
       className={cn(
-        "relative mt-6 cursor-pointer rounded-[1.75rem] border-[#F4C7C4] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99] min-w-0 w-full overflow-hidden",
+        "relative cursor-pointer rounded-[1.75rem] border-[#F4C7C4] bg-white px-4 pt-6 pb-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99] min-w-0 w-full",
         focused ? "ring-2 ring-[#EA7188]" : "",
       )}
     >
@@ -2170,7 +2170,7 @@ function TransactionDateList({
           <div className="sticky top-20 z-10 w-fit rounded-2xl border border-[#F4C7C4] bg-white/95 px-4 py-2 text-sm font-black text-[#5B342C] shadow-sm backdrop-blur">
             {group.date} · {group.rows.length} giao dịch
           </div>
-          <div className="grid gap-3">
+          <div className="grid gap-y-7 gap-x-3 pt-3">
             {group.rows.map((row, index) => {
               const id = String(row.id ?? "");
               const isIncome = String(row.type) === "INCOME";
