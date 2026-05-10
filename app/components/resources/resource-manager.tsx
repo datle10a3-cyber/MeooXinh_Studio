@@ -365,7 +365,7 @@ function printableInvoiceData(row: Row) {
 
   const projectParts = splitBookingProjectName(projectName);
   const isIncome = String(row.type ?? "") === "INCOME" || String(row.type ?? "") === "income" || Number(row.amount ?? row.total ?? 0) >= 0;
-  const customerName = String(snapshot?.customerName || nestedName(row.customer) || row.customerName || projectParts.customerName || (isIncome ? "Người nộp tiền" : "Người nhận tiền"));
+  const customerName = String(snapshot?.customerName || nestedName(row.customer) || row.customerName || row.name || projectParts.customerName || (isIncome ? "Người nộp tiền" : "Người nhận tiền"));
   const title = String(snapshot?.packageName || item?.description || row.packageName || projectParts.packageName || row.title || row.code || "Gói dịch vụ");
   const amount = row.total ?? row.paid ?? row.amount ?? item?.total ?? 0;
   const code = String(row.code ?? snapshot?.invoiceCode ?? noteCode ?? (row.id ? `GD-${String(row.id).slice(-6).toUpperCase()}` : "meoxinh--"));
@@ -990,15 +990,15 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
                 <PawPrint size={22} />
               </div>
               <div className="min-w-0 flex-1">
-                <h2 className="whitespace-normal break-words text-base sm:text-lg font-black leading-tight text-[#5B342C]">{title}</h2>
+                <h2 className="whitespace-normal break-words text-base sm:text-lg font-black leading-tight text-[#5B342C]">{isProject ? String(row.name || title) : title}</h2>
                 <p className="mt-1 truncate text-xs sm:text-sm font-bold text-[#9B746B]">
                   {groupRows.length} khách · {packageName}
                 </p>
               </div>
             </div>
 
-            <div className="shrink-0 text-right">
-              <p className={cn("text-sm sm:text-base font-black", financialMoneyTone(resource, row))}>
+            <div className="shrink-0 text-right max-w-[45%]">
+              <p className={cn("truncate text-sm sm:text-base font-black", financialMoneyTone(resource, row))}>
                 {financialAmountPrefix(row)}{formatMoney(amount as string | number | null | undefined)}
               </p>
               <p className="text-[10px] font-bold text-[#9B746B]">{isProject ? "Dự án" : "Thanh toán"}</p>
@@ -1006,11 +1006,12 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
           </div>
 
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <div className="flex flex-1 justify-end gap-1.5 sm:gap-2">
+            <FinancialPackageThumb row={row} resource={resource} onOpenGallery={onOpenGallery} />
+            <div className="flex flex-1 flex-wrap justify-end gap-1.5 sm:gap-2">
               {!isProject ? (
                 <button
                   type="button"
-                  className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-[#FFF0F4] hover:bg-[#FFE2EA] px-3 py-1.5 text-xs font-black text-[#EA7188] transition active:scale-95 shadow-sm"
+                  className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-[#FFF0F4] hover:bg-[#FFE2EA] px-3 py-1.5 text-xs font-black text-[#EA7188] transition active:scale-95 shadow-sm whitespace-nowrap"
                   onClick={(event) => {
                     event.stopPropagation();
                     printResourceInvoice(row);
@@ -1030,7 +1031,7 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
                   <Trash2 size={16} />
                 </Button>
               ) : null}
-              <span className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-white hover:bg-[#FFF8F1] px-3 py-1.5 text-xs font-black text-[#A84E61] transition shadow-sm">
+              <span className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-white hover:bg-[#FFF8F1] px-3 py-1.5 text-xs font-black text-[#A84E61] transition shadow-sm whitespace-nowrap">
                 {expanded ? <EyeOff size={13} strokeWidth={2.5} /> : <Eye size={13} strokeWidth={2.5} />}
                 {expanded ? "Thu gọn" : "Xem"}
               </span>

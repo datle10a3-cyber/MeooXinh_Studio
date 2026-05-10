@@ -566,24 +566,6 @@ export async function finalizeGroupCompletedBookings(
     const invoiceSuffix = invoiceCode.slice("GROUP-meoxinh".length);
     const projectCode = `GRP-MEOXINH${invoiceSuffix}`;
 
-    // 3. Create a brand-new unique Project for the group (NEVER overwrite or merge)
-    const project = await tx.project.create({
-      data: {
-        studioId,
-        code: projectCode,
-        name: groupTitle,
-        coverUrl: customerImage,
-        galleryUrls: proofGallery,
-        status: "DELIVERED",
-        amount: totalAmount,
-        dueAmount: new Prisma.Decimal(0),
-        deadlineAt: firstBooking.endAt,
-        note: projectNote,
-      },
-    });
-
-    const existingInvoice = null; // Always null to trigger brand-new Invoice creation!
-
     // Snapshot structure to represent group elements
     const snapshotObj = {
       invoiceCode,
@@ -602,6 +584,26 @@ export async function finalizeGroupCompletedBookings(
       })),
     };
     const snapshot = `RECEIPT:${JSON.stringify(snapshotObj)}`;
+
+    // 3. Create a brand-new unique Project for the group (NEVER overwrite or merge)
+    const project = await tx.project.create({
+      data: {
+        studioId,
+        code: projectCode,
+        name: groupTitle,
+        coverUrl: customerImage,
+        galleryUrls: proofGallery,
+        status: "DELIVERED",
+        amount: totalAmount,
+        dueAmount: new Prisma.Decimal(0),
+        deadlineAt: firstBooking.endAt,
+        note: `${snapshot}\n${projectNote}`,
+      },
+    });
+
+    const existingInvoice = null; // Always null to trigger brand-new Invoice creation!
+
+
 
     const invoice = await tx.invoice.create({
       data: {
