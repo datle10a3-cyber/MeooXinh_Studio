@@ -23,3 +23,6 @@ export function serverError(error: unknown) {
   return fail(`Máy chủ đang gặp lỗi: ${detailMsg}`, 500);
 }
 
+// Trigger Vercel redeployment in Singapore region (sin1) to minimize database latency
+
+
