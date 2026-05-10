@@ -1527,6 +1527,7 @@ function printBookingInvoice(booking: BookingItem, targetWindow?: Window | null)
 <html lang="vi">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Hóa đơn ${invoiceCode}</title>
   <style>
     * { box-sizing: border-box; }

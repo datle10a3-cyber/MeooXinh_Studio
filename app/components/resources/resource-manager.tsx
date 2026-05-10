@@ -425,6 +425,7 @@ function printResourceInvoice(row: Row) {
 <html lang="vi">
 <head>
   <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>${receiptEscape(code)}</title>
   <style>
     *{box-sizing:border-box}
