@@ -62,14 +62,16 @@ export async function writeAuditLog(
     actorRoleLabel: actorRoleLabel(user.role),
   };
 
+  // Verify user exists in DB first to avoid FK constraint P2003 on Vercel/Neon
+  const userExists = await prisma.user.findUnique({ where: { id: user.id }, select: { id: true } });
   await prisma.auditLog.create({
     data: {
       studioId: user.studioId,
-      userId: user.id,
+      userId: userExists ? user.id : null,
       action,
       entity,
       entityId,
       metadata: JSON.stringify(nextMetadata),
     },
-  });
+  }).catch(() => null); // Audit logs are non-critical — never crash the main operation
 }

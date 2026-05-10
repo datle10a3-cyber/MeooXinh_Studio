@@ -438,10 +438,14 @@ export async function finalizeCompletedBooking(booking: BookingLike, actor?: Ses
       }
     }
 
+    // Verify actor userId exists in DB to avoid FK constraint violation
+    const actorUserId = actor?.id
+      ? (await tx.user.findUnique({ where: { id: actor.id }, select: { id: true } }))?.id ?? null
+      : null;
     await tx.auditLog.create({
       data: {
         studioId: booking.studioId,
-        userId: actor?.id,
+        userId: actorUserId,
         action: "FINALIZE_BOOKING",
         entity: "Booking",
         entityId: booking.id,

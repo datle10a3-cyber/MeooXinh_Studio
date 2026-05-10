@@ -154,7 +154,13 @@ export async function POST(req: Request) {
 
     let invoiceSnapshot = null;
     if (status === "COMPLETED") {
-      invoiceSnapshot = await finalizeCompletedBooking(row, user);
+      try {
+        invoiceSnapshot = await finalizeCompletedBooking(row, user);
+      } catch (finalizeError) {
+        // Roll back — delete the booking so data stays consistent
+        await prisma.booking.delete({ where: { id: row.id } }).catch(() => null);
+        throw finalizeError;
+      }
     }
 
     await writeAuditLog(user, "CREATE", "Booking", row.id, { customerName: row.customerName, name: row.packageName });
@@ -193,7 +199,8 @@ export async function PUT(req: Request) {
     const customerName = String(body.customerName).trim();
     const finishTime = endTime ?? new Date(startTime.getTime() + 60 * 60 * 1000);
     const status = body.status ? String(body.status) : "PENDING";
-    if (current.status !== "COMPLETED" && status === "COMPLETED") {
+    const isNewlyCompleting = current.status !== "COMPLETED" && status === "COMPLETED";
+    if (isNewlyCompleting) {
       const shiftError = await ensureOpenPaymentShift(user.studioId);
       if (shiftError) return fail(shiftError, 409);
     }
@@ -201,31 +208,55 @@ export async function PUT(req: Request) {
     const discountInfo = resolveDiscount(body as Record<string, unknown>, selectedPackage.price);
     const bookingMode = String(body.bookingMode ?? "PERSONAL");
     const nextTotal = body.discountType === undefined ? current.total : discountInfo.total;
-    const row = await prisma.booking.update({
-      where: { id: body.id },
-      data: {
-        customerId: body.customerId ? String(body.customerId) : null,
-        packageId: selectedPackage.id,
-        customerName,
-        imageUrl: body.imageUrl ? String(body.imageUrl).trim() : null,
-        packageName: selectedPackage.name,
-        categoryName: selectedPackage.category.name,
-        price: selectedPackage.price,
-        startTime,
-        endTime: finishTime,
-        title: `${customerName} - ${selectedPackage.name}`,
-        startAt: startTime,
-        endAt: finishTime,
-        total: nextTotal,
-        status,
-        note: body.discountType === undefined
-          ? (body.note ? String(body.note).trim() : null)
-          : appendBookingNote(body.note, discountInfo.label, bookingMode, body.groupLabel ? String(body.groupLabel) : undefined),
-      },
-      include: bookingSelect(),
-    });
+    const bookingData = {
+      customerId: body.customerId ? String(body.customerId) : null,
+      packageId: selectedPackage.id,
+      customerName,
+      imageUrl: body.imageUrl ? String(body.imageUrl).trim() : null,
+      packageName: selectedPackage.name,
+      categoryName: selectedPackage.category.name,
+      price: selectedPackage.price,
+      startTime,
+      endTime: finishTime,
+      title: `${customerName} - ${selectedPackage.name}`,
+      startAt: startTime,
+      endAt: finishTime,
+      total: nextTotal,
+      status,
+      note: body.discountType === undefined
+        ? (body.note ? String(body.note).trim() : null)
+        : appendBookingNote(body.note, discountInfo.label, bookingMode, body.groupLabel ? String(body.groupLabel) : undefined),
+    };
 
-    const invoiceSnapshot = status === "COMPLETED" ? await finalizeCompletedBooking(row, user) : null;
+    let row: Awaited<ReturnType<typeof prisma.booking.update<{ where: { id: string }; data: typeof bookingData; include: ReturnType<typeof bookingSelect> }>>>;
+    let invoiceSnapshot = null;
+
+    if (isNewlyCompleting) {
+      // Atomic: update booking + finalize finance in a single logical flow.
+      // finalizeCompletedBooking runs its own $transaction; we update booking first
+      // then pass it in. If finalize throws, we roll the booking back.
+      row = await prisma.booking.update({
+        where: { id: body.id },
+        data: bookingData,
+        include: bookingSelect(),
+      });
+      try {
+        invoiceSnapshot = await finalizeCompletedBooking(row, user);
+      } catch (finalizeError) {
+        // Roll back booking status to previous status so data stays consistent
+        await prisma.booking.update({
+          where: { id: body.id },
+          data: { status: current.status },
+        }).catch(() => null);
+        throw finalizeError;
+      }
+    } else {
+      row = await prisma.booking.update({
+        where: { id: body.id },
+        data: bookingData,
+        include: bookingSelect(),
+      });
+    }
 
     await writeAuditLog(user, "UPDATE", "Booking", row.id, { customerName: row.customerName, name: row.packageName });
     return ok({ ...row, ...(invoiceSnapshot ?? {}) });
