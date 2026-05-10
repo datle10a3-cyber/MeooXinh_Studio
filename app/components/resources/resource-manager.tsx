@@ -837,6 +837,14 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const [editStudioPassword, setEditStudioPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
   
   useEffect(() => {
     if (showForm || !!detailRow) {
@@ -1512,7 +1520,9 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
           </section>
         </div>
 
-        {canMutate(session) && showForm ? (
+      {(() => {
+        if (!canMutate(session) || !showForm) return null;
+        const formElement = (
           <div ref={formRef} className="order-1 scroll-mt-20 xl:order-2">
             <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm(config.fields)); setShowForm(false); }} />
             <Card className="studio-mobile-form-sheet rounded-[1.5rem] border-[#F4C7C4] bg-white shadow-[0_18px_50px_rgba(184,95,108,0.1)] sm:sticky sm:top-[5.5rem] sm:rounded-[2rem]">
@@ -1603,7 +1613,9 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
               <div className="h-20 sm:hidden" />
             </Card>
           </div>
-        ) : null}
+        );
+        return isMobile ? <Portal>{formElement}</Portal> : formElement;
+      })()}
       </div>
 
 

@@ -12,6 +12,7 @@ import { MediaGalleryPicker } from "@/app/components/media/media-picker";
 import { ImagePreview } from "@/app/components/media/image-preview";
 import { formatMoney } from "@/app/utils/format";
 import { AlertModal } from "@/app/components/ui/alert-modal";
+import { Portal } from "@/app/components/ui/portal";
 
 type StaffRow = {
   id: string;
@@ -85,6 +86,14 @@ export function UserManagement() {
   const formRef = useRef<HTMLDivElement>(null);
   const editing = Boolean(form.id);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   async function loadRows() {
     const result = await fetch("/api/users").then((res) => res.json() as Promise<ApiResult<StaffRow[]>>);
@@ -99,11 +108,18 @@ export function UserManagement() {
   }, []);
 
   useEffect(() => {
-    if (!showForm) return;
-    const frame = window.requestAnimationFrame(() => {
-      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-    return () => window.cancelAnimationFrame(frame);
+    if (showForm) {
+      document.body.classList.add("studio-modal-open");
+      const frame = window.requestAnimationFrame(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      return () => {
+        window.cancelAnimationFrame(frame);
+        document.body.classList.remove("studio-modal-open");
+      };
+    } else {
+      document.body.classList.remove("studio-modal-open");
+    }
   }, [showForm]);
 
   async function save() {
@@ -389,89 +405,94 @@ export function UserManagement() {
           ) : null}
         </div>
 
-        {showForm ? (
-        <div ref={formRef} className="scroll-mt-20">
-        <Card className="h-fit xl:sticky xl:top-24">
-          <div className="mb-3 flex justify-end">
-            <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => { setForm(emptyForm); setShowForm(false); }}>
-              <X size={16} />
-            </Button>
-          </div>
-          <div className="mb-5 flex items-center gap-2">
-            <UserPlus size={20} className="text-[#EA7188]" />
-            <CardTitle>{editing ? "Sửa nhân viên" : "Thêm nhân viên"}</CardTitle>
-          </div>
-          <div className="space-y-4">
-            <MediaGalleryPicker
-              mainUrl={form.avatarUrl}
-              galleryUrls={form.galleryUrls}
-              onMainChange={(value) => setForm((current) => ({ ...current, avatarUrl: value }))}
-              onGalleryChange={(value) => setForm((current) => ({ ...current, galleryUrls: value }))}
-            />
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Input placeholder="Tên nhân viên" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
-              <Input placeholder="Chức vụ" value={form.position} onChange={(event) => setForm((current) => ({ ...current, position: event.target.value }))} />
-              <Input placeholder="Email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} />
-              <Input placeholder="Số điện thoại" value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} />
-              <Input className="sm:col-span-2" placeholder="Địa chỉ" value={form.address} onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))} />
-              <Input placeholder="Lương" type="number" value={form.baseSalary} onChange={(event) => setForm((current) => ({ ...current, baseSalary: event.target.value }))} />
-              <select className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm text-[#5B342C]" value={form.salaryType} onChange={(event) => setForm((current) => ({ ...current, salaryType: event.target.value }))}>
-                <option value="FIXED">Lương cố định</option>
-                <option value="HOURLY">Theo giờ</option>
-                <option value="COMMISSION">Theo hoa hồng</option>
-              </select>
-            </div>
-
-            <Input placeholder="Lịch làm việc" value={form.workSchedule} onChange={(event) => setForm((current) => ({ ...current, workSchedule: event.target.value }))} />
-            <Textarea placeholder="Ghi chú nhân sự" value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} />
-
-            <div className="rounded-2xl border border-[#F4C7C4] bg-[#FFF9F4] p-4">
-              <label className="flex items-center justify-between gap-3">
-                <span>
-                  <span className="flex items-center gap-2 font-bold text-[#5B342C]"><KeyRound size={17} />Tài khoản đăng nhập</span>
-                  <span className="mt-1 block text-xs text-[#9B746B]">Bật để nhân viên đăng nhập vào hệ thống.</span>
-                </span>
-                <input
-                  type="checkbox"
-                  checked={form.createAccount}
-                  onChange={(event) => setForm((current) => ({ ...current, createAccount: event.target.checked }))}
-                  className="h-5 w-5 accent-[#EA7188]"
+      {(() => {
+        if (!showForm) return null;
+        const formElement = (
+          <div ref={formRef} className="scroll-mt-20">
+            <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setForm(emptyForm); setShowForm(false); }} />
+            <Card className="studio-mobile-form-sheet h-fit xl:sticky xl:top-24">
+              <div className="mb-3 flex justify-end">
+                <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => { setForm(emptyForm); setShowForm(false); }}>
+                  <X size={16} />
+                </Button>
+              </div>
+              <div className="mb-5 flex items-center gap-2">
+                <UserPlus size={20} className="text-[#EA7188]" />
+                <CardTitle>{editing ? "Sửa nhân viên" : "Thêm nhân viên"}</CardTitle>
+              </div>
+              <div className="space-y-4">
+                <MediaGalleryPicker
+                  mainUrl={form.avatarUrl}
+                  galleryUrls={form.galleryUrls}
+                  onMainChange={(value) => setForm((current) => ({ ...current, avatarUrl: value }))}
+                  onGalleryChange={(value) => setForm((current) => ({ ...current, galleryUrls: value }))}
                 />
-              </label>
-              {form.createAccount ? (
-                <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                  <select className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm text-[#5B342C]" value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}>
-                    <option value="STAFF">Nhân viên</option>
-                    <option value="MANAGER">Quản lý</option>
-                    <option value="ADMIN">Quản trị</option>
-                  </select>
-                  <select className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm text-[#5B342C]" value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}>
-                    <option value="ACTIVE">Đang hoạt động</option>
-                    <option value="INACTIVE">Tạm khóa</option>
-                  </select>
-                  <Input
-                    className="sm:col-span-2"
-                    placeholder={editing ? "Mật khẩu mới nếu muốn đổi" : "Mật khẩu tối thiểu 8 ký tự"}
-                    type="password"
-                    value={form.password}
-                    onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
-                  />
-                </div>
-              ) : null}
-            </div>
 
-            <div className="flex gap-2">
-              <Button className="flex-1" onClick={save}>
-                <BadgeCheck size={17} />
-                {editing ? "Cập nhật" : "Lưu nhân viên"}
-              </Button>
-              {editing ? <Button variant="secondary" onClick={() => setForm(emptyForm)}>Hủy</Button> : null}
-            </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Input placeholder="Tên nhân viên" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
+                  <Input placeholder="Chức vụ" value={form.position} onChange={(event) => setForm((current) => ({ ...current, position: event.target.value }))} />
+                  <Input placeholder="Email" value={form.email} onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))} />
+                  <Input placeholder="Số điện thoại" value={form.phone} onChange={(event) => setForm((current) => ({ ...current, phone: event.target.value }))} />
+                  <Input className="sm:col-span-2" placeholder="Địa chỉ" value={form.address} onChange={(event) => setForm((current) => ({ ...current, address: event.target.value }))} />
+                  <Input placeholder="Lương" type="number" value={form.baseSalary} onChange={(event) => setForm((current) => ({ ...current, baseSalary: event.target.value }))} />
+                  <select className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm text-[#5B342C]" value={form.salaryType} onChange={(event) => setForm((current) => ({ ...current, salaryType: event.target.value }))}>
+                    <option value="FIXED">Lương cố định</option>
+                    <option value="HOURLY">Theo giờ</option>
+                    <option value="COMMISSION">Theo hoa hồng</option>
+                  </select>
+                </div>
+
+                <Input placeholder="Lịch làm việc" value={form.workSchedule} onChange={(event) => setForm((current) => ({ ...current, workSchedule: event.target.value }))} />
+                <Textarea placeholder="Ghi chú nhân sự" value={form.note} onChange={(event) => setForm((current) => ({ ...current, note: event.target.value }))} />
+
+                <div className="rounded-2xl border border-[#F4C7C4] bg-[#FFF9F4] p-4">
+                  <label className="flex items-center justify-between gap-3">
+                    <span>
+                      <span className="flex items-center gap-2 font-bold text-[#5B342C]"><KeyRound size={17} />Tài khoản đăng nhập</span>
+                      <span className="mt-1 block text-xs text-[#9B746B]">Bật để nhân viên đăng nhập vào hệ thống.</span>
+                    </span>
+                    <input
+                      type="checkbox"
+                      checked={form.createAccount}
+                      onChange={(event) => setForm((current) => ({ ...current, createAccount: event.target.checked }))}
+                      className="h-5 w-5 accent-[#EA7188]"
+                    />
+                  </label>
+                  {form.createAccount ? (
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <select className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm text-[#5B342C]" value={form.role} onChange={(event) => setForm((current) => ({ ...current, role: event.target.value }))}>
+                        <option value="STAFF">Nhân viên</option>
+                        <option value="MANAGER">Quản lý</option>
+                        <option value="ADMIN">Quản trị</option>
+                      </select>
+                      <select className="h-12 w-full rounded-xl border border-[#F4C7C4] bg-white px-4 text-sm text-[#5B342C]" value={form.status} onChange={(event) => setForm((current) => ({ ...current, status: event.target.value }))}>
+                        <option value="ACTIVE">Đang hoạt động</option>
+                        <option value="INACTIVE">Tạm khóa</option>
+                      </select>
+                      <Input
+                        className="sm:col-span-2"
+                        placeholder={editing ? "Mật khẩu mới nếu muốn đổi" : "Mật khẩu tối thiểu 8 ký tự"}
+                        type="password"
+                        value={form.password}
+                        onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+                      />
+                    </div>
+                  ) : null}
+                </div>
+
+                <div className="flex gap-2">
+                  <Button className="flex-1" onClick={save}>
+                    <BadgeCheck size={17} />
+                    {editing ? "Cập nhật" : "Lưu nhân viên"}
+                  </Button>
+                  {editing ? <Button variant="secondary" onClick={() => setForm(emptyForm)}>Hủy</Button> : null}
+                </div>
+              </div>
+            </Card>
           </div>
-        </Card>
-        </div>
-        ) : null}
+        );
+        return isMobile ? <Portal>{formElement}</Portal> : formElement;
+      })()}
       </div>
       <ImagePreview
         images={preview?.images}
