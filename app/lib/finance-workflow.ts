@@ -99,6 +99,9 @@ export async function applyTransactionWalletDelta(transaction: TransactionLike, 
       data: { balance: { increment: direction === 1 ? delta : delta.neg() } },
     });
     await recalculateWalletShiftSnapshot(tx, studioId, transaction.walletShiftId);
+  }, {
+    maxWait: 15000,
+    timeout: 30000,
   });
 }
 
@@ -124,6 +127,9 @@ export async function replaceTransactionWalletDelta(before: TransactionLike | nu
 
     const shiftIds = new Set([before?.walletShiftId, after.walletShiftId].filter(Boolean) as string[]);
     for (const shiftId of shiftIds) await recalculateWalletShiftSnapshot(tx, studioId, shiftId);
+  }, {
+    maxWait: 15000,
+    timeout: 30000,
   });
 }
 
@@ -478,5 +484,8 @@ export async function finalizeCompletedBooking(booking: BookingLike, actor?: Ses
         total: invoiceItem.total.toString(),
       }],
     };
+  }, {
+    maxWait: 15000,
+    timeout: 30000,
   });
 }
