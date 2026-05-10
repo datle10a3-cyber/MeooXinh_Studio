@@ -147,6 +147,35 @@ async function defaultWallet(studioId: string) {
   });
 }
 
+async function activeOpenShiftWallet(studioId: string) {
+  const openShifts = await prisma.walletShift.findMany({
+    where: { studioId, status: "OPEN" },
+    select: { id: true, walletId: true },
+  });
+  if (openShifts.length > 0) {
+    const activeWalletWithShift = await prisma.wallet.findFirst({
+      where: {
+        studioId,
+        id: { in: openShifts.map((s) => s.walletId) },
+        deletedAt: null,
+        isActive: true,
+      },
+    });
+    if (activeWalletWithShift) {
+      const shiftId = openShifts.find((s) => s.walletId === activeWalletWithShift.id)?.id;
+      return {
+        wallet: activeWalletWithShift,
+        openShift: shiftId ? { id: shiftId } : null,
+      };
+    }
+  }
+  const wallet = await defaultWallet(studioId);
+  return {
+    wallet,
+    openShift: null,
+  };
+}
+
 async function openShiftForWallet(tx: Prisma.TransactionClient, studioId: string, walletId?: string | null, occurredAt = new Date()) {
   if (!walletId) return null;
   return tx.walletShift.findFirst({
@@ -209,7 +238,7 @@ export async function finalizeCompletedBooking(booking: BookingLike, actor?: Ses
   const amount = bookingAmount(booking);
   if (amount.lte(0)) return null;
 
-  const wallet = await defaultWallet(booking.studioId);
+  const { wallet, openShift: resolvedOpenShift } = await activeOpenShiftWallet(booking.studioId);
   const marker = `BOOKING_DONE:${booking.id}`;
   const customerImage = booking.customerId ? booking.customer?.avatarUrl || null : booking.imageUrl || null;
   const packageImage = booking.package?.imageUrl || null;
@@ -309,7 +338,7 @@ export async function finalizeCompletedBooking(booking: BookingLike, actor?: Ses
       select: { id: true, walletId: true, walletShiftId: true, customerId: true, amount: true },
     });
     const occurredAt = new Date();
-    const openShift = await openShiftForWallet(tx, booking.studioId, wallet?.id, occurredAt);
+    const openShift = resolvedOpenShift ?? await openShiftForWallet(tx, booking.studioId, wallet?.id, occurredAt);
     const nextWalletShiftId = existedIncome?.walletShiftId ?? openShift?.id ?? null;
 
     if (existedIncome) {

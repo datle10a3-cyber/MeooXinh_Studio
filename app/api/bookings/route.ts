@@ -40,17 +40,27 @@ function bookingSelect() {
 }
 
 async function ensureOpenPaymentShift(studioId: string) {
-  const wallet = await prisma.wallet.findFirst({
+  const openShifts = await prisma.walletShift.findMany({
+    where: { studioId, status: "OPEN" },
+    select: { id: true, walletId: true },
+  });
+  if (openShifts.length > 0) {
+    const activeWalletWithShift = await prisma.wallet.findFirst({
+      where: {
+        studioId,
+        id: { in: openShifts.map((s) => s.walletId) },
+        deletedAt: null,
+        isActive: true,
+      },
+    });
+    if (activeWalletWithShift) return null;
+  }
+
+  const hasWallet = await prisma.wallet.findFirst({
     where: { studioId, deletedAt: null, isActive: true },
-    orderBy: { createdAt: "asc" },
   });
-  if (!wallet) return "Chưa có ví tiền. Vui lòng tạo ví và mở ca trước khi thanh toán booking.";
-  const openShift = await prisma.walletShift.findFirst({
-    where: { studioId, walletId: wallet.id, status: "OPEN" },
-    select: { id: true },
-  });
-  if (!openShift) return "Chưa mở ca. Vui lòng vào Ví mở ca trước khi thanh toán booking.";
-  return null;
+  if (!hasWallet) return "Chưa có ví tiền. Vui lòng tạo ví và mở ca trước khi thanh toán booking.";
+  return "Chưa mở ca. Vui lòng vào Ví mở ca trước khi thanh toán booking.";
 }
 
 export async function GET(request: Request) {
