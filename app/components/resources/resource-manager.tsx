@@ -1012,13 +1012,6 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     return () => window.clearTimeout(timer);
   }, [focusedItemId, resource, rows, setFocusedItemId, transactionView]);
 
-  useEffect(() => {
-    if (!showForm) return;
-    const frame = window.requestAnimationFrame(() => {
-      formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [showForm, resource]);
 
   async function save() {
     setSubmitting(true);
