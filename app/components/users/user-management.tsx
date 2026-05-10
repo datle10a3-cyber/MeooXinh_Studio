@@ -89,7 +89,7 @@ export function UserManagement() {
   async function loadRows() {
     const result = await fetch("/api/users").then((res) => res.json() as Promise<ApiResult<StaffRow[]>>);
     if (result.data) setRows(result.data);
-    if (result.error) setMessage(result.error.message);
+    if (result.error && !/chưa đăng nhập/i.test(result.error.message)) setMessage(result.error.message);
     setInitialLoading(false);
   }
 

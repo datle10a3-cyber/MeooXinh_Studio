@@ -396,7 +396,9 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
           }),
         );
       }
-      if (bookingResult.error) setMessage(bookingResult.error.message);
+      if (customerResult.error && !/chưa đăng nhập/i.test(customerResult.error.message)) setMessage(customerResult.error.message);
+      if (packageResult.error && !/chưa đăng nhập/i.test(packageResult.error.message)) setMessage(packageResult.error.message);
+      if (bookingResult.error && !/chưa đăng nhập/i.test(bookingResult.error.message)) setMessage(bookingResult.error.message);
     } catch (err) {
       console.error("Booking load error:", err);
     } finally {

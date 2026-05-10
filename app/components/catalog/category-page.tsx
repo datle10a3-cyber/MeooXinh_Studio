@@ -42,7 +42,7 @@ export function CategoryPage() {
   async function loadRows() {
     const result = await fetch("/api/categories").then((res) => res.json() as Promise<ApiResult<CategoryItem[]>>);
     if (result.data) setRows(result.data);
-    if (result.error) setMessage(result.error.message);
+    if (result.error && !/chưa đăng nhập/i.test(result.error.message)) setMessage(result.error.message);
     setInitialLoading(false);
   }
 

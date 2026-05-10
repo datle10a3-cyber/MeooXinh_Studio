@@ -59,8 +59,8 @@ export function AlertModal({ isOpen, message, onClose, title }: AlertModalProps)
               <AlertTriangle size={32} />
             </div>
           ) : (
-            <div className="grid h-16 w-16 place-items-center rounded-full bg-[#FFF0F4] text-[#EA7188] ring-8 ring-[#FFE4EA]/60">
-              <span className="text-3xl">🐱</span>
+            <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-[#FFF0F4] p-1.5 ring-8 ring-[#FFE4EA]/60 animate-bounce">
+              <img src="/be-meo-studio-avatar.svg" alt="Mèoo Xinhh" className="h-full w-full object-cover" />
             </div>
           )}
         </div>

@@ -868,7 +868,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
         } catch { /* storage full — ignore */ }
       }
     }
-    if (payload.error) setMessage(payload.error.message);
+    if (payload.error && !/chưa đăng nhập/i.test(payload.error.message)) setMessage(payload.error.message);
     setLoadingMoreRows(false);
     setInitialLoading(false);
   }, [endpoint]);
@@ -2260,7 +2260,7 @@ function WalletAppView({
       .then((res) => res.json())
       .catch(() => null);
     if (payload?.data) setShiftData(payload.data);
-    if (payload?.error) setShiftMessage(payload.error.message);
+    if (payload?.error && !/chưa đăng nhập/i.test(payload.error.message)) setShiftMessage(payload.error.message);
   }, []);
 
   const activeWalletTransactions = useMemo(() => {
@@ -2524,7 +2524,7 @@ function WalletAppView({
             </div>
             <span className="rounded-full bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700">Sẵn sàng mở</span>
           </div>
-          {shiftMessage ? <p className="mt-3 rounded-2xl bg-[#F6F7FB] px-4 py-3 text-sm font-bold text-[#5B342C]">{shiftMessage}</p> : null}
+          <AlertModal isOpen={!!shiftMessage} message={shiftMessage} onClose={() => setShiftMessage("")} />
           <Button className="mt-5 h-14 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => setOpeningOpen(true)}>
             Mở ca
           </Button>
@@ -2571,7 +2571,7 @@ function WalletAppView({
             <span className="rounded-full bg-emerald-50 px-3 py-2 text-sm font-black text-emerald-700">Sẵn sàng mở</span>
           </div>
 
-          {shiftMessage ? <p className="mt-3 rounded-2xl bg-[#F6F7FB] px-4 py-3 text-sm font-bold text-[#5B342C]">{shiftMessage}</p> : null}
+          <AlertModal isOpen={!!shiftMessage} message={shiftMessage} onClose={() => setShiftMessage("")} />
 
           <Button className="mt-5 h-14 w-full rounded-2xl bg-emerald-600 text-base font-black text-white hover:bg-emerald-700" onClick={() => setOpeningOpen(true)}>
             Mở ca
@@ -2795,7 +2795,7 @@ function WalletAppView({
               </span>
             </div>
 
-            {shiftMessage ? <p className="mt-3 rounded-2xl bg-[#F6F7FB] px-4 py-3 text-sm font-bold text-[#5B342C]">{shiftMessage}</p> : null}
+            <AlertModal isOpen={!!shiftMessage} message={shiftMessage} onClose={() => setShiftMessage("")} />
 
             {openShift ? (
               <div className="mt-4 space-y-3">

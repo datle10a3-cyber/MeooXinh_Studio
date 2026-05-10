@@ -151,8 +151,8 @@ export function PackagePage() {
     ]);
     if (categoryResult.data) setCategories(categoryResult.data);
     if (packageResult.data) setRows(packageResult.data);
-    if (categoryResult.error) setMessage(categoryResult.error.message);
-    if (packageResult.error) setMessage(packageResult.error.message);
+    if (categoryResult.error && !/chưa đăng nhập/i.test(categoryResult.error.message)) setMessage(categoryResult.error.message);
+    if (packageResult.error && !/chưa đăng nhập/i.test(packageResult.error.message)) setMessage(packageResult.error.message);
     setInitialLoading(false);
   }
 
