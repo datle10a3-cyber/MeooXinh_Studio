@@ -35,7 +35,13 @@ function bookingGroupKey(item: TrashItem) {
   if (item.resource !== "bookings") return "";
   const groupName = bookingGroupName(item.note);
   if (!groupName) return "";
-  return `booking-group:${groupName.trim().toLowerCase()}`;
+  const baseKey = `booking-group:${groupName.trim().toLowerCase()}`;
+
+  const date = new Date(String(item.deletedAt || item.updatedAt || item.createdAt || ""));
+  if (Number.isNaN(date.getTime())) return baseKey;
+
+  const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+  return `${baseKey}-${dateStr}`;
 }
 
 function getTrashConfig(item: TrashItem) {

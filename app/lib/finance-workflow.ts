@@ -559,20 +559,16 @@ export async function finalizeGroupCompletedBookings(
   return prisma.$transaction(async (tx) => {
     const openShift = resolvedOpenShift ?? await openShiftForWallet(tx, studioId, wallet?.id, occurredAt);
 
-    // 1. Create one unified Project for the group
-    const projectCode = `GRP-${groupKey.slice(0, 6).toUpperCase()}`;
-    const project = await tx.project.upsert({
-      where: { studioId_code: { studioId, code: projectCode } },
-      update: {
-        name: groupTitle,
-        coverUrl: customerImage,
-        galleryUrls: proofGallery,
-        amount: totalAmount,
-        dueAmount: new Prisma.Decimal(0),
-        status: "DELIVERED",
-        note: projectNote,
-      },
-      create: {
+    // 1. Get next unique group invoice code first
+    const invoiceCode = await nextStudioGroupInvoiceCode(tx, studioId);
+
+    // 2. Create matching unique project code
+    const invoiceSuffix = invoiceCode.slice("GROUP-meoxinh".length);
+    const projectCode = `GRP-MEOXINH${invoiceSuffix}`;
+
+    // 3. Create a brand-new unique Project for the group (NEVER overwrite or merge)
+    const project = await tx.project.create({
+      data: {
         studioId,
         code: projectCode,
         name: groupTitle,
@@ -586,18 +582,7 @@ export async function finalizeGroupCompletedBookings(
       },
     });
 
-    // 2. Create/Update group invoice: GROUP-meoxinh01, etc.
-    const existingInvoice = await tx.invoice.findFirst({
-      where: {
-        studioId,
-        deletedAt: null,
-        projectId: project.id,
-      },
-    });
-
-    const invoiceCode = existingInvoice?.code && /^GROUP-meoxinh\d+$/i.test(existingInvoice.code)
-      ? existingInvoice.code
-      : await nextStudioGroupInvoiceCode(tx, studioId);
+    const existingInvoice = null; // Always null to trigger brand-new Invoice creation!
 
     // Snapshot structure to represent group elements
     const snapshotObj = {
@@ -618,36 +603,21 @@ export async function finalizeGroupCompletedBookings(
     };
     const snapshot = `RECEIPT:${JSON.stringify(snapshotObj)}`;
 
-    const invoice = existingInvoice
-      ? await tx.invoice.update({
-        where: { id: existingInvoice.id },
-        data: {
-          code: invoiceCode,
-          projectId: project.id,
-          imageUrl: customerImage,
-          galleryUrls: proofGallery,
-          total: totalAmount,
-          paid: totalAmount,
-          due: new Prisma.Decimal(0),
-          status: "PAID",
-          note: `${snapshot}\n${projectNote}`,
-        },
-      })
-      : await tx.invoice.create({
-        data: {
-          studioId,
-          projectId: project.id,
-          code: invoiceCode,
-          status: "PAID",
-          imageUrl: customerImage,
-          galleryUrls: proofGallery,
-          issueDate: new Date(),
-          total: totalAmount,
-          paid: totalAmount,
-          due: new Prisma.Decimal(0),
-          note: `${snapshot}\n${projectNote}`,
-        },
-      });
+    const invoice = await tx.invoice.create({
+      data: {
+        studioId,
+        projectId: project.id,
+        code: invoiceCode,
+        status: "PAID",
+        imageUrl: customerImage,
+        galleryUrls: proofGallery,
+        issueDate: new Date(),
+        total: totalAmount,
+        paid: totalAmount,
+        due: new Prisma.Decimal(0),
+        note: `${snapshot}\n${projectNote}`,
+      },
+    });
 
     // 3. Create invoice items for each booking inside the group!
     await tx.invoiceItem.deleteMany({ where: { invoiceId: invoice.id } });
@@ -670,7 +640,7 @@ export async function finalizeGroupCompletedBookings(
       where: {
         studioId,
         walletShiftId: openShift?.id,
-        note: { startsWith: `GROUP_CHECKOUT:${groupKey}` },
+        note: { startsWith: `GROUP_CHECKOUT:${invoiceCode}` },
       },
     });
 
@@ -685,7 +655,7 @@ export async function finalizeGroupCompletedBookings(
         amount: totalAmount,
         method: wallet?.type?.toUpperCase()?.includes("BANK") ? "BANK_TRANSFER" : "CASH",
         approvalStatus: "APPROVED",
-        note: `${snapshot}\nGROUP_CHECKOUT:${groupKey}\nThao tác bởi: ${actor?.name || "Hệ thống"}.\n${projectNote}`,
+        note: `${snapshot}\nGROUP_CHECKOUT:${invoiceCode}\nThao tác bởi: ${actor?.name || "Hệ thống"}.\n${projectNote}`,
       },
     });
 

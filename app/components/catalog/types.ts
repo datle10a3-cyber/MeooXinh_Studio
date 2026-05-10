@@ -1,4 +1,4 @@
-﻿export type CategoryItem = {
+export type CategoryItem = {
   id: string;
   name: string;
   description?: string | null;
@@ -41,6 +41,7 @@ export type BookingItem = {
   note?: string | null;
   status: string;
   createdAt: string;
+  updatedAt?: string | null;
   customer?: {
     id: string;
     name: string;

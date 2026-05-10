@@ -97,7 +97,15 @@ function bookingGroupName(note?: string | null) {
 function bookingGroupKey(row: BookingItem) {
   const groupName = bookingGroupName(row.note);
   if (!groupName) return "";
-  return groupName.trim().toLowerCase();
+  const baseKey = groupName.trim().toLowerCase();
+
+  if (row.status === "COMPLETED") {
+    const date = new Date(row.updatedAt || row.createdAt);
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")} ${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+    return `${baseKey}-completed-${dateStr}`;
+  }
+
+  return `${baseKey}-pending`;
 }
 
 function renameBookingGroupNote(note: string | null | undefined, nextName: string) {
@@ -536,6 +544,46 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
       setSelectedIds((current) => current.filter((id) => id !== row.id));
       setSelectedGroupKeys((current) => current.filter((key) => !displayGroups.some((group) => group.key === key && group.rows.some((item) => item.id === row.id))));
       await loadData();
+    } finally {
+      setDeleting(false);
+    }
+  }
+
+  async function removeGroup(group: { key: string; rows: BookingItem[] }, mode: "trash" | "hard") {
+    let studioPassword = "";
+    if (role === "STAFF") {
+      studioPassword = window.prompt("Nhập mật khẩu studio 6 số để xóa nhóm.")?.trim() ?? "";
+      if (!/^\d{6}$/.test(studioPassword)) {
+        setMessage("Nhân viên cần nhập đúng mật khẩu studio 6 số để xóa nhóm.");
+        return;
+      }
+    }
+    const isConfirmed = window.confirm(mode === "hard" ? "Bạn có chắc chắn muốn xóa vĩnh viễn toàn bộ nhóm này không?" : "Bạn có chắc chắn muốn chuyển toàn bộ nhóm này vào thùng rác không?");
+    if (!isConfirmed) return;
+
+    setDeleting(true);
+    try {
+      for (const row of group.rows) {
+        const result = await fetch("/api/bookings", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: row.id,
+            mode,
+            ...(role === "STAFF" ? { studioPassword } : {}),
+          }),
+        }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
+        if (result.error) {
+          setMessage(`Lỗi khi xóa booking ${row.customerName}: ${result.error.message}`);
+          return;
+        }
+      }
+      setMessage(mode === "hard" ? "Đã xóa toàn bộ nhóm." : "Đã chuyển toàn bộ nhóm vào thùng rác.");
+      setExpandedGroups((current) => current.filter((key) => key !== group.key));
+      setSelectedGroupKeys((current) => current.filter((key) => key !== group.key));
+      await loadData();
+    } catch (err) {
+      console.error("Remove group error:", err);
     } finally {
       setDeleting(false);
     }
@@ -1150,42 +1198,69 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                   </div>
                   <div className="flex flex-wrap items-center justify-end gap-1.5 border-t border-dashed border-[#F4C7C4]/50 pt-2.5 sm:border-t-0 sm:pt-0 sm:gap-2 shrink-0">
                     {completedOnly ? (
-                      <button
-                        type="button"
-                        className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-[#FFF0F4] hover:bg-[#FFE2EA] px-3 py-1.5 text-xs font-black text-[#EA7188] transition active:scale-95"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          printBookingGroupInvoice(group);
-                        }}
-                      >
-                        <Printer size={13} strokeWidth={2.5} />
-                        In bill tổng
-                      </button>
-                    ) : null}
-                    {!completedOnly && uncompletedRows.length > 0 ? (
-                      <button
-                        type="button"
-                        className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-600 transition active:scale-95"
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setGroupPaymentTarget(group);
-                        }}
-                      >
-                        <CreditCard size={13} strokeWidth={2.5} />
-                        Thanh toán ({uncompletedRows.length})
-                      </button>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="flex items-center gap-1 rounded-full border border-[#FCD34D] bg-[#FFF8F1] hover:bg-[#FFF3EC] px-3 py-1.5 text-xs font-black text-[#D97706] transition active:scale-95"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        void renameGroup(group);
-                      }}
-                    >
-                      <Pencil size={13} strokeWidth={2.5} />
-                      Sửa tên
-                    </button>
+                      <>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-[#FFF0F4] hover:bg-[#FFE2EA] px-3 py-1.5 text-xs font-black text-[#EA7188] transition active:scale-95"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            printBookingGroupInvoice(group);
+                          }}
+                        >
+                          <Printer size={13} strokeWidth={2.5} />
+                          In bill tổng
+                        </button>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 rounded-full border border-[#FCD34D] bg-[#FFF8F1] hover:bg-[#FFF3EC] px-3 py-1.5 text-xs font-black text-[#D97706] transition active:scale-95"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void renameGroup(group);
+                          }}
+                        >
+                          <Pencil size={13} strokeWidth={2.5} />
+                          Sửa tên
+                        </button>
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 rounded-full border border-rose-200 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 text-xs font-black text-rose-600 transition active:scale-95"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void removeGroup(group, "trash");
+                          }}
+                        >
+                          <Trash2 size={13} strokeWidth={2.5} />
+                          Xóa nhóm
+                        </button>
+                      </>
+                    ) : (
+                      <>
+                        {uncompletedRows.length > 0 ? (
+                          <button
+                            type="button"
+                            className="flex items-center gap-1 rounded-full border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 text-xs font-black text-emerald-600 transition active:scale-95"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              setGroupPaymentTarget(group);
+                            }}
+                          >
+                            <CreditCard size={13} strokeWidth={2.5} />
+                            Thanh toán ({uncompletedRows.length})
+                          </button>
+                        ) : null}
+                        <button
+                          type="button"
+                          className="flex items-center gap-1 rounded-full border border-[#FCD34D] bg-[#FFF8F1] hover:bg-[#FFF3EC] px-3 py-1.5 text-xs font-black text-[#D97706] transition active:scale-95"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            void renameGroup(group);
+                          }}
+                        >
+                          <Pencil size={13} strokeWidth={2.5} />
+                          Sửa tên
+                        </button>
+                      </>
+                    )}
                     <span className="flex items-center gap-1 rounded-full border border-[#F4C7C4] bg-white hover:bg-[#FFF8F1] px-3 py-1.5 text-xs font-black text-[#A84E61] transition">
                       {expanded ? <EyeOff size={13} strokeWidth={2.5} /> : <Eye size={13} strokeWidth={2.5} />}
                       {expanded ? "Thu gọn" : "Xem"}
@@ -1973,13 +2048,16 @@ function printBookingGroupInvoice(
       <div class="bold" style="font-size: 11.5px; color: #4b2a25;">👤 ${receiptEscape(row.customerName)}</div>
       <div class="small" style="color: #7a5750; padding-left: 12px; margin-top: 1px;">📸 Gói: ${receiptEscape(row.packageName || "Chưa có gói")}</div>
       <div class="row qty" style="padding-left: 12px; font-size: 11px;">
-        <span>Đơn giá: ${receiptEscape(formatMoney(originalPrice))}</span>
-        ${discount > 0 ? `<span style="color: #e86b88; font-weight: bold;">Giảm: -${receiptEscape(formatMoney(discount))}</span>` : ""}
-        <span class="right bold">${receiptEscape(formatMoney(finalPrice))}</span>
+        <span>Giá gốc: ${receiptEscape(formatMoney(originalPrice))}</span>
+        ${discount > 0 ? `<span class="right" style="color: #e86b88; font-weight: bold;">🏷️ Giảm: -${receiptEscape(formatMoney(discount))}</span>` : ""}
+      </div>
+      <div class="row qty" style="padding-left: 12px; font-weight: bold; font-size: 11px; margin-top: 1px;">
+        <span>Thành tiền:</span>
+        <span class="right" style="color: #d94f73;">${receiptEscape(formatMoney(finalPrice))}</span>
       </div>
     </div>
     `;
-  }).join('<div class="solid" style="margin: 4px 0; border-top-color: #f7d5dd;"></div>');
+  }).join('<div class="sep" style="margin: 6px 0;"></div>');
 
   const html = `<!doctype html>
 <html lang="vi">
