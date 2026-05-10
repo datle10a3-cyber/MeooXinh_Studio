@@ -301,8 +301,7 @@ function evidenceImageLabel(row: Row, resource: ResourceKey, imageIndex: number)
 }
 
 function canPrintInvoice(row: Row) {
-  const note = String(row.note ?? "");
-  return Boolean(row.code) || note.includes("BOOKING_DONE") || String(row.title ?? "").includes("Hoàn tất booking");
+  return true;
 }
 
 function receiptEscape(value: unknown) {
@@ -350,10 +349,11 @@ function printableInvoiceData(row: Row) {
   const projectName = nestedName(row.project);
   const snapshot = receiptSnapshotFromNote(row.note);
   const projectParts = splitBookingProjectName(projectName);
-  const customerName = String(snapshot?.customerName || nestedName(row.customer) || row.customerName || projectParts.customerName || "Khách hàng");
+  const isIncome = String(row.type ?? "") === "INCOME" || String(row.type ?? "") === "income" || Number(row.amount ?? row.total ?? 0) >= 0;
+  const customerName = String(snapshot?.customerName || nestedName(row.customer) || row.customerName || projectParts.customerName || (isIncome ? "Người nộp tiền" : "Người nhận tiền"));
   const title = String(snapshot?.packageName || item?.description || row.packageName || projectParts.packageName || row.title || row.code || "Gói dịch vụ");
   const amount = item?.total ?? row.total ?? row.paid ?? row.amount ?? 0;
-  const code = String(row.code ?? snapshot?.invoiceCode ?? noteCode ?? "meoxinh--");
+  const code = String(row.code ?? snapshot?.invoiceCode ?? noteCode ?? (row.id ? `GD-${String(row.id).slice(-6).toUpperCase()}` : "meoxinh--"));
   
   let originalPrice = snapshot?.originalPrice ? Number(snapshot.originalPrice) : Number(amount);
   let discountLabel = snapshot?.discountLabel ? String(snapshot.discountLabel) : "";
@@ -393,6 +393,7 @@ function printableInvoiceData(row: Row) {
     originalPrice,
     discountLabel,
     discountPercent,
+    snapshot,
   };
 }
 
@@ -421,6 +422,79 @@ function printResourceInvoice(row: Row) {
   const qrBlock = paymentQrUrl
     ? `<div class="sep"></div><div class="center qr"><img src="${receiptEscape(paymentQrUrl)}" alt="QR thanh toán" /><div class="small bold">Quét mã để thanh toán</div><div class="small">Số tiền: ${receiptEscape(formattedAmount)}</div></div>`
     : "";
+
+  const isIncome = String(row.type ?? "") === "INCOME" || String(row.type ?? "") === "income";
+  const isExpense = String(row.type ?? "") === "EXPENSE" || String(row.type ?? "") === "expense";
+  const invoiceHeader = isExpense ? "PHIẾU CHI TIỀN" : (isIncome && !row.code ? "PHIẾU THU TIỀN" : "HÓA ĐƠN THANH TOÁN");
+  const personLabel = isExpense ? "Người nhận" : "Khách";
+
+  const snapshot = printable.snapshot;
+  const isGroupInvoice = Boolean(snapshot?.isGroupInvoice || snapshot?.groupRows);
+  const groupRows = Array.isArray(snapshot?.groupRows) ? snapshot.groupRows : [];
+
+  let detailsBlock = "";
+  if (isGroupInvoice && groupRows.length > 0) {
+    const rowsHtml = groupRows.map((grow: any) => {
+      const gName = String(grow.customerName || "Khách");
+      const gPackage = String(grow.packageName || "Gói dịch vụ");
+      const originalPrice = Number(grow.price ?? 0);
+      const finalPrice = Number(grow.total ?? grow.price ?? originalPrice);
+      const discount = originalPrice - finalPrice;
+
+      return `
+      <div class="item" style="margin-bottom: 8px;">
+        <div class="bold" style="font-size: 11.5px; color: #4b2a25;">👤 ${receiptEscape(gName)}</div>
+        <div class="small" style="color: #7a5750; padding-left: 12px; margin-top: 1px;">📸 Gói: ${receiptEscape(gPackage)}</div>
+        <div class="row qty" style="padding-left: 12px; font-size: 11px;">
+          <span>Giá gốc: ${receiptEscape(formatMoney(originalPrice))}</span>
+          ${discount > 0 ? `<span class="right" style="color: #e86b88; font-weight: bold;">🏷️ Giảm: -${receiptEscape(formatMoney(discount))}</span>` : ""}
+        </div>
+        <div class="row qty" style="padding-left: 12px; font-weight: bold; font-size: 11px; margin-top: 1px;">
+          <span>Thành tiền:</span>
+          <span class="right" style="color: #d94f73;">${receiptEscape(formatMoney(finalPrice))}</span>
+        </div>
+      </div>
+      `;
+    }).join('<div class="sep" style="margin: 6px 0;"></div>');
+
+    detailsBlock = `
+    <div class="section">📸 CHI TIẾT NHÓM (${groupRows.length} khách)</div>
+    <div class="sep"></div>
+    ${rowsHtml}
+    <div class="solid"></div>
+    `;
+  } else if (!row.code && !snapshot) {
+    detailsBlock = `
+    <div class="section">📝 CHI TIẾT GIAO DỊCH</div>
+    <div class="sep"></div>
+    <div class="item">
+      <div class="bold" style="font-size: 12px; color: #4b2a25;">${receiptEscape(row.title || "Nội dung giao dịch")}</div>
+      ${row.note ? `<div class="small" style="color: #7a5750; margin-top: 4px; font-size: 11px; line-height: 1.4;">Mô tả: ${receiptEscape(row.note)}</div>` : ""}
+    </div>
+    <div class="solid"></div>
+    `;
+  } else {
+    detailsBlock = `
+    <div class="section">📸 GÓI CHỤP</div>
+    <div>[${receiptEscape(printable.categoryName)}] ${receiptEscape(printable.packageName)}</div>
+    <div class="sep"></div>
+    <div class="section">💰 CHI TIẾT</div>
+    <div class="item"><div>${receiptEscape(printable.packageName)}</div><div class="row qty"><span>x1</span><span class="right">${receiptEscape(formatMoney(printable.originalPrice as string | number | null))}</span></div></div>
+    <div class="solid"></div>
+    ${printable.discountLabel ? `
+    <div class="row info" style="margin-bottom: 4px; font-size: 11px; color: #7a5750;">
+      <span>Giá gốc</span>
+      <span class="right">${receiptEscape(formatMoney(printable.originalPrice as string | number | null))}</span>
+    </div>
+    <div class="row info" style="margin-bottom: 6px; font-weight: bold; color: #e86b88;">
+      <span>🏷️ Giảm giá ${printable.discountPercent ? `(${receiptEscape(printable.discountPercent)})` : ""}</span>
+      <span class="right">-${receiptEscape(printable.discountLabel)}</span>
+    </div>
+    <div class="solid" style="margin: 4px 0;"></div>
+    ` : ""}
+    `;
+  }
+
   const html = `<!doctype html>
 <html lang="vi">
 <head>
@@ -472,28 +546,12 @@ function printResourceInvoice(row: Row) {
         <div class="address">⌂ ${receiptEscape(STUDIO_ADDRESS)}</div>
       </div>
     </div>
-    <div class="title">HÓA ĐƠN THANH TOÁN</div>
-    <div class="info row"><span class="label">Mã HĐ</span><span class="left">: ${receiptEscape(code)}</span></div>
-    <div class="info row"><span class="label">👤 Khách</span><span class="left">: ${receiptEscape(printable.customerName)}</span></div>
+    <div class="title">${receiptEscape(invoiceHeader)}</div>
+    <div class="info row"><span class="label">Mã số</span><span class="left">: ${receiptEscape(code)}</span></div>
+    <div class="info row"><span class="label">👤 ${receiptEscape(personLabel)}</span><span class="left">: ${receiptEscape(printable.customerName)}</span></div>
     <div class="info row"><span class="label">⏰ Giờ</span><span class="left">: ${receiptEscape(formatDateTimeLabel(invoiceDate))}</span></div>
     <div class="sep"></div>
-    <div class="section">📸 GÓI CHỤP</div>
-    <div>[${receiptEscape(printable.categoryName)}] ${receiptEscape(printable.packageName)}</div>
-    <div class="sep"></div>
-    <div class="section">💰 CHI TIẾT</div>
-    <div class="item"><div>${receiptEscape(printable.packageName)}</div><div class="row qty"><span>x1</span><span class="right">${receiptEscape(formatMoney(printable.originalPrice as string | number | null))}</span></div></div>
-    <div class="solid"></div>
-    ${printable.discountLabel ? `
-    <div class="row info" style="margin-bottom: 4px; font-size: 11px; color: #7a5750;">
-      <span>Giá gốc</span>
-      <span class="right">${receiptEscape(formatMoney(printable.originalPrice as string | number | null))}</span>
-    </div>
-    <div class="row info" style="margin-bottom: 6px; font-weight: bold; color: #e86b88;">
-      <span>🏷️ Giảm giá ${printable.discountPercent ? `(${receiptEscape(printable.discountPercent)})` : ""}</span>
-      <span class="right">-${receiptEscape(printable.discountLabel)}</span>
-    </div>
-    <div class="solid" style="margin: 4px 0;"></div>
-    ` : ""}
+    ${detailsBlock}
     <div class="row bold total"><span>TỔNG THANH TOÁN</span><span class="right">${receiptEscape(formattedAmount)}</span></div>
     <div class="sep"></div>
     <div class="status">ĐÃ THANH TOÁN ✓</div>
@@ -741,8 +799,8 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
         )}
       </div>
 
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-3">
+      <div className="flex min-w-0 items-start justify-between gap-3 w-full">
+        <div className="flex min-w-0 flex-1 items-center gap-3">
           {canRemove && (selectionMode || selected) ? (
             <button
               type="button"
@@ -762,17 +820,17 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
             <OrderBadge value={indexLabel} />
           )}
           <FinancialCustomerAvatar row={row} resource={resource} />
-          <div className="min-w-0">
-            <h2 className="whitespace-normal break-words text-lg font-black leading-tight text-[#5B342C]">{title}</h2>
-            <div className="mt-1 flex items-center gap-1.5">
+          <div className="min-w-0 flex-1">
+            <h2 className="whitespace-normal break-words text-base sm:text-lg font-black leading-tight text-[#5B342C]">{title}</h2>
+            <div className="mt-1 flex items-center gap-1.5 min-w-0">
               <div className={cn("h-1.5 w-1.5 shrink-0 rounded-full", isIncome ? "bg-emerald-500" : "bg-rose-500")} />
-              <p className="truncate text-sm font-bold text-[#9B746B]">{packageName}</p>
+              <p className="truncate text-xs sm:text-sm font-bold text-[#9B746B]">{packageName}</p>
             </div>
           </div>
         </div>
 
         <div className="shrink-0 text-right">
-          <p className={cn("text-base font-black", financialMoneyTone(resource, row))}>
+          <p className={cn("text-sm sm:text-base font-black", financialMoneyTone(resource, row))}>
             {financialAmountPrefix(row)}{formatMoney(amount as string | number | null | undefined)}
           </p>
           <p className="text-[10px] font-bold text-[#9B746B]">{resource === "projects" ? "Dự án" : "Thanh toán"}</p>
@@ -2223,7 +2281,7 @@ function ShiftTransactionRow({ row, index, onOpenDetail }: { row: Row; index: nu
     <div
       role="button"
       tabIndex={0}
-      className="group flex cursor-pointer items-start justify-between gap-3 rounded-[1.25rem] bg-[#F6F7FB] p-3 text-left transition hover:bg-white hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#EA7188]/35 active:scale-[0.99]"
+      className="group flex min-w-0 w-full cursor-pointer items-start justify-between gap-3 rounded-[1.25rem] bg-[#F6F7FB] p-3 text-left transition hover:bg-white hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#EA7188]/35 active:scale-[0.99]"
       onClick={() => onOpenDetail(row)}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -2236,7 +2294,7 @@ function ShiftTransactionRow({ row, index, onOpenDetail }: { row: Row; index: nu
         <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-2xl", isIncome ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>
           {isIncome ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
         </span>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <p className="whitespace-normal break-words text-sm font-black text-[#2F2F2F]">{String(row.title ?? "Giao dịch")}</p>
             <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-[#9B746B] shadow-sm">#{index + 1}</span>
