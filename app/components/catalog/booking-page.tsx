@@ -814,7 +814,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     for (const row of filteredRows) {
       const title = bookingGroupName(row.note);
       const key = bookingGroupKey(row);
-      if (!title || !key) {
+      if (!title || !key || completedOnly) {
         groups.push({ key: row.id, rows: [row] });
         continue;
       }
