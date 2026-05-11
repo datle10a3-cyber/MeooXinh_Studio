@@ -12,9 +12,9 @@ import {
   CreditCard,
   ImageIcon,
   Loader2,
-  MoreHorizontal,
   PawPrint,
   Pencil,
+  Printer,
   Repeat2,
   Save,
   Search,
@@ -511,39 +511,71 @@ function printResourceInvoice(row: Row) {
 }
 
 const PrintInvoiceMenu = memo(function PrintInvoiceMenu({ row }: { row: Row }) {
-  const [open, setOpen] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   if (!canPrintInvoice(row)) return null;
 
   return (
-    <div className="relative shrink-0" onClick={(event) => event.stopPropagation()}>
+    <>
       <Button
         variant="secondary"
         size="icon"
-        aria-label="Mở lựa chọn hóa đơn"
+        className="h-10 w-10 shrink-0 rounded-2xl border-2 border-[#F4C7C4] bg-white text-[#EA7188] hover:bg-[#FFF3EC] active:scale-95 transition"
+        aria-label="In hóa đơn"
         onClick={(event) => {
           event.stopPropagation();
-          setOpen((value) => !value);
+          setShowConfirm(true);
         }}
       >
-        <MoreHorizontal size={16} />
+        <Printer size={16} strokeWidth={2.5} />
       </Button>
-      {open ? (
-        <div className="absolute right-0 z-30 mt-2 w-44 rounded-2xl border border-[#F4C7C4] bg-white p-2 shadow-xl">
-          <button
-            type="button"
-            className="w-full rounded-xl px-3 py-2 text-left text-sm font-black text-[#5B342C] transition hover:bg-[#FFF3EC]"
-            onClick={(event) => {
-              event.stopPropagation();
-              setOpen(false);
-              printResourceInvoice(row);
-            }}
-          >
-            In lại hóa đơn
-          </button>
-        </div>
-      ) : null}
-    </div>
+
+      {showConfirm && (
+        <Portal>
+          <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 animate-in fade-in-0 duration-200" onClick={(e) => e.stopPropagation()}>
+            <div 
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" 
+              onClick={() => setShowConfirm(false)} 
+            />
+
+            <div className="relative w-full max-w-sm transform overflow-hidden rounded-[2.25rem] border border-white bg-white/95 p-6 text-center shadow-[0_24px_70px_rgba(184,95,108,0.22)] backdrop-blur-xl animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full mb-4">
+                <div className="grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-[#FFF0F4] p-1.5 ring-8 ring-[#FFE4EA]/60">
+                  <Printer size={32} className="text-[#EA7188] animate-bounce" />
+                </div>
+              </div>
+
+              <h3 className="text-lg font-black text-[#5B342C]">
+                Xác nhận in hóa đơn
+              </h3>
+
+              <p className="mt-3 whitespace-normal break-words text-sm font-semibold leading-relaxed text-[#7B554D]">
+                Bạn có chắc chắn muốn in lại hóa đơn cho giao dịch này không?
+              </p>
+
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <Button 
+                  variant="secondary"
+                  className="h-12 w-full rounded-2xl text-sm font-black border border-[#F4C7C4] text-[#7B554D] hover:bg-[#FFF3EC] active:scale-[0.98] transition"
+                  onClick={() => setShowConfirm(false)}
+                >
+                  Hủy bỏ
+                </Button>
+                <Button 
+                  className="h-12 w-full rounded-2xl text-sm font-black bg-[#EA7188] text-white hover:bg-[#E85C77] active:scale-[0.98] shadow-[0_8px_20px_rgba(234,113,136,0.25)] transition"
+                  onClick={() => {
+                    setShowConfirm(false);
+                    printResourceInvoice(row);
+                  }}
+                >
+                  Đồng ý in
+                </Button>
+              </div>
+            </div>
+          </div>
+        </Portal>
+      )}
+    </>
   );
 });
 
