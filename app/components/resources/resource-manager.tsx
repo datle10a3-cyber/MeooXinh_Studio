@@ -738,6 +738,42 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
     }, 520);
   }
 
+  const theme = useMemo(() => {
+    if (isTransaction) {
+      if (isIncome) {
+        return {
+          card: "border-emerald-200 bg-gradient-to-br from-white to-emerald-50/30 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.1)]",
+          badge: "bg-emerald-100 border-emerald-200 text-emerald-700",
+          money: "text-emerald-600",
+        };
+      }
+      return {
+        card: "border-rose-200 bg-gradient-to-br from-white to-rose-50/30 shadow-[0_4px_20px_-4px_rgba(244,63,94,0.1)]",
+        badge: "bg-rose-100 border-rose-200 text-rose-700",
+        money: "text-rose-600",
+      };
+    }
+    if (resource === "projects") {
+      return {
+        card: "border-violet-200 bg-gradient-to-br from-white to-violet-50/30 shadow-[0_4px_20px_-4px_rgba(139,92,246,0.1)]",
+        badge: "bg-violet-100 border-violet-200 text-violet-700",
+        money: "text-violet-600",
+      };
+    }
+    if (resource === "invoices") {
+      return {
+        card: "border-amber-200 bg-gradient-to-br from-white to-amber-50/40 shadow-[0_4px_20px_-4px_rgba(245,158,11,0.1)]",
+        badge: "bg-amber-100 border-amber-200 text-amber-700",
+        money: "text-amber-600",
+      };
+    }
+    return {
+      card: "border-[#F4C7C4] bg-white",
+      badge: "bg-[#FFF0F4] border-[#F4C7C4] text-[#C14F69]",
+      money: "text-[#5B342C]",
+    };
+  }, [isTransaction, isIncome, resource]);
+
   return (
     <Card
       data-row-id={id}
@@ -753,22 +789,23 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
       onPointerCancel={clearLongPress}
       onPointerLeave={clearLongPress}
       className={cn(
-        "relative mt-6 cursor-pointer rounded-[1.75rem] border-[#F4C7C4] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]",
+        "relative mt-6 cursor-pointer rounded-[1.75rem] p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]",
+        theme.card,
         focused ? "ring-2 ring-[#EA7188]" : "",
       )}
     >
       <div className="absolute -top-3 left-5 flex gap-1.5">
-        <span className="rounded-full border border-[#F4C7C4] bg-[#FFF0F4] px-3 py-1 text-[11px] font-black text-[#C14F69] shadow-sm">
+        <span className={cn("rounded-full border px-3 py-1 text-[11px] font-black shadow-sm", theme.badge)}>
           {formatDateTimeLabel(row.occurredAt ?? row.issueDate ?? row.deadlineAt ?? row.createdAt)}
         </span>
         {isTransaction ? (
-          <span className={cn("rounded-full border px-3 py-1 text-[11px] font-black shadow-sm", isIncome ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700")}>
+          <span className={cn("rounded-full border px-3 py-1 text-[11px] font-black shadow-sm", theme.badge)}>
             {isIncome ? "Khoản thu" : "Khoản chi"}
           </span>
         ) : (
           <>
-            {resource === "projects" && <span className="rounded-full border border-violet-200 bg-violet-50 px-3 py-1 text-[11px] font-black text-violet-700 shadow-sm">Dự án</span>}
-            {resource === "invoices" && <span className="rounded-full border border-[#F4C7C4] bg-[#FFF3EC] px-3 py-1 text-[11px] font-black text-[#A84E61] shadow-sm">Hóa đơn</span>}
+            {resource === "projects" && <span className={cn("rounded-full border px-3 py-1 text-[11px] font-black shadow-sm", theme.badge)}>Dự án</span>}
+            {resource === "invoices" && <span className={cn("rounded-full border px-3 py-1 text-[11px] font-black shadow-sm", theme.badge)}>Hóa đơn</span>}
           </>
         )}
       </div>

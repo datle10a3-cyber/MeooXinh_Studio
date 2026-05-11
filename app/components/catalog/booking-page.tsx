@@ -733,6 +733,20 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     const isDiscounted = Number(row.total ?? row.price) < Number(row.price);
     const displayNote = (row.note ?? "").replace(/Loại booking:\s*Booking nhóm(?:\s*-\s*[^\n.]+)?\.?/i, "").trim();
 
+    const theme = completedOnly 
+      ? { 
+          card: "border-orange-200 bg-gradient-to-br from-white to-orange-50/30 shadow-[0_4px_20px_-4px_rgba(249,115,22,0.15)]", 
+          badge: "bg-orange-100 border-orange-200 text-orange-700",
+          dot: "bg-orange-500",
+          money: "text-orange-600"
+        }
+      : { 
+          card: "border-[#F4C7C4] bg-white", 
+          badge: "bg-[#FFF0F4] border-[#F4C7C4] text-[#C14F69]",
+          dot: "bg-[#EA7188]",
+          money: "text-[#EA7188]"
+        };
+
     return (
       <div
         key={row.id}
@@ -809,9 +823,9 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         onTouchMove={(event) => { event.stopPropagation(); moveTouchLongPress(event); }}
         onTouchEnd={(event) => { event.stopPropagation(); endTouchLongPress(); }}
         onTouchCancel={(event) => { event.stopPropagation(); endTouchLongPress(); }}
-        className="relative mt-6 w-full cursor-pointer rounded-[1.75rem] border border-[#F4C7C4] bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99]"
+        className={`relative mt-6 w-full cursor-pointer rounded-[1.75rem] border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99] ${theme.card}`}
       >
-        <span className="absolute -top-3 left-5 rounded-full border border-[#F4C7C4] bg-[#FFF0F4] px-3 py-1 text-[11px] font-black text-[#C14F69] shadow-sm">
+        <span className={`absolute -top-3 left-5 rounded-full border px-3 py-1 text-[11px] font-black shadow-sm ${theme.badge}`}>
           {bookingDateBadge(row.startTime)}
         </span>
 
@@ -856,13 +870,13 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
             <div className="min-w-0">
               <h2 className="whitespace-normal break-words text-lg font-black leading-tight text-[#5B342C]">{row.customerName || "Khách chưa đặt tên"}</h2>
               <div className="mt-1 flex items-center gap-1.5">
-                <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#EA7188]" />
+                <div className={`h-1.5 w-1.5 shrink-0 rounded-full ${theme.dot}`} />
                 <p className="truncate text-sm font-bold text-[#9B746B]">{row.packageName || "Chưa có gói"}</p>
               </div>
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <p className="text-base font-black text-[#EA7188]">{formatMoney(row.total ?? row.price)}</p>
+            <p className={`text-base font-black ${theme.money}`}>{formatMoney(row.total ?? row.price)}</p>
             {isDiscounted ? <p className="text-[10px] font-bold text-emerald-600">Đã giảm giá</p> : null}
           </div>
         </div>
