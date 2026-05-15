@@ -1742,19 +1742,16 @@ function formatReceiptDateTime(value: unknown) {
 }
 
 function printGroupEstimateInvoice(groupName: string, rows: BookingItem[]) {
-  const subtotal = rows.reduce((sum, row) => sum + moneyNumber(row.price), 0);
   const total = rows.reduce((sum, row) => sum + moneyNumber(row.total ?? row.price), 0);
-  const discount = Math.max(0, subtotal - total);
-  const items = rows.map((row, index) => `
-    <div class="item">
-      <div>${index + 1}. ${receiptEscape(row.customerName || "Khách hàng")}</div>
-      <div class="small muted">${receiptEscape(row.packageName || "Gói dịch vụ")}</div>
-      <div class="row qty"><span>x1</span><span class="right">${receiptEscape(formatMoney(row.total ?? row.price))}</span></div>
-    </div>
-  `).join("");
+  const items = rows.map((row, index) => {
+    const orig = moneyNumber(row.price);
+    const final_ = moneyNumber(row.total ?? row.price);
+    const disc = final_ < orig;
+    return `<div class="item"><div>${index + 1}. ${receiptEscape(row.customerName || "Khách hàng")}</div><div class="small muted">${receiptEscape(row.packageName || "Gói dịch vụ")}</div><div class="row qty"><span>x1</span><span class="right">${disc ? `<span style="text-decoration:line-through;color:#7a5750;font-size:11px">${receiptEscape(formatMoney(orig))}</span> ` : ""}${receiptEscape(formatMoney(final_))}</span></div>${disc ? `<div class="small" style="color:#e86b88;padding-left:12px">🏷️ Giảm ${receiptEscape(formatMoney(orig - final_))}</div>` : ""}</div>`;
+  }).join("");
   const html = `<!doctype html><html lang="vi"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"/><title>Bill tạm tính</title><style>
     *{box-sizing:border-box}body{margin:0;background:#fff7fb;color:#4b2a25;font-family:Arial,"Helvetica Neue",sans-serif;padding-top:10px}.receipt{width:80mm;max-width:310px;margin:0 auto;padding:10px 9px;font-size:12px;line-height:1.38;background:#fff;border:1px solid #f6c6d4}.center{text-align:center}.bold{font-weight:700}.muted{color:#7a5750}.brand-box{display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;border-radius:14px;background:#fff0f5;border:1px solid #f5b8ca}.logo{width:34px;height:34px;border-radius:50%;background:#fff;object-fit:contain;border:1px solid #f5b8ca}.brand{font-size:15px;font-weight:900;letter-spacing:.9px;text-transform:uppercase;color:#e86b88}.address{margin-top:3px;font-size:10.5px;line-height:1.35;color:#7a5750}.title{margin:8px 0 6px;padding:7px 0;border-radius:12px;background:#e86b88;color:#fff;font-size:14px;font-weight:900;text-align:center;text-transform:uppercase;letter-spacing:.4px}.sep{margin:8px 0;border-top:1px dashed #e9a8b8}.solid{margin:8px 0;border-top:1px solid #f0b4c1}.row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.left{flex:1;min-width:0;overflow-wrap:anywhere}.right{flex:0 0 auto;text-align:right;white-space:nowrap}.info{margin-top:4px}.label{flex:0 0 86px}.section{margin-top:4px;font-weight:800;text-transform:uppercase}.item{margin-top:5px}.qty{padding-left:12px}.small{font-size:11px}.total{padding:8px;border-radius:12px;background:#fff0f5;font-size:13px;color:#d94f73}.toolbar{display:flex;justify-content:center;gap:10px;margin:0 auto 12px;max-width:310px;width:100%;padding:0 4px}.btn{flex:1;padding:10px 14px;font-size:13px;font-weight:bold;border:0;border-radius:20px;cursor:pointer}.btn-print{background:#e86b88;color:white}.btn-close{background:#f3f4f6;color:#4b5563}@page{margin:0}@media print{.no-print{display:none!important}body{background:#fff;margin:0;padding-top:0;color:#000}.receipt{width:100%;max-width:80mm;margin:0 auto;padding:8px 6px;border:0!important}.brand-box,.total{background:#fff;border-color:#000;color:#000}.brand,.address,.title{color:#000}.title{background:#fff;border:1px solid #000}.sep{border-top-color:#777}.solid{border-top-color:#000}}
-  </style></head><body><div class="no-print toolbar"><button class="btn btn-print" onclick="window.print()">In tạm tính</button><button class="btn btn-close" onclick="window.close()">Đóng</button></div><div class="receipt"><div class="brand-box"><img class="logo" src="/be-meo-studio-avatar.svg" alt="Mèoo Xinhh"/><div><div class="brand">Mèoo Xinhh Studio</div><div class="address">make & photo</div><div class="address">☎ ${receiptEscape(STUDIO_PHONE)}</div><div class="address">⌂ ${receiptEscape(STUDIO_ADDRESS)}</div></div></div><div class="title">BILL TẠM TÍNH</div><div class="info row"><span class="label">Nhóm</span><span class="left">: ${receiptEscape(groupName)}</span></div><div class="info row"><span class="label">Giờ</span><span class="left">: ${receiptEscape(formatReceiptDateTime(new Date()))}</span></div><div class="sep"></div><div class="section">GÓI CHỤP</div><div>Booking nhóm - ${receiptEscape(groupName)}</div><div class="sep"></div><div class="section">CHI TIẾT</div>${items}<div class="solid"></div><div class="row info"><span>Tạm tính</span><span class="right">${receiptEscape(formatMoney(subtotal))}</span></div>${discount > 0 ? `<div class="row info"><span>🏷️ Giảm giá</span><span class="right">-${receiptEscape(formatMoney(discount))}</span></div>` : ""}<div class="row bold total"><span>TỔNG TẠM TÍNH</span><span class="right">${receiptEscape(formatMoney(total))}</span></div><div class="sep"></div><div class="center thanks">Cảm ơn quý khách ♥<br/><span class="bold">MÈOO XINHH STUDIO</span></div></div><script>window.onload=()=>{try{window.print();}catch(e){console.error(e);}};</script></body></html>`;
+  </style></head><body><div class="no-print toolbar"><button class="btn btn-print" onclick="window.print()">In tạm tính</button><button class="btn btn-close" onclick="window.close()">Đóng</button></div><div class="receipt"><div class="brand-box"><img class="logo" src="/be-meo-studio-avatar.svg" alt="Mèoo Xinhh"/><div><div class="brand">Mèoo Xinhh Studio</div><div class="address">make & photo</div><div class="address">☎ ${receiptEscape(STUDIO_PHONE)}</div><div class="address">⌂ ${receiptEscape(STUDIO_ADDRESS)}</div></div></div><div class="title">BILL TẠM TÍNH</div><div class="info row"><span class="label">Nhóm</span><span class="left">: ${receiptEscape(groupName)}</span></div><div class="info row"><span class="label">Giờ</span><span class="left">: ${receiptEscape(formatReceiptDateTime(new Date()))}</span></div><div class="sep"></div><div class="section">GÓI CHỤP</div><div>Booking nhóm - ${receiptEscape(groupName)}</div><div class="sep"></div><div class="section">CHI TIẾT</div>${items}<div class="solid"></div><div class="row bold total"><span>TỔNG TẠM TÍNH</span><span class="right">${receiptEscape(formatMoney(total))}</span></div><div class="sep"></div><div class="center qr"><img src="${receiptEscape(buildPaymentQrUrl(total, `TT-${groupName.replace(/\\s+/g, "").slice(0, 10)}`))}" alt="QR" style="width:128px;height:128px;object-fit:contain;margin:4px auto;display:block"/><div class="small bold">Quét mã để thanh toán</div></div><div class="sep"></div><div class="center thanks">Cảm ơn quý khách ♥<br/><span class="bold">MÈOO XINHH STUDIO</span></div></div><script>window.onload=()=>{try{window.print();}catch(e){console.error(e);}};</script></body></html>`;
   const popup = window.open("", "_blank", "width=900,height=1000");
   if (!popup) return;
   popup.document.write(html);
@@ -1764,12 +1761,12 @@ function printGroupEstimateInvoice(groupName: string, rows: BookingItem[]) {
 function printGroupBookingInvoice(groupBooking: GroupBookingSnapshot, targetWindow?: Window | null) {
   const invoiceCode = groupBooking.paymentInfo?.invoiceCode || groupBooking.customers[0]?.invoiceCode || "Group-meoxinh--";
   const paidAt = groupBooking.paymentInfo?.paidAt || groupBooking.createdAt || new Date();
-  const rows = groupBooking.customers.map((customer, index) => `
-    <div class="item">
-      <div class="row"><span class="left">${index + 1}. ${receiptEscape(customer.customerName)}</span><span class="right">${receiptEscape(formatMoney(customer.totalAmount))}</span></div>
-      <div class="small muted">${receiptEscape(customer.packageName)}</div>
-    </div>
-  `).join("");
+  const rows = groupBooking.customers.map((customer, index) => {
+    const sub = Number(customer.subtotal ?? customer.totalAmount);
+    const fin = Number(customer.totalAmount);
+    const disc = fin < sub;
+    return `<div class="item"><div class="row"><span class="left">${index + 1}. ${receiptEscape(customer.customerName)}</span><span class="right">${disc ? `<span style="text-decoration:line-through;color:#7a5750;font-size:11px">${receiptEscape(formatMoney(sub))}</span> ` : ""}${receiptEscape(formatMoney(fin))}</span></div><div class="small muted">${receiptEscape(customer.packageName)}</div>${disc ? `<div class="small" style="color:#e86b88">🏷️ Giảm ${receiptEscape(formatMoney(sub - fin))}</div>` : ""}</div>`;
+  }).join("");
   const html = `<!doctype html>
 <html lang="vi">
 <head>
@@ -1844,12 +1841,12 @@ function printGroupBookingInvoice(groupBooking: GroupBookingSnapshot, targetWind
     <div class="section">CHI TIẾT</div>
     ${rows}
     <div class="solid"></div>
-    <div class="row info"><span>Tạm tính</span><span class="right">${receiptEscape(formatMoney(groupBooking.subtotal))}</span></div>
-    ${groupBooking.discount > 0 ? `<div class="row info"><span>🏷️ Giảm giá</span><span class="right">-${receiptEscape(formatMoney(groupBooking.discount))}</span></div>` : ""}
     ${groupBooking.extraFee > 0 ? `<div class="row info"><span>Phí phát sinh</span><span class="right">${receiptEscape(formatMoney(groupBooking.extraFee))}</span></div>` : ""}
     <div class="row bold total"><span>TỔNG THANH TOÁN</span><span class="right">${receiptEscape(formatMoney(groupBooking.totalAmount))}</span></div>
     <div class="sep"></div>
     <div class="status">ĐÃ THANH TOÁN ✓</div>
+    <div class="sep"></div>
+    <div class="center qr"><img src="${receiptEscape(buildPaymentQrUrl(groupBooking.totalAmount, invoiceCode))}" alt="QR" style="width:128px;height:128px;object-fit:contain;margin:4px auto;display:block"/><div class="small bold">Quét mã để thanh toán</div></div>
     <div class="sep"></div>
     <div class="center thanks">Cảm ơn quý khách ♥<br/><span class="bold">MÈOO XINHH STUDIO</span></div>
   </div>
