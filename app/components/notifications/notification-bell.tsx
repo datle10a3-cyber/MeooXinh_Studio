@@ -52,7 +52,7 @@ function canSendBrowserNotification(id: string) {
   if (typeof window === "undefined") return false;
   const key = notificationKey(id);
   const count = Number(window.localStorage.getItem(key) ?? "0");
-  if (count >= 3) return false;
+  if (count >= 1) return false;
   window.localStorage.setItem(key, String(count + 1));
   return true;
 }
