@@ -39,7 +39,7 @@ export function PwaInstaller() {
     if (isInAppBrowser()) return;
 
     const iosDevice = isIosDevice();
-    setIsIOS(iosDevice);
+    const iosFrame = window.requestAnimationFrame(() => setIsIOS(iosDevice));
 
     if (iosDevice) {
       // On iOS Safari: show a simple hint after 6s, once only
@@ -47,7 +47,10 @@ export function PwaInstaller() {
         const hasSeen = localStorage.getItem("pwa-ios-seen");
         if (!hasSeen) setShowPrompt(true);
       }, 6000);
-      return () => window.clearTimeout(timer);
+      return () => {
+        window.cancelAnimationFrame(iosFrame);
+        window.clearTimeout(timer);
+      };
     }
 
     // Android / Desktop: listen for beforeinstallprompt
@@ -62,7 +65,10 @@ export function PwaInstaller() {
     };
 
     window.addEventListener("beforeinstallprompt", handlePrompt);
-    return () => window.removeEventListener("beforeinstallprompt", handlePrompt);
+    return () => {
+      window.cancelAnimationFrame(iosFrame);
+      window.removeEventListener("beforeinstallprompt", handlePrompt);
+    };
   }, []);
 
   async function handleInstall() {

@@ -10,7 +10,7 @@ export function NetworkStatus() {
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    setIsOnline(navigator.onLine);
+    const frame = window.requestAnimationFrame(() => setIsOnline(navigator.onLine));
 
     function handleOnline() {
       setIsOnline(true);
@@ -27,6 +27,7 @@ export function NetworkStatus() {
     window.addEventListener("offline", handleOffline);
 
     return () => {
+      window.cancelAnimationFrame(frame);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };

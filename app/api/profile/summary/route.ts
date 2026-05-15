@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import { fail, ok, serverError } from "@/app/lib/api-response";
 import { writeAuditLog } from "@/app/lib/audit";
 import { requireUser } from "@/app/lib/auth";
@@ -73,7 +74,7 @@ export async function GET() {
             email: user.email,
             phone: user.phone,
             avatarUrl: user.avatarUrl,
-            notificationsEnabled: (user as any).notificationsEnabled,
+            notificationsEnabled: user.notificationsEnabled,
           }
         : session,
       studio,
@@ -122,7 +123,7 @@ export async function PATCH(req: Request) {
         ? (userInput.notificationsEnabled === true || userInput.notificationsEnabled === "true")
         : undefined;
 
-      const data: any = {};
+      const data: Prisma.UserUpdateInput = {};
       if (name !== undefined) {
         if (!name) return fail("Tên không được để trống.", 422);
         data.name = name;
@@ -181,7 +182,7 @@ export async function PATCH(req: Request) {
             email: freshUser.email,
             phone: freshUser.phone,
             avatarUrl: freshUser.avatarUrl,
-            notificationsEnabled: (freshUser as any).notificationsEnabled,
+            notificationsEnabled: freshUser.notificationsEnabled,
           }
         : session,
       studio,

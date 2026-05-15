@@ -29,7 +29,8 @@ export function ImagePreview({
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
@@ -62,12 +63,33 @@ export function ImagePreview({
   const currentSrc = list[currentIndex];
   const canSlide = list.length > 1 && onIndexChange;
 
-  if (!currentSrc) return null;
-
   function move(step: number) {
     if (!canSlide) return;
     onIndexChange((currentIndex + step + list.length) % list.length);
   }
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        move(-1);
+      }
+      if (event.key === "ArrowRight") {
+        event.preventDefault();
+        move(1);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  });
+
+  if (!currentSrc) return null;
 
   function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
     const touch = event.touches[0];

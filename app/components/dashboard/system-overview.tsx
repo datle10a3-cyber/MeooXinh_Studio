@@ -7,7 +7,6 @@ import {
   BadgeDollarSign,
   BriefcaseBusiness,
   CalendarDays,
-  CheckCircle2,
   Database,
   Download,
   FileJson,
@@ -21,7 +20,6 @@ import {
   UploadCloud,
   Users,
   WalletCards,
-  X,
 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { DetailModal } from "@/app/components/ui/detail-modal";
@@ -356,7 +354,6 @@ export function ReportsView() {
 
   useEffect(() => {
     let mounted = true;
-    setHealthLoading(true);
     fetch("/api/system/health")
       .then((res) => res.json())
       .then((result) => {

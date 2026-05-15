@@ -179,7 +179,7 @@ export function ProfilePage() {
     if (summary?.user) {
       setNotifyEnabled(summary.user.notificationsEnabled ?? false);
     }
-  }, [summary?.user]);
+  }, [summary]);
 
   async function enablePushNotifications() {
     if (!("serviceWorker" in navigator) || !("PushManager" in window) || !("Notification" in window)) {

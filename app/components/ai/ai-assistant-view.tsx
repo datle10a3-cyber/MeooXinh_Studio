@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { Bot, CheckCircle2, Database, ImagePlus, Lightbulb, RotateCcw, Send, Sparkles, User, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { Card, CardTitle } from "@/app/components/ui/card";
-import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 import { Textarea } from "@/app/components/ui/input";
 import { navigateStudioView } from "@/app/utils/studio-navigation";
 

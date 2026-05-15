@@ -10,7 +10,7 @@ import { AlertModal } from "@/app/components/ui/alert-modal";
 export default function ForgotPasswordPage() {
   const [form, setForm] = useState({ email: "", otp: "", password: "", confirmPassword: "" });
   const [message, setMessage] = useState("");
-  const [successTone, setSuccessTone] = useState(false);
+  const [, setSuccessTone] = useState(false);
   const [sendingOtp, setSendingOtp] = useState(false);
   const [saving, setSaving] = useState(false);
   const [showPassword, setShowPassword] = useState(false);

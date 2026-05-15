@@ -20,7 +20,7 @@ import { StudioCatMark } from "@/app/components/brand/studio-brand";
 import { Card, CardTitle } from "@/app/components/ui/card";
 import { cachedFetch } from "@/app/lib/cached-fetch";
 import { useUiStore } from "@/app/store/ui-store";
-import type { ApiResult, DashboardData } from "@/app/types/studio";
+import type { DashboardData } from "@/app/types/studio";
 import { formatDate, formatMoney } from "@/app/utils/format";
 import { navigateStudioView } from "@/app/utils/studio-navigation";
 
@@ -123,7 +123,8 @@ export function ModuleHome() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const timer = window.setTimeout(() => setMounted(true), 0);
+    return () => window.clearTimeout(timer);
   }, []);
 
   if (!mounted) return null;

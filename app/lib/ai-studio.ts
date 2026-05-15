@@ -836,10 +836,10 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
   const matchedTransactions = transactionRows
     .filter((item) => matchesTokens([item.title, item.note, item.customer?.name, item.project?.name, item.wallet?.name].filter(Boolean).join(" ")))
     .slice(0, 30);
-  const matchedPackages = (packageRows as any[])
+  const matchedPackages = packageRows
     .filter((item) => matchesTokens([item.name, item.category?.name, item.description, item.customerNote].filter(Boolean).join(" ")))
     .slice(0, 20);
-  const matchedEquipment = (equipmentRows as any[])
+  const matchedEquipment = equipmentRows
     .filter((item) => matchesTokens([item.name, item.type, item.serial, item.note].filter(Boolean).join(" ")))
     .slice(0, 20);
 

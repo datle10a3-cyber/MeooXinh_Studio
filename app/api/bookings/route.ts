@@ -1,7 +1,7 @@
 import { created, fail, ok, serverError } from "@/app/lib/api-response";
 import { writeAuditLog } from "@/app/lib/audit";
 import { canCreate, canUpdate, requireUser, verifyStudioEditPassword } from "@/app/lib/auth";
-import { finalizeCompletedBooking } from "@/app/lib/finance-workflow";
+import { bookingGroupNameFromNote, finalizeCompletedBooking, finalizeCompletedBookingGroup } from "@/app/lib/finance-workflow";
 import { prisma } from "@/app/lib/prisma";
 
 function parseDate(value: unknown) {
@@ -228,7 +228,7 @@ export async function PUT(req: Request) {
         : appendBookingNote(body.note, discountInfo.label, bookingMode, body.groupLabel ? String(body.groupLabel) : undefined),
     };
 
-    let row: any;
+    let row: NonNullable<Awaited<ReturnType<typeof prisma.booking.findFirst>>>;
     let invoiceSnapshot = null;
 
     if (isNewlyCompleting) {
@@ -241,7 +241,21 @@ export async function PUT(req: Request) {
         include: bookingSelect(),
       });
       try {
-        invoiceSnapshot = await finalizeCompletedBooking(row, user);
+        const groupName = bookingGroupNameFromNote(row.note);
+        if (groupName) {
+          const groupCandidates = await prisma.booking.findMany({
+            where: {
+              studioId: user.studioId,
+              deletedAt: null,
+              status: { not: "CANCELLED" },
+            },
+            include: bookingSelect(),
+          });
+          const groupRows = groupCandidates.filter((item) => bookingGroupNameFromNote(item.note) === groupName);
+          invoiceSnapshot = await finalizeCompletedBookingGroup(groupRows.length ? groupRows : [row], user);
+        } else {
+          invoiceSnapshot = await finalizeCompletedBooking(row, user);
+        }
       } catch (finalizeError) {
         // Roll back booking status to previous status so data stays consistent
         await prisma.booking.update({

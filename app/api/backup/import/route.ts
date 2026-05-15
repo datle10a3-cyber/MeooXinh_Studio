@@ -2,8 +2,6 @@ import { fail, ok, serverError } from "@/app/lib/api-response";
 import { requireUser } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
 import { writeAuditLog } from "@/app/lib/audit";
-import { mkdir, writeFile } from "fs/promises";
-import path from "path";
 
 type BackupSection =
   | "categories"
@@ -27,10 +25,6 @@ type BackupPayload = {
   exportedAt?: string;
   studio?: { id?: string; name?: string; slug?: string } | null;
   data?: Partial<Record<BackupSection | "users", unknown[]>>;
-};
-
-type FindManyDelegate = {
-  findMany: (args: Record<string, unknown>) => Promise<Array<Record<string, unknown>>>;
 };
 
 const sectionLabels: Record<BackupSection, string> = {
@@ -114,7 +108,6 @@ const delegateNames: Record<BackupSection, string> = {
 };
 
 const dateFields = new Set(["createdAt", "updatedAt", "deletedAt", "startAt", "endAt", "startTime", "endTime", "deadlineAt", "occurredAt", "issueDate", "dueDate", "dueAt", "openedAt", "closedAt"]);
-const BATCH_SIZE = 1000;
 const userReferenceFields: Partial<Record<BackupSection, string[]>> = {
   walletShifts: ["openedById", "closedById"],
   employees: ["userId"],
@@ -198,24 +191,7 @@ function previewBackup(backup: BackupPayload) {
   };
 }
 
-async function findAllByCursor(delegate: FindManyDelegate, args: Record<string, unknown>) {
-  const output: Array<Record<string, unknown>> = [];
-  let cursor: string | null = null;
-  while (true) {
-    const rows = await delegate.findMany({
-      ...args,
-      take: BATCH_SIZE,
-      ...(cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-    });
-    output.push(...rows);
-    if (rows.length < BATCH_SIZE) break;
-    cursor = String(rows[rows.length - 1]?.id ?? "");
-    if (!cursor) break;
-  }
-  return output;
-}
-
-async function createPreRestoreBackup(studioId: string, user: { id: string; name: string; email: string; role: string }) {
+async function createPreRestoreBackup() {
   // Tránh lỗi EROFS trên Vercel do ổ cứng chỉ đọc (read-only).
   // Frontend đã tự động gọi API và tải file backup an toàn về máy người dùng trước khi gọi hàm này.
   // Do đó không cần thiết phải query toàn bộ DB và lưu file vào ổ cứng local của Serverless Function.
@@ -290,12 +266,7 @@ export async function POST(req: Request) {
     if (action !== "import") return fail("Thao tác không hợp lệ.", 400);
     if (!sections.length) return fail("Không có nhóm dữ liệu nào để khôi phục.", 400);
 
-    const safetyBackup = await createPreRestoreBackup(user.studioId, {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    });
+    const safetyBackup = await createPreRestoreBackup();
 
     const result = await prisma.$transaction(async (tx) => {
       const validUsers = await tx.user.findMany({ where: { studioId: user.studioId }, select: { id: true } });

@@ -1,5 +1,5 @@
 import { fail, ok, serverError } from "@/app/lib/api-response";
-import { cacheGet, cacheSet, cacheInvalidate } from "@/app/lib/api-cache";
+import { cacheGet, cacheSet } from "@/app/lib/api-cache";
 import { requireUser } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
 

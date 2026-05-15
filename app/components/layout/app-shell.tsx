@@ -151,28 +151,6 @@ function displayStudioName(session: CurrentSession | null) {
   return name;
 }
 
-function navTarget(item: NavItem) {
-  if (item.href) return item.href;
-  return studioViewPath(item.id);
-}
-
-function canScrollElement(element: Element, deltaY: number) {
-  const style = window.getComputedStyle(element);
-  if (!/(auto|scroll|overlay)/.test(style.overflowY)) return false;
-  const node = element as HTMLElement;
-  if (deltaY > 0) return node.scrollTop + node.clientHeight < node.scrollHeight - 1;
-  return node.scrollTop > 0;
-}
-
-function hasScrollableParent(target: Element, deltaY: number) {
-  let node: Element | null = target;
-  while (node && node !== document.body && node !== document.documentElement) {
-    if (canScrollElement(node, deltaY)) return true;
-    node = node.parentElement;
-  }
-  return false;
-}
-
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 6000) {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -184,7 +162,6 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
-  const activeResource = useUiStore((state) => state.activeResource);
   const setActiveResource = useUiStore((state) => state.setActiveResource);
   const darkMode = useUiStore((state) => state.darkMode);
   const setDarkMode = useUiStore((state) => state.setDarkMode);
@@ -206,19 +183,29 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   // Sync session from localStorage instantly on client render
   useEffect(() => {
+    const timers: number[] = [];
+    const defer = (callback: () => void) => {
+      const timer = window.setTimeout(callback, 0);
+      timers.push(timer);
+    };
+
     if (pathname === "/login" || pathname === "/register" || pathname === "/forgot-password") {
-      setSessionLoading(false);
-      return;
+      defer(() => setSessionLoading(false));
+      return () => timers.forEach((timer) => window.clearTimeout(timer));
     }
     try {
       const cached = localStorage.getItem("studio-session");
       if (cached) {
-        setSession(JSON.parse(cached));
-        setSessionLoading(false);
+        const parsed = JSON.parse(cached);
+        defer(() => {
+          setSession(parsed);
+          setSessionLoading(false);
+        });
       }
     } catch (err) {
       console.error("Local session sync error:", err);
     }
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [pathname, setSession]);
 
   const loadSession = useCallback(async () => {

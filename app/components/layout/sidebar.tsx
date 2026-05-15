@@ -163,7 +163,6 @@ export const Sidebar = memo(function Sidebar({ session }: { session: CurrentSess
   const pathname = usePathname();
   const router = useRouter();
 
-  const activeResource = useUiStore((state) => state.activeResource);
   const setActiveResource = useUiStore((state) => state.setActiveResource);
 
   const role = session?.user.role;

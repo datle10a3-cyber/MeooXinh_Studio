@@ -113,6 +113,18 @@ function auditName(row: Record<string, unknown>) {
   return String(row.name ?? row.title ?? row.customerName ?? row.code ?? row.filename ?? "").trim() || undefined;
 }
 
+function pushableNotification(row: Record<string, unknown>) {
+  const dueAt = row.dueAt;
+  const title = String(row.title ?? "");
+  const message = String(row.message ?? "");
+  const id = String(row.id ?? "");
+  const isRead = row.isRead === true;
+  if (!dueAt || !title || !message || !id || isRead) return null;
+  const dueDate = new Date(String(dueAt));
+  if (Number.isNaN(dueDate.getTime()) || dueDate <= new Date()) return null;
+  return { id, title, message };
+}
+
 async function openShiftForTransaction(studioId: string, payload: Record<string, unknown>) {
   const walletId = String(payload.walletId ?? "");
   if (!walletId) return null;
@@ -213,8 +225,8 @@ export async function createResource(req: Request, resourceName: string) {
     cacheInvalidate("dashboard:");
 
     if (resource.key === "notifications") {
-      const notification = row as any;
-      if (notification.dueAt && new Date(notification.dueAt) > new Date() && !notification.isRead) {
+      const notification = pushableNotification(row);
+      if (notification) {
         await sendStudioPush(user.studioId, { title: notification.title, body: notification.message, url: "/", tag: notification.id });
       }
     }
@@ -261,8 +273,8 @@ export async function updateResource(req: Request, resourceName: string) {
     cacheInvalidate("dashboard:");
 
     if (resource.key === "notifications") {
-      const notification = row as any;
-      if (notification.dueAt && new Date(notification.dueAt) > new Date() && !notification.isRead) {
+      const notification = pushableNotification(row);
+      if (notification) {
         await sendStudioPush(user.studioId, { title: notification.title, body: notification.message, url: "/", tag: notification.id });
       }
     }

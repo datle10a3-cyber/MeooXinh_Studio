@@ -18,7 +18,8 @@ export function AlertModal({ isOpen, message, onClose, title }: AlertModalProps)
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   // Sync state with body scroll

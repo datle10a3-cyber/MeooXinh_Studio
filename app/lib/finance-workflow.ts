@@ -32,9 +32,81 @@ type BookingLike = {
   note?: string | null;
   imageUrl?: string | null;
   galleryUrls?: string | null;
-  customer?: { avatarUrl?: string | null } | null;
+  customer?: { name?: string | null; avatarUrl?: string | null } | null;
   package?: { imageUrl?: string | null; galleryUrls?: string | null } | null;
 };
+
+type GroupBookingCustomerSnapshot = {
+  id: string;
+  customerDbId?: string | null;
+  customerName: string;
+  packageName: string;
+  packageImage?: string | null;
+  packageImages: string[];
+  status: string;
+  subtotal: number;
+  extraFee: number;
+  totalAmount: number;
+  invoiceCode: string;
+};
+
+type GroupBookingSnapshot = {
+  id: string;
+  groupName: string;
+  paymentInfo: {
+    invoiceCode: string;
+    walletId?: string | null;
+    walletName?: string | null;
+    walletShiftId?: string | null;
+    paymentMethod: string;
+    paidAt: string;
+  };
+  subtotal: number;
+  discount: number;
+  extraFee: number;
+  totalAmount: number;
+  paymentMethod: string;
+  createdAt: string;
+  customers: GroupBookingCustomerSnapshot[];
+};
+
+function groupBookingName(note?: string | null) {
+  const text = String(note ?? "");
+  const direct = text.match(/Loáº¡i booking:\s*Booking nhĂ³m(?:\s*-\s*([^\n.]+))?/i);
+  if (direct) return direct[1]?.trim() || "Booking nhĂ³m";
+  const fallback = text.match(/Booking\s+nh\S*m(?:\s*-\s*([^\n.]+))?/i);
+  return fallback ? fallback[1]?.trim() || "Booking nhĂ³m" : null;
+}
+
+function groupBookingKey(groupName: string) {
+  return groupName.trim().toLowerCase();
+}
+
+function groupBookingMarker(groupName: string) {
+  return `GROUP_BOOKING_DONE:${groupBookingKey(groupName)}`;
+}
+
+function groupBookingLine(snapshot: GroupBookingSnapshot) {
+  return `GROUP_BOOKING:${JSON.stringify(snapshot)}`;
+}
+
+function withGroupBookingLine(note: string | null | undefined, snapshot: GroupBookingSnapshot) {
+  const source = String(note ?? "").trim();
+  const nextLine = groupBookingLine(snapshot);
+  if (/^GROUP_BOOKING:.+$/m.test(source)) return source.replace(/^GROUP_BOOKING:.+$/m, nextLine);
+  return [source, nextLine].filter(Boolean).join("\n");
+}
+
+function groupBookingSnapshotFromNote(note?: string | null) {
+  const match = String(note ?? "").match(/^GROUP_BOOKING:(.+)$/m);
+  if (!match) return null;
+  try {
+    const parsed = JSON.parse(match[1]);
+    return parsed && typeof parsed === "object" ? parsed as GroupBookingSnapshot : null;
+  } catch {
+    return null;
+  }
+}
 
 function decimal(value: unknown) {
   return new Prisma.Decimal(String(value ?? 0));
@@ -231,6 +303,18 @@ async function nextStudioInvoiceCode(tx: Prisma.TransactionClient, studioId: str
   return `meoxinh${String(max + 1).padStart(2, "0")}`;
 }
 
+async function nextGroupInvoiceCode(tx: Prisma.TransactionClient, studioId: string) {
+  const invoices = await tx.invoice.findMany({
+    where: { studioId, deletedAt: null, code: { startsWith: "Group-meoxinh" } },
+    select: { code: true },
+  });
+  const max = invoices.reduce((highest, invoice) => {
+    const match = /^Group-meoxinh(\d+)$/i.exec(invoice.code);
+    return match ? Math.max(highest, Number(match[1])) : highest;
+  }, 0);
+  return `Group-meoxinh${String(max + 1).padStart(2, "0")}`;
+}
+
 function receiptSnapshot(booking: BookingLike, invoiceCode: string) {
   const originalPrice = moneyNumber(booking.price);
   const finalPrice = moneyNumber(booking.total) > 0 ? moneyNumber(booking.total) : originalPrice;
@@ -261,6 +345,310 @@ function receiptSnapshot(booking: BookingLike, invoiceCode: string) {
     discountLabel,
     discountPercent,
   })}`;
+}
+
+export function bookingGroupNameFromNote(note?: string | null) {
+  return groupBookingName(note);
+}
+
+export async function finalizeCompletedBookingGroup(bookings: BookingLike[], actor?: SessionUser) {
+  const activeBookings = bookings.filter((booking) => booking.studioId && booking.id);
+  if (!activeBookings.length) return null;
+
+  const firstBooking = activeBookings[0];
+  const groupName = activeBookings.map((booking) => groupBookingName(booking.note)).find(Boolean) ?? "Booking nhĂ³m";
+  const marker = groupBookingMarker(groupName);
+  const sortedBookings = [...activeBookings].sort((a, b) => {
+    const timeDiff = new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
+    if (timeDiff !== 0) return timeDiff;
+    return String(a.customerName ?? a.id).localeCompare(String(b.customerName ?? b.id), "vi");
+  });
+  const subtotal = sortedBookings.reduce((sum, booking) => sum.plus(decimal(booking.price)), new Prisma.Decimal(0));
+  const amount = sortedBookings.reduce((sum, booking) => sum.plus(bookingAmount(booking)), new Prisma.Decimal(0));
+  if (amount.lte(0)) return null;
+
+  const { wallet, openShift: resolvedOpenShift } = await activeOpenShiftWallet(firstBooking.studioId);
+  const paymentMethod = wallet?.type?.toUpperCase()?.includes("BANK") ? "BANK_TRANSFER" : "CASH";
+  const occurredAt = new Date();
+
+  return prisma.$transaction(async (tx) => {
+    const existingInvoice = await tx.invoice.findFirst({
+      where: {
+        studioId: firstBooking.studioId,
+        deletedAt: null,
+        note: { contains: marker },
+      },
+    });
+    const invoiceCode = existingInvoice?.code && /^Group-meoxinh\d+$/i.test(existingInvoice.code)
+      ? existingInvoice.code
+      : await nextGroupInvoiceCode(tx, firstBooking.studioId);
+    const openShift = resolvedOpenShift ?? await openShiftForWallet(tx, firstBooking.studioId, wallet?.id, occurredAt);
+    const galleryImages = sortedBookings
+      .flatMap((booking) => [booking.package?.imageUrl, ...packageGalleryUrls(booking.package?.galleryUrls)])
+      .filter((item): item is string => typeof item === "string" && Boolean(item.trim()))
+      .slice(0, 8);
+    const customers: GroupBookingCustomerSnapshot[] = sortedBookings.map((booking) => {
+      const packageImages = [booking.package?.imageUrl, ...packageGalleryUrls(booking.package?.galleryUrls)]
+        .filter((item): item is string => typeof item === "string" && Boolean(item?.trim()))
+        .slice(0, 8);
+      return {
+        id: booking.id,
+        customerDbId: booking.customerId ?? null,
+        customerName: booking.customerName || booking.customer?.name || "KhĂ¡ch hĂ ng",
+        packageName: booking.packageName || booking.title,
+        packageImage: packageImages[0] ?? booking.imageUrl ?? null,
+        packageImages,
+        status: "COMPLETED",
+        subtotal: moneyNumber(booking.price),
+        extraFee: 0,
+        totalAmount: moneyNumber(bookingAmount(booking)),
+        invoiceCode,
+      };
+    });
+    const snapshot: GroupBookingSnapshot = {
+      id: marker,
+      groupName,
+      paymentInfo: {
+        invoiceCode,
+        walletId: wallet?.id ?? null,
+        walletName: wallet?.name ?? null,
+        walletShiftId: openShift?.id ?? null,
+        paymentMethod,
+        paidAt: occurredAt.toISOString(),
+      },
+      subtotal: moneyNumber(subtotal),
+      discount: Math.max(0, moneyNumber(subtotal.minus(amount))),
+      extraFee: 0,
+      totalAmount: moneyNumber(amount),
+      paymentMethod,
+      createdAt: occurredAt.toISOString(),
+      customers,
+    };
+    const sourceLine = groupBookingLine(snapshot);
+    const note = `${marker}\n${sourceLine}\nTá»± Ä‘á»™ng cá»™ng doanh thu khi booking nhĂ³m hoĂ n táº¥t.`;
+
+    const existingProject = await tx.project.findFirst({
+      where: {
+        studioId: firstBooking.studioId,
+        deletedAt: null,
+        OR: [
+          { bookingId: firstBooking.id },
+          { note: { contains: marker } },
+        ],
+      },
+    });
+    const projectData = {
+      customerId: null,
+      name: groupName,
+      coverUrl: galleryImages[0] ?? null,
+      galleryUrls: JSON.stringify(galleryImages),
+      amount,
+      dueAmount: new Prisma.Decimal(0),
+      status: "DELIVERED",
+      deadlineAt: sortedBookings.at(-1)?.endAt ?? firstBooking.endAt,
+      note,
+    };
+    const project = existingProject
+      ? await tx.project.update({ where: { id: existingProject.id }, data: projectData })
+      : await tx.project.create({
+        data: {
+          studioId: firstBooking.studioId,
+          bookingId: firstBooking.id,
+          code: `GROUP-${firstBooking.id.slice(-6).toUpperCase()}`,
+          ...projectData,
+        },
+      });
+
+    const invoice = existingInvoice
+      ? await tx.invoice.update({
+        where: { id: existingInvoice.id },
+        data: {
+          code: invoiceCode,
+          customerId: null,
+          projectId: project.id,
+          imageUrl: galleryImages[0] ?? null,
+          galleryUrls: JSON.stringify(galleryImages),
+          subtotal,
+          discount: subtotal.minus(amount).gt(0) ? subtotal.minus(amount) : new Prisma.Decimal(0),
+          total: amount,
+          paid: amount,
+          due: new Prisma.Decimal(0),
+          status: "PAID",
+          note,
+        },
+      })
+      : await tx.invoice.create({
+        data: {
+          studioId: firstBooking.studioId,
+          customerId: null,
+          projectId: project.id,
+          code: invoiceCode,
+          status: "PAID",
+          imageUrl: galleryImages[0] ?? null,
+          galleryUrls: JSON.stringify(galleryImages),
+          issueDate: occurredAt,
+          subtotal,
+          discount: subtotal.minus(amount).gt(0) ? subtotal.minus(amount) : new Prisma.Decimal(0),
+          total: amount,
+          paid: amount,
+          due: new Prisma.Decimal(0),
+          note,
+        },
+      });
+
+    await tx.invoiceItem.deleteMany({ where: { invoiceId: invoice.id } });
+    await tx.invoiceItem.createMany({
+      data: customers.map((customer) => ({
+        invoiceId: invoice.id,
+        description: `${customer.customerName} - ${customer.packageName}`,
+        quantity: 1,
+        unitPrice: new Prisma.Decimal(customer.totalAmount),
+        total: new Prisma.Decimal(customer.totalAmount),
+      })),
+    });
+
+    const existedIncome = await tx.transaction.findFirst({
+      where: {
+        studioId: firstBooking.studioId,
+        type: "INCOME",
+        deletedAt: null,
+        note: { contains: marker },
+      },
+      select: { id: true, walletId: true, walletShiftId: true, amount: true, note: true },
+    });
+    const nextWalletShiftId = existedIncome?.walletShiftId ?? openShift?.id ?? null;
+    const transactionData = {
+      walletId: wallet?.id ?? existedIncome?.walletId ?? null,
+      walletShiftId: nextWalletShiftId,
+      customerId: null,
+      projectId: project.id,
+      title: groupName,
+      imageUrl: galleryImages[0] ?? null,
+      galleryUrls: JSON.stringify(galleryImages),
+      amount,
+      method: paymentMethod,
+      approvalStatus: "APPROVED",
+      occurredAt,
+      note,
+    };
+
+    if (existedIncome) {
+      await tx.transaction.update({ where: { id: existedIncome.id }, data: transactionData });
+      const previousAmount = decimal(existedIncome.amount);
+      const previousWalletId = existedIncome.walletId;
+      const nextWalletId = transactionData.walletId;
+      if (previousWalletId && previousWalletId === nextWalletId) {
+        const diff = amount.minus(previousAmount);
+        if (!diff.eq(0)) {
+          await tx.wallet.updateMany({
+            where: { id: previousWalletId, studioId: firstBooking.studioId, deletedAt: null },
+            data: { balance: { increment: diff } },
+          });
+        }
+      } else {
+        if (previousWalletId && previousAmount.gt(0)) {
+          await tx.wallet.updateMany({
+            where: { id: previousWalletId, studioId: firstBooking.studioId, deletedAt: null },
+            data: { balance: { decrement: previousAmount } },
+          });
+        }
+        if (nextWalletId && amount.gt(0)) {
+          await tx.wallet.updateMany({
+            where: { id: nextWalletId, studioId: firstBooking.studioId, deletedAt: null },
+            data: { balance: { increment: amount } },
+          });
+        }
+      }
+
+      const oldSnapshot = groupBookingSnapshotFromNote(existedIncome.note);
+      for (const oldCustomer of oldSnapshot?.customers ?? []) {
+        if (!oldCustomer.customerDbId || oldCustomer.totalAmount <= 0) continue;
+        await tx.customer.updateMany({
+          where: { id: oldCustomer.customerDbId, studioId: firstBooking.studioId },
+          data: { totalSpent: { decrement: new Prisma.Decimal(oldCustomer.totalAmount) } },
+        });
+      }
+    } else {
+      await tx.transaction.create({
+        data: {
+          studioId: firstBooking.studioId,
+          type: "INCOME",
+          ...transactionData,
+        },
+      });
+      if (wallet) {
+        await tx.wallet.update({
+          where: { id: wallet.id },
+          data: { balance: { increment: amount } },
+        });
+      }
+    }
+
+    for (const customer of customers) {
+      if (!customer.customerDbId || customer.totalAmount <= 0) continue;
+      await tx.customer.updateMany({
+        where: { id: customer.customerDbId, studioId: firstBooking.studioId },
+        data: { totalSpent: { increment: new Prisma.Decimal(customer.totalAmount) } },
+      });
+    }
+
+    const shiftIds = new Set([existedIncome?.walletShiftId, nextWalletShiftId].filter(Boolean) as string[]);
+    for (const shiftId of shiftIds) await recalculateWalletShiftSnapshot(tx, firstBooking.studioId, shiftId);
+
+    for (const booking of sortedBookings) {
+      await tx.booking.update({
+        where: { id: booking.id },
+        data: {
+          status: "COMPLETED",
+          note: withGroupBookingLine(booking.note, snapshot),
+        },
+      });
+    }
+
+    const actorUserId = actor?.id
+      ? (await tx.user.findUnique({ where: { id: actor.id }, select: { id: true } }))?.id ?? null
+      : null;
+    await tx.auditLog.create({
+      data: {
+        studioId: firstBooking.studioId,
+        userId: actorUserId,
+        action: "FINALIZE_GROUP_BOOKING",
+        entity: "Booking",
+        entityId: firstBooking.id,
+        metadata: JSON.stringify({
+          actionLabel: "HoĂ n táº¥t booking nhĂ³m",
+          entityLabel: auditEntityLabel("Booking"),
+          actorName: actor?.name,
+          actorRole: actor?.role,
+          actorRoleLabel: actor ? actorRoleLabel(actor.role) : undefined,
+          groupName,
+          customerCount: customers.length,
+          amount: moneyNumber(amount),
+          projectId: project.id,
+          invoiceId: invoice.id,
+          walletId: wallet?.id ?? null,
+        }),
+      },
+    });
+
+    return {
+      invoiceCode: invoice.code,
+      invoiceIssueDate: invoice.issueDate,
+      invoiceCustomerName: groupName,
+      invoicePackageName: groupName,
+      invoiceCategoryName: "BOOKING_GROUP",
+      invoiceTotal: amount.toString(),
+      invoiceItems: customers.map((customer) => ({
+        description: `${customer.customerName} - ${customer.packageName}`,
+        quantity: 1,
+        total: String(customer.totalAmount),
+      })),
+      groupBooking: snapshot,
+    };
+  }, {
+    maxWait: 15000,
+    timeout: 30000,
+  });
 }
 
 export async function finalizeCompletedBooking(booking: BookingLike, actor?: SessionUser) {

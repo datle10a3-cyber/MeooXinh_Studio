@@ -29,7 +29,10 @@ export function DetailModal({
   const [mounted, setMounted] = useState(false);
 
   // Portal mount
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setMounted(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
   const onCloseRef = useRef(onClose);
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -58,7 +61,6 @@ export function DetailModal({
     };
   }, []);  // Body scroll lock with stack counting to prevent losing scroll position on multiple modals
   useEffect(() => {
-    const html = document.documentElement;
     const body = document.body;
     
     // Check if a modal is already open

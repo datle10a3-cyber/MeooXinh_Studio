@@ -26,6 +26,31 @@ type SearchCustomerItem = {
   subtitle?: string | null;
   targetResource?: string;
 };
+type GroupBookingCustomerSnapshot = {
+  id: string;
+  customerName: string;
+  packageName: string;
+  packageImage?: string | null;
+  packageImages?: string[];
+  status: string;
+  subtotal: number;
+  extraFee: number;
+  totalAmount: number;
+  invoiceCode: string;
+};
+type GroupBookingSnapshot = {
+  id: string;
+  groupName: string;
+  paymentInfo?: { invoiceCode?: string; paymentMethod?: string; paidAt?: string };
+  subtotal: number;
+  discount: number;
+  extraFee: number;
+  totalAmount: number;
+  paymentMethod?: string;
+  createdAt?: string;
+  customers: GroupBookingCustomerSnapshot[];
+};
+type BookingApiData = BookingItem & { groupBooking?: GroupBookingSnapshot };
 
 const PAYMENT_BANK_BIN = "970415";
 const PAYMENT_ACCOUNT_NUMBER = "100882473179";
@@ -596,7 +621,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
           status,
           ...(role === "STAFF" ? { studioPassword } : {}),
         }),
-      }).then((res) => res.json() as Promise<ApiResult<BookingItem>>);
+      }).then((res) => res.json() as Promise<ApiResult<BookingApiData>>);
 
       if (result.error) {
         printWindow?.close();
@@ -606,7 +631,13 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
       setPaymentTarget(null);
       setDetail(null);
       setMessage(status === "COMPLETED" ? "Đã thanh toán, lưu hóa đơn và chuyển vào Booking hoàn tất." : "Đã hủy booking.");
-      if (status === "COMPLETED" && printAfter) printBookingInvoice(result.data ?? row, printWindow);
+      if (status === "COMPLETED" && printAfter) {
+        if (result.data?.groupBooking) {
+          printGroupBookingInvoice(result.data.groupBooking, printWindow);
+        } else {
+          printBookingInvoice(result.data ?? row, printWindow);
+        }
+      }
       await loadData();
     } catch (err) {
       printWindow?.close();
@@ -1087,6 +1118,18 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                     </div>
                   </div>
                   <div className="flex shrink-0 items-center gap-2">
+                    {!completedOnly ? (
+                      <button
+                        type="button"
+                        className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700 transition hover:bg-emerald-200"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setPaymentTarget(group.rows[0]);
+                        }}
+                      >
+                        Xong nhĂ³m
+                      </button>
+                    ) : null}
                     <button
                       type="button"
                       className="rounded-full bg-[#FFF0F4] px-3 py-1 text-xs font-black text-[#A84E61] transition hover:bg-[#FFE2EA]"
@@ -1612,6 +1655,60 @@ function formatReceiptDateTime(value: unknown) {
     month: "2-digit",
     year: "numeric",
   }).format(safeDate);
+}
+
+function printGroupBookingInvoice(groupBooking: GroupBookingSnapshot, targetWindow?: Window | null) {
+  const invoiceCode = groupBooking.paymentInfo?.invoiceCode || groupBooking.customers[0]?.invoiceCode || "Group-meoxinh--";
+  const paidAt = groupBooking.paymentInfo?.paidAt || groupBooking.createdAt || new Date();
+  const rows = groupBooking.customers.map((customer, index) => `
+    <div class="item">
+      <div class="row"><span class="left">${index + 1}. ${receiptEscape(customer.customerName)}</span><span class="right">${receiptEscape(formatMoney(customer.totalAmount))}</span></div>
+      <div class="small muted">${receiptEscape(customer.packageName)}</div>
+    </div>
+  `).join("");
+  const html = `<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>${receiptEscape(invoiceCode)}</title>
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;background:#fff7fb;color:#4b2a25;font-family:Arial,"Helvetica Neue",sans-serif;padding-top:10px}
+    .receipt{width:80mm;max-width:310px;margin:0 auto;padding:10px 9px;font-size:12px;line-height:1.38;background:#fff;border:1px solid #f6c6d4}
+    .center{text-align:center}.bold{font-weight:700}.muted{color:#7a5750}
+    .brand{font-size:15px;font-weight:900;text-transform:uppercase;color:#e86b88}.title{margin:8px 0 6px;padding:7px 0;border-radius:12px;background:#e86b88;color:#fff;font-size:14px;font-weight:900;text-align:center;text-transform:uppercase}
+    .sep{margin:8px 0;border-top:1px dashed #e9a8b8}.solid{margin:8px 0;border-top:1px solid #f0b4c1}
+    .row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.left{flex:1;min-width:0;overflow-wrap:anywhere}.right{flex:0 0 auto;text-align:right;white-space:nowrap}
+    .item{margin-top:6px}.small{font-size:11px}.total{padding:8px;border-radius:12px;background:#fff0f5;font-size:13px;color:#d94f73}
+    .toolbar{display:flex;justify-content:center;gap:10px;margin:0 auto 12px;max-width:310px}.btn{flex:1;padding:10px 14px;font-size:13px;font-weight:700;border:0;border-radius:20px;cursor:pointer}.btn-print{background:#e86b88;color:#fff}.btn-close{background:#f3f4f6;color:#4b5563}
+    @page{margin:0}@media print{.no-print{display:none!important}body{background:#fff;padding-top:0}.receipt{border:0;max-width:80mm}.title,.total{background:#fff;color:#000;border:1px solid #000}}
+  </style>
+</head>
+<body>
+  <div class="no-print toolbar"><button class="btn btn-print" onclick="window.print()">In hĂ³a Ä‘Æ¡n tá»•ng</button><button class="btn btn-close" onclick="window.close()">ÄĂ³ng</button></div>
+  <div class="receipt">
+    <div class="center"><div class="brand">MĂ¨oo Xinhh Studio</div><div class="small muted">â˜ ${receiptEscape(STUDIO_PHONE)}</div><div class="small muted">${receiptEscape(STUDIO_ADDRESS)}</div></div>
+    <div class="title">HĂ“A ÄÆ N NHĂ“M</div>
+    <div class="row"><span>MĂ£ HÄ</span><span class="right">${receiptEscape(invoiceCode)}</span></div>
+    <div class="row"><span>NhĂ³m</span><span class="right">${receiptEscape(groupBooking.groupName)}</span></div>
+    <div class="row"><span>Giá»</span><span class="right">${receiptEscape(formatReceiptDateTime(paidAt))}</span></div>
+    <div class="sep"></div>
+    ${rows}
+    <div class="solid"></div>
+    <div class="row"><span>Táº¡m tĂ­nh</span><span class="right">${receiptEscape(formatMoney(groupBooking.subtotal))}</span></div>
+    ${groupBooking.discount > 0 ? `<div class="row"><span>Giáº£m giĂ¡</span><span class="right">-${receiptEscape(formatMoney(groupBooking.discount))}</span></div>` : ""}
+    ${groupBooking.extraFee > 0 ? `<div class="row"><span>PhĂ­ phĂ¡t sinh</span><span class="right">${receiptEscape(formatMoney(groupBooking.extraFee))}</span></div>` : ""}
+    <div class="row bold total"><span>Tá»•ng thanh toĂ¡n</span><span class="right">${receiptEscape(formatMoney(groupBooking.totalAmount))}</span></div>
+    <div class="sep"></div><div class="center bold">ÄĂƒ THANH TOĂN</div>
+  </div>
+  <script>window.onload=()=>{try{window.print();}catch(e){console.error(e);}};</script>
+</body>
+</html>`;
+  const popup = targetWindow ?? window.open("", "_blank", "width=900,height=1000");
+  if (!popup) return;
+  popup.document.write(html);
+  popup.document.close();
 }
 
 function printBookingInvoice(booking: BookingItem, targetWindow?: Window | null) {
