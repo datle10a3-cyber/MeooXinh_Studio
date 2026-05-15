@@ -50,9 +50,21 @@ const fallbackDashboard: DashboardData = {
   wallets: [],
 };
 
+function bookingGroupName(note?: string | null) {
+  const match = String(note ?? "").match(/Loại booking:\s*Booking nhóm(?:\s*-\s*([^\n.]+))?/i);
+  return match ? (match[1]?.trim() || "Booking nhóm") : null;
+}
+
 function upcomingBookingTitle(item: Record<string, unknown>) {
+  const groupName = bookingGroupName(item.note as string);
   const customerName = String(item.customerName ?? "").trim();
   const packageName = String(item.packageName ?? "").trim();
+  
+  if (groupName) {
+    const base = customerName && packageName ? `${customerName} · ${packageName}` : String(item.title ?? customerName ?? packageName ?? "Booking");
+    return `[Nhóm: ${groupName}] ${base}`;
+  }
+  
   if (customerName && packageName) return `${customerName} · ${packageName}`;
   return String(item.title ?? customerName ?? packageName ?? "Booking sắp tới");
 }
@@ -65,11 +77,16 @@ function upcomingBookingTime(item: Record<string, unknown>) {
 function upcomingBookingBadge(item: Record<string, unknown>) {
   const raw = item.startAt ?? item.startTime;
   const date = raw ? new Date(String(raw)) : null;
-  if (!date || Number.isNaN(date.getTime())) return "Sắp tới";
-  const today = new Date();
-  const sameDay = date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
-  if (sameDay) return "Hôm nay";
-  return "Sắp tới";
+  let timeStatus = "Sắp tới";
+  
+  if (date && !Number.isNaN(date.getTime())) {
+    const today = new Date();
+    const sameDay = date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
+    if (sameDay) timeStatus = "Hôm nay";
+  }
+  
+  const groupName = bookingGroupName(item.note as string);
+  return groupName ? `Nhóm · ${timeStatus}` : `Cá nhân · ${timeStatus}`;
 }
 
 export function ModuleHome() {

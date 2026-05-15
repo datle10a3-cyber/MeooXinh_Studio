@@ -49,6 +49,11 @@ type Insight = {
   suggestions: string[];
 };
 
+function bookingGroupName(note?: string | null) {
+  const match = String(note ?? "").match(/Loại booking:\s*Booking nhóm(?:\s*-\s*([^\n.]+))?/i);
+  return match ? (match[1]?.trim() || "Booking nhóm") : null;
+}
+
 export function DashboardView() {
   const [dashboard, setDashboard] = useState<DashboardData>(fallbackData);
   const [insight, setInsight] = useState<Insight | null>(null);
@@ -226,12 +231,20 @@ export function DashboardView() {
           </div>
           <div className="space-y-3">
             {dashboard.upcomingBookings.length === 0 ? <p className="text-sm font-semibold text-[#9B746B]">Chưa có booking.</p> : null}
-            {dashboard.upcomingBookings.map((item, index) => (
-              <div key={String(item.id ?? index)} className="rounded-2xl bg-[#FFF3EC] p-3">
-                <p className="whitespace-normal break-words text-sm font-black leading-5 text-[#5B342C]">{String(item.title ?? "")}</p>
-                <p className="text-xs font-semibold text-[#9B746B]">{formatDate(item.startAt as string | Date)}</p>
-              </div>
-            ))}
+            {dashboard.upcomingBookings.map((item, index) => {
+              const gName = bookingGroupName(item.note as string);
+              const titleStr = gName ? `[Nhóm: ${gName}] ${String(item.title ?? "Booking")}` : String(item.title ?? "Booking cá nhân");
+              
+              return (
+                <div key={String(item.id ?? index)} className="rounded-2xl bg-[#FFF3EC] p-3 border border-[#F4C7C4]/40 relative">
+                  <span className="mb-1.5 inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-[#EA7188] border border-[#F4C7C4]/50 shadow-sm">
+                    {gName ? "Nhóm" : "Cá nhân"}
+                  </span>
+                  <p className="whitespace-normal break-words text-sm font-black leading-5 text-[#5B342C]">{titleStr}</p>
+                  <p className="mt-1 text-xs font-semibold text-[#9B746B]">{formatDate(item.startAt as string | Date)}</p>
+                </div>
+              );
+            })}
           </div>
         </Card>
       ) : null}
