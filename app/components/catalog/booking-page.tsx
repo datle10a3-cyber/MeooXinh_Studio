@@ -1521,9 +1521,9 @@ function BookingDetailModal({
   );
 }
 
-function CustomerAvatar({ booking, large = false }: { booking: BookingItem; large?: boolean }) {
+function CustomerAvatar({ booking, large = false, compact = false }: { booking: BookingItem; large?: boolean; compact?: boolean }) {
   const image = booking.customer?.avatarUrl || booking.imageUrl;
-  const size = large ? "h-14 w-14 rounded-2xl" : "h-12 w-12 rounded-2xl";
+  const size = large ? "h-14 w-14 rounded-2xl" : compact ? "h-10 w-10 rounded-xl" : "h-12 w-12 rounded-2xl";
 
   if (image) {
     return (
@@ -1535,24 +1535,25 @@ function CustomerAvatar({ booking, large = false }: { booking: BookingItem; larg
 
   return (
     <div className={`grid ${size} shrink-0 place-items-center bg-[#FFF3EC] text-[#5B342C]`}>
-      <CalendarClock size={large ? 24 : 22} />
+      <CalendarClock size={large ? 24 : compact ? 18 : 22} />
     </div>
   );
 }
 
-function PackageThumb({ booking }: { booking: BookingItem }) {
+function PackageThumb({ booking, compact = false }: { booking: BookingItem; compact?: boolean }) {
   const image = booking.package?.imageUrl;
+  const size = compact ? "h-10 w-10 rounded-xl" : "h-14 w-14 rounded-2xl";
   if (!image) {
     return (
-      <div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-[#F4C7C4] bg-[#FFF3EC] text-[#A84E61] shadow-sm">
-        <Images size={20} />
+      <div className={`grid ${size} shrink-0 place-items-center border border-[#F4C7C4] bg-[#FFF3EC] text-[#A84E61] shadow-sm`}>
+        <Images size={compact ? 17 : 20} />
       </div>
     );
   }
   return (
-    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-2xl border border-[#F4C7C4] bg-[#FFF3EC] shadow-sm">
+    <div className={`relative ${size} shrink-0 overflow-hidden border border-[#F4C7C4] bg-[#FFF3EC] shadow-sm`}>
       <img src={image} alt={booking.packageName || "Gói"} className="h-full w-full object-cover" />
-      <span className="absolute bottom-0 left-0 right-0 bg-white/92 px-1 py-0.5 text-center text-[9px] font-black text-[#A84E61] shadow-sm">
+      <span className={`absolute bottom-0 left-0 right-0 bg-white/92 px-1 py-0.5 text-center font-black text-[#A84E61] shadow-sm ${compact ? "text-[7px]" : "text-[9px]"}`}>
         Gói chụp
       </span>
     </div>
@@ -1581,7 +1582,7 @@ function ActionConfirmModal({
   if (!open) return null;
   return (
     <Portal>
-      <div className="fixed inset-0 z-[150] grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={onCancel}>
+      <div className="fixed inset-0 z-[150] grid place-items-center bg-[#2F1E1A]/45 p-2 backdrop-blur-sm sm:p-4" onClick={onCancel}>
         <div className="w-full max-w-md rounded-[2rem] border border-[#F4C7C4] bg-white p-5 shadow-[0_24px_80px_rgba(91,52,44,0.28)]" onClick={(event) => event.stopPropagation()}>
           <div className="flex items-start justify-between gap-3">
             <div>
@@ -1636,20 +1637,20 @@ function PaymentConfirmModal({
   return (
     <Portal>
       <div className="fixed inset-0 z-[150] grid place-items-center bg-[#2F1E1A]/45 p-4 backdrop-blur-sm" onClick={onCancel}>
-        <div className="w-full max-w-lg rounded-[2rem] border border-[#F4C7C4] bg-white p-5 shadow-[0_24px_80px_rgba(91,52,44,0.28)]" onClick={(event) => event.stopPropagation()}>
-          <div className="flex items-start justify-between gap-3">
-            <div>
+        <div className="flex max-h-[calc(100dvh-1rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-lg flex-col overflow-hidden rounded-[1.5rem] border border-[#F4C7C4] bg-white p-4 shadow-[0_24px_80px_rgba(91,52,44,0.28)] sm:rounded-[2rem] sm:p-5" onClick={(event) => event.stopPropagation()}>
+          <div className="flex shrink-0 items-start justify-between gap-3">
+            <div className="min-w-0">
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Thanh toán</p>
-              <h3 className="mt-1 text-2xl font-black text-[#5B342C]">Bạn có chắc muốn thanh toán?</h3>
+              <h3 className="mt-1 break-words text-xl font-black leading-tight text-[#5B342C] sm:text-2xl">Bạn có chắc muốn thanh toán?</h3>
             </div>
-            <button type="button" className="grid h-10 w-10 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C]" onClick={onCancel} disabled={loading}>
+            <button type="button" className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl border border-[#F4C7C4] bg-white text-[#5B342C]" onClick={onCancel} disabled={loading}>
               <X size={18} />
             </button>
           </div>
-          <div className="mt-4 rounded-[1.5rem] bg-[#FFF3EC] p-4">
-            <div className="flex items-center gap-3">
-              <CustomerAvatar booking={booking} />
-              <PackageThumb booking={booking} />
+          <div className="studio-ios-scroll mt-3 min-h-0 flex-1 overflow-y-auto rounded-[1.25rem] bg-[#FFF3EC] p-3 sm:mt-4 sm:rounded-[1.5rem] sm:p-4">
+            <div className="flex items-center gap-2.5">
+              <CustomerAvatar booking={booking} compact />
+              <PackageThumb booking={booking} compact />
               <div className="min-w-0">
                 <p className="whitespace-normal break-words text-base font-black text-[#5B342C]">{booking.customerName || "Khách hàng"}</p>
                 <p className="mt-1 whitespace-normal break-words text-sm font-bold text-[#9B746B]">{booking.packageName || "Gói dịch vụ"}</p>
@@ -1661,25 +1662,25 @@ function PaymentConfirmModal({
               </p>
             ) : null}
             {isGroup ? (
-              <div className="mt-3 grid max-h-40 gap-2 overflow-y-auto pr-1">
+              <div className="studio-ios-scroll mt-3 grid max-h-[30dvh] gap-2 overflow-y-auto pr-1 sm:max-h-52">
                 {groupRows.map((row) => (
-                  <div key={row.id} className="grid grid-cols-[40px_1fr_auto] items-center gap-2 rounded-2xl bg-white px-3 py-2">
-                    <CustomerAvatar booking={row} />
+                  <div key={row.id} className="grid grid-cols-[36px_minmax(0,1fr)] items-center gap-2 rounded-2xl bg-white px-3 py-2 sm:grid-cols-[40px_minmax(0,1fr)_auto]">
+                    <CustomerAvatar booking={row} compact />
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-black text-[#5B342C]">{row.customerName || "Khách hàng"}</p>
                       <p className="truncate text-xs font-bold text-[#9B746B]">{row.packageName || "Gói dịch vụ"}</p>
                     </div>
-                    <p className="whitespace-nowrap text-sm font-black text-[#EA7188]">{formatMoney(row.total ?? row.price)}</p>
+                    <p className="col-start-2 break-words text-sm font-black text-[#EA7188] sm:col-start-auto sm:whitespace-nowrap">{formatMoney(row.total ?? row.price)}</p>
                   </div>
                 ))}
               </div>
             ) : null}
-            <div className="mt-4 flex items-center justify-between rounded-2xl bg-white px-4 py-3">
+            <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl bg-white px-4 py-3 sm:mt-4">
               <span className="text-sm font-bold text-[#9B746B]">Tổng thanh toán</span>
-              <span className="text-xl font-black text-[#EA7188]">{formatMoney(totalAmount)}</span>
+              <span className="break-words text-right text-lg font-black text-[#EA7188] sm:text-xl">{formatMoney(totalAmount)}</span>
             </div>
           </div>
-          <div className={`mt-5 grid gap-2 ${isGroup ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
+          <div className={`mt-3 grid shrink-0 gap-2 sm:mt-5 ${isGroup ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
             <Button variant="secondary" className="min-h-11" onClick={onCancel} disabled={loading}>
               Hủy
             </Button>
