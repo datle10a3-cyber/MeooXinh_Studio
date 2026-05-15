@@ -738,9 +738,10 @@ function financialPackageImageIndex(row: Row, resource: ResourceKey) {
 }
 
 function financialMoneyTone(resource: ResourceKey, row: Row) {
-  if (String(row.type ?? "") === "EXPENSE") return "text-rose-700";
+  if (String(row.type ?? "") === "EXPENSE") return "text-red-700";
   if (String(row.type ?? "") === "INCOME") return "text-emerald-700";
-  if (resource === "projects") return "text-violet-700";
+  if (resource === "projects") return "text-purple-700";
+  if (resource === "invoices") return "text-amber-700";
   return "text-[#5B342C]";
 }
 
@@ -818,21 +819,30 @@ const GroupBookingCard = memo(function GroupBookingCard({
   if (!group) return null;
   const id = String(row.id ?? group.id);
   const canPrint = ["transactions", "invoices", "wallets"].includes(resource);
+  const groupTheme = String(row.type ?? "") === "INCOME"
+    ? { card: "border-emerald-400 bg-gradient-to-br from-emerald-50 via-white to-emerald-100 shadow-[0_14px_38px_-14px_rgba(5,150,105,0.45)] ring-1 ring-emerald-200/80", badge: "border-emerald-700 bg-emerald-600 text-white" }
+    : String(row.type ?? "") === "EXPENSE"
+      ? { card: "border-red-400 bg-gradient-to-br from-red-50 via-white to-red-100 shadow-[0_14px_38px_-14px_rgba(220,38,38,0.45)] ring-1 ring-red-200/80", badge: "border-red-700 bg-red-600 text-white" }
+      : resource === "projects"
+        ? { card: "border-purple-400 bg-gradient-to-br from-purple-50 via-white to-purple-100 shadow-[0_14px_38px_-14px_rgba(126,34,206,0.45)] ring-1 ring-purple-200/80", badge: "border-purple-700 bg-purple-600 text-white" }
+        : resource === "invoices"
+          ? { card: "border-amber-400 bg-gradient-to-br from-amber-50 via-white to-yellow-100 shadow-[0_14px_38px_-14px_rgba(217,119,6,0.45)] ring-1 ring-amber-200/80", badge: "border-amber-600 bg-amber-500 text-white" }
+          : { card: "border-[#F4C7C4] bg-white shadow-sm", badge: "border-[#F4C7C4] bg-white text-[#A84E61]" };
 
   return (
     <>
       <Card
         data-row-id={id}
         className={cn(
-          "relative mt-6 rounded-[1.5rem] border p-4 shadow-sm transition",
-          selected ? "border-[#EA7188] bg-[#FFF0F4] ring-2 ring-[#EA7188]/30" : "border-[#F4C7C4] bg-white",
+          "relative mt-6 rounded-[1.5rem] border p-4 transition",
+          selected ? "border-[#EA7188] bg-[#FFF0F4] ring-2 ring-[#EA7188]/30" : groupTheme.card,
         )}
       >
         <div className="absolute -top-3 left-5 flex gap-1.5">
-          <span className="rounded-full border border-[#F4C7C4] bg-white px-3 py-1 text-[11px] font-black text-[#A84E61] shadow-sm">
+          <span className={cn("rounded-full border px-3 py-1 text-[11px] font-black shadow-sm", groupTheme.badge)}>
             {formatDateTimeLabel(group.paymentInfo?.paidAt || group.createdAt || row.createdAt)}
           </span>
-          <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-700 shadow-sm">
+          <span className={cn("rounded-full border px-3 py-1 text-[11px] font-black shadow-sm", groupTheme.badge)}>
             Booking nhóm
           </span>
         </div>
@@ -1059,29 +1069,29 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
     if (isTransaction) {
       if (isIncome) {
         return {
-          card: "border-emerald-200 bg-gradient-to-br from-white to-emerald-50/30 shadow-[0_4px_20px_-4px_rgba(16,185,129,0.1)]",
-          badge: "bg-emerald-100 border-emerald-200 text-emerald-700",
-          money: "text-emerald-600",
+          card: "border-emerald-400 bg-gradient-to-br from-emerald-50 via-white to-emerald-100 shadow-[0_14px_38px_-14px_rgba(5,150,105,0.45)] ring-1 ring-emerald-200/80",
+          badge: "bg-emerald-600 border-emerald-700 text-white",
+          money: "text-emerald-700",
         };
       }
       return {
-        card: "border-rose-200 bg-gradient-to-br from-white to-rose-50/30 shadow-[0_4px_20px_-4px_rgba(244,63,94,0.1)]",
-        badge: "bg-rose-100 border-rose-200 text-rose-700",
-        money: "text-rose-600",
+        card: "border-red-400 bg-gradient-to-br from-red-50 via-white to-red-100 shadow-[0_14px_38px_-14px_rgba(220,38,38,0.45)] ring-1 ring-red-200/80",
+        badge: "bg-red-600 border-red-700 text-white",
+        money: "text-red-700",
       };
     }
     if (resource === "projects") {
       return {
-        card: "border-violet-200 bg-gradient-to-br from-white to-violet-50/30 shadow-[0_4px_20px_-4px_rgba(139,92,246,0.1)]",
-        badge: "bg-violet-100 border-violet-200 text-violet-700",
-        money: "text-violet-600",
+        card: "border-purple-400 bg-gradient-to-br from-purple-50 via-white to-purple-100 shadow-[0_14px_38px_-14px_rgba(126,34,206,0.45)] ring-1 ring-purple-200/80",
+        badge: "bg-purple-600 border-purple-700 text-white",
+        money: "text-purple-700",
       };
     }
     if (resource === "invoices") {
       return {
-        card: "border-amber-200 bg-gradient-to-br from-white to-amber-50/40 shadow-[0_4px_20px_-4px_rgba(245,158,11,0.1)]",
-        badge: "bg-amber-100 border-amber-200 text-amber-700",
-        money: "text-amber-600",
+        card: "border-amber-400 bg-gradient-to-br from-amber-50 via-white to-yellow-100 shadow-[0_14px_38px_-14px_rgba(217,119,6,0.45)] ring-1 ring-amber-200/80",
+        badge: "bg-amber-500 border-amber-600 text-white",
+        money: "text-amber-700",
       };
     }
     return {

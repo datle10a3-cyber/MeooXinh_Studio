@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CalendarClock, CheckCircle2, Images, Loader2, Pencil, Plus, Printer, ReceiptText, Search, Trash2, X } from "lucide-react";
+import { CalendarClock, CheckCircle2, ChevronDown, ChevronRight, CreditCard, Images, Loader2, Pencil, Plus, Printer, ReceiptText, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { DetailModal } from "@/app/components/ui/detail-modal";
 import { Card, CardTitle } from "@/app/components/ui/card";
@@ -782,10 +782,10 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
 
     const theme = completedOnly 
       ? { 
-          card: "border-orange-200 bg-gradient-to-br from-white to-orange-50/30 shadow-[0_4px_20px_-4px_rgba(249,115,22,0.15)]", 
-          badge: "bg-orange-100 border-orange-200 text-orange-700",
-          dot: "bg-orange-500",
-          money: "text-orange-600"
+          card: "border-orange-400 bg-gradient-to-br from-orange-50 via-white to-orange-100 shadow-[0_12px_34px_-12px_rgba(194,65,12,0.45)] ring-1 ring-orange-200/80", 
+          badge: "bg-orange-600 border-orange-700 text-white",
+          dot: "bg-orange-600",
+          money: "text-orange-700"
         }
       : { 
           card: "border-[#F4C7C4] bg-white", 
@@ -1147,26 +1147,27 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                     {!completedOnly ? (
                       <button
                         type="button"
-                        className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-black text-emerald-700 transition hover:bg-emerald-200"
+                        className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(5,150,105,0.24)] transition hover:bg-emerald-700 active:scale-95"
                         onClick={(event) => {
                           event.stopPropagation();
                           setPaymentTarget(group.rows[0]);
                         }}
                       >
-                        Xong nhóm
+                        <CreditCard size={14} /> Thanh toán
                       </button>
                     ) : null}
                     <button
                       type="button"
-                      className="rounded-full bg-[#FFF0F4] px-3 py-1 text-xs font-black text-[#A84E61] transition hover:bg-[#FFE2EA]"
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[#F4C7C4] bg-white px-3 py-1.5 text-xs font-black text-[#A84E61] shadow-sm transition hover:bg-[#FFF0F4] active:scale-95"
                       onClick={(event) => {
                         event.stopPropagation();
                         void renameGroup(group);
                       }}
                     >
-                      Sửa tên
+                      <Pencil size={13} /> Sửa tên
                     </button>
-                    <span className="rounded-full bg-[#FFF0F4] px-3 py-1 text-xs font-black text-[#A84E61]">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF0F4] px-3 py-1.5 text-xs font-black text-[#A84E61]">
+                      {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                       {expanded ? "Thu gọn" : "Xem"}
                     </span>
                   </div>
