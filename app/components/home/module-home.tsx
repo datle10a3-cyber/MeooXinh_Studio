@@ -89,6 +89,16 @@ function upcomingBookingBadge(item: Record<string, unknown>) {
   return groupName ? `Nhóm · ${timeStatus}` : `Cá nhân · ${timeStatus}`;
 }
 
+function rowTimeValue(item: Record<string, unknown>, fields: string[]) {
+  for (const field of fields) {
+    const raw = item[field];
+    if (!raw) continue;
+    const time = new Date(String(raw)).getTime();
+    if (!Number.isNaN(time)) return time;
+  }
+  return 0;
+}
+
 export function ModuleHome() {
   const setActiveResource = useUiStore((state) => state.setActiveResource);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
@@ -202,12 +212,21 @@ export function ModuleHome() {
     }
     
     return final.sort((a, b) => {
-      const tA = new Date(String(a.startAt ?? a.startTime ?? "")).getTime();
-      const tB = new Date(String(b.startAt ?? b.startTime ?? "")).getTime();
-      if (tA !== tB) return tA - tB;
-      return new Date(String(b.createdAt ?? "")).getTime() - new Date(String(a.createdAt ?? "")).getTime();
+      const tA = rowTimeValue(a, ["startAt", "startTime", "createdAt"]);
+      const tB = rowTimeValue(b, ["startAt", "startTime", "createdAt"]);
+      if (tA !== tB) return tB - tA;
+      return rowTimeValue(b, ["createdAt"]) - rowTimeValue(a, ["createdAt"]);
     });
   }, [dashboard?.upcomingBookings]);
+
+  const displayTransactions = useMemo(() => {
+    return [...(dashboard?.recentTransactions || [])].sort((a, b) => {
+      const tA = rowTimeValue(a, ["occurredAt", "createdAt"]);
+      const tB = rowTimeValue(b, ["occurredAt", "createdAt"]);
+      if (tA !== tB) return tB - tA;
+      return rowTimeValue(b, ["createdAt"]) - rowTimeValue(a, ["createdAt"]);
+    });
+  }, [dashboard?.recentTransactions]);
 
   if (!mounted) return null;
 
@@ -266,15 +285,15 @@ export function ModuleHome() {
         <Card className="min-w-0 overflow-hidden border-[#F7AFC0] p-3 shadow-[0_14px_38px_rgba(184,95,108,0.1)] sm:p-5">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-base sm:text-xl">Giao dịch gần đây</CardTitle>
-            {dashboard.recentTransactions.length > previewLimit ? (
+            {displayTransactions.length > previewLimit ? (
               <button type="button" onClick={() => setShowAllTransactions((open) => !open)} className="shrink-0 text-xs font-black text-[#EA7188]">
                 {showAllTransactions ? "Thu gọn" : "Xem thêm"}
               </button>
             ) : null}
           </div>
           <div className={`studio-ios-scroll mt-3 space-y-2 ${showAllTransactions ? "max-h-[18rem] overflow-y-auto pr-1" : ""}`}>
-            {(dashboard?.recentTransactions || []).length === 0 ? <p className="text-xs font-semibold text-[#9B746B] sm:text-sm">Chưa có giao dịch.</p> : null}
-            {(showAllTransactions ? (dashboard?.recentTransactions || []) : (dashboard?.recentTransactions || []).slice(0, previewLimit)).map((item, index) => (
+            {displayTransactions.length === 0 ? <p className="text-xs font-semibold text-[#9B746B] sm:text-sm">Chưa có giao dịch.</p> : null}
+            {(showAllTransactions ? displayTransactions : displayTransactions.slice(0, previewLimit)).map((item, index) => (
               <button key={item?.id ? String(item.id) : `tx-${index}`} onClick={() => item && goToTransaction(item)} className="grid w-full min-w-0 grid-cols-1 gap-1 rounded-2xl bg-[#FFF3EC] p-2.5 text-left transition hover:bg-[#FFE4EA] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center sm:gap-3 sm:p-3">
                 <div className="min-w-0">
                   <p className="line-clamp-2 break-words text-xs font-black leading-5 text-[#5B342C] sm:text-sm">{String(item?.title ?? "Giao dịch")}</p>
