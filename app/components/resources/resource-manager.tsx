@@ -902,52 +902,72 @@ const GroupBookingCard = memo(function GroupBookingCard({
 
         {expanded ? (
           <div className="mt-3 grid gap-2">
-            {group.customers.map((customer) => {
+            {group.customers.map((customer, customerIdx) => {
               const images = (customer.packageImages?.length ? customer.packageImages : customer.packageImage ? [customer.packageImage] : []).filter(Boolean) as string[];
               const customerInitial = customer.customerName.trim().charAt(0).toUpperCase() || "K";
+              const avatarGradients = [
+                "from-[#EA7188] to-[#D94F73]",
+                "from-violet-500 to-purple-600",
+                "from-sky-500 to-blue-600",
+                "from-amber-500 to-orange-600",
+                "from-emerald-500 to-teal-600",
+                "from-rose-500 to-pink-600",
+                "from-cyan-500 to-blue-500",
+                "from-fuchsia-500 to-purple-600",
+              ];
+              const avatarGradient = avatarGradients[customerIdx % avatarGradients.length];
               return (
                 <button
                   key={customer.id}
                   type="button"
-                  className="grid min-h-[112px] w-full grid-cols-[64px_minmax(0,1fr)_auto] items-center gap-3 rounded-[1.1rem] border border-[#F4C7C4] bg-[#FFFDFB] p-3 text-left transition hover:bg-[#FFF8F1] active:scale-[0.99]"
+                  className="flex w-full items-center gap-3 rounded-2xl border border-[#F4C7C4] bg-[#FFFDFB] p-3 text-left transition hover:bg-[#FFF8F1] active:scale-[0.99]"
                   onClick={() => setDetail(customer)}
                 >
-                  <span className="flex w-16 shrink-0 flex-col items-center gap-1">
-                    <span className="grid h-14 w-14 place-items-center overflow-hidden rounded-xl border border-[#F4C7C4] bg-[#FFF3EC] text-base font-black text-[#A84E61] shadow-sm">
-                      {customer.customerImage ? <img src={customer.customerImage} alt="" className="h-full w-full object-cover" /> : customerInitial}
+                  {/* Customer avatar */}
+                  <span className="relative shrink-0">
+                    <span className={`grid h-11 w-11 place-items-center overflow-hidden rounded-[0.85rem] shadow-sm ${customer.customerImage ? "" : `bg-gradient-to-br ${avatarGradient}`}`}>
+                      {customer.customerImage ? (
+                        <img src={customer.customerImage} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="text-[15px] font-black text-white drop-shadow-sm">{customerInitial}</span>
+                      )}
                     </span>
-                    <span
-                      role="button"
-                      tabIndex={0}
-                      className="relative h-12 w-12 overflow-hidden rounded-xl border border-[#F4C7C4] bg-[#FFF3EC] shadow-sm"
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        if (images.length) setPreview({ images, index: 0, alt: customer.packageName });
-                      }}
-                      onKeyDown={(event) => {
-                        if ((event.key === "Enter" || event.key === " ") && images.length) {
-                          event.preventDefault();
+                    {/* Package thumbnail overlay */}
+                    {images[0] ? (
+                      <span
+                        role="button"
+                        tabIndex={0}
+                        className="absolute -bottom-1 -right-1 h-6 w-6 overflow-hidden rounded-lg border-2 border-white bg-[#FFF3EC] shadow-sm"
+                        onClick={(event) => {
                           event.stopPropagation();
                           setPreview({ images, index: 0, alt: customer.packageName });
-                        }
-                      }}
-                    >
-                      {images[0] ? <img src={images[0]} alt="" className="h-full w-full object-cover" /> : <span className="grid h-full w-full place-items-center"><ImageIcon size={16} className="text-[#B9857D]" /></span>}
-                      <span className="absolute bottom-0 left-0 right-0 bg-white/92 px-0.5 py-0.5 text-center text-[8px] font-black text-[#A84E61]">Gói</span>
-                    </span>
+                        }}
+                        onKeyDown={(event) => {
+                          if ((event.key === "Enter" || event.key === " ") && images.length) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            setPreview({ images, index: 0, alt: customer.packageName });
+                          }
+                        }}
+                      >
+                        <img src={images[0]} alt="" className="h-full w-full object-cover" />
+                      </span>
+                    ) : null}
                   </span>
-                  <span className="min-w-0">
+                  {/* Customer info */}
+                  <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-black text-[#5B342C]">{customer.customerName}</span>
-                    <span className="mt-1 line-clamp-2 text-xs font-bold leading-4 text-[#9B746B]">{customer.packageName}</span>
-                    <span className="mt-1 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black text-emerald-700">{customer.status || "COMPLETED"}</span>
+                    <span className="mt-0.5 line-clamp-1 text-xs font-bold leading-4 text-[#9B746B]">{customer.packageName}</span>
+                    <span className="mt-1 inline-flex rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-black uppercase text-emerald-700">{customer.status || "COMPLETED"}</span>
                   </span>
-                  <span className="flex min-w-[92px] flex-col items-end gap-2">
+                  {/* Price + actions */}
+                  <span className="flex shrink-0 flex-col items-end gap-1.5">
                     <span className="whitespace-nowrap text-sm font-black text-[#5B342C]">{formatMoney(customer.totalAmount)}</span>
                     {canPrint ? (
                       <span
                         role="button"
                         tabIndex={0}
-                        className="rounded-xl border border-[#F4C7C4] bg-white px-2.5 py-1 text-[11px] font-black text-[#EA7188]"
+                        className="rounded-lg border border-[#F4C7C4] bg-white px-2 py-0.5 text-[11px] font-black text-[#EA7188] transition hover:bg-[#FFF0F4]"
                         onClick={(event) => {
                           event.stopPropagation();
                           printGroupCustomerBill(group, customer);

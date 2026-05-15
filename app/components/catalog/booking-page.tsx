@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { CalendarClock, CheckCircle2, ChevronDown, ChevronRight, CreditCard, Images, Loader2, Pencil, Plus, Printer, ReceiptText, Search, Trash2, X } from "lucide-react";
+import { CalendarClock, CheckCircle2, ChevronDown, ChevronUp, CreditCard, Images, Loader2, Pencil, Plus, Printer, ReceiptText, Search, Trash2, Users, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { DetailModal } from "@/app/components/ui/detail-modal";
 import { Card, CardTitle } from "@/app/components/ui/card";
@@ -1102,12 +1102,13 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                 onTouchMove={moveTouchLongPress}
                 onTouchEnd={endTouchLongPress}
                 onTouchCancel={endTouchLongPress}
-                className={`rounded-[1.5rem] border p-3 shadow-sm transition ${selected ? "border-[#EA7188] bg-[#FFF0F4] shadow-[0_0_0_4px_rgba(234,113,136,0.13)]" : "border-[#F4C7C4] bg-[#FFF8F1]"}`}
+                className={`overflow-hidden rounded-[1.75rem] border-2 shadow-[0_14px_40px_-10px_rgba(184,95,108,0.18)] transition ${selected ? "border-[#EA7188] shadow-[0_0_0_4px_rgba(234,113,136,0.13),0_14px_40px_-10px_rgba(184,95,108,0.22)]" : "border-[#F4C7C4]"}`}
               >
+                {/* ── Group Header ── */}
                 <div
                   role="button"
                   tabIndex={0}
-                  className="grid w-full cursor-pointer gap-3 rounded-[1.25rem] bg-white px-3 py-3 text-left shadow-sm transition active:scale-[0.99] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
+                  className="cursor-pointer bg-gradient-to-br from-[#FFF8F1] via-[#FFF0F4] to-[#FFE4EA] px-4 pb-3 pt-4 transition active:scale-[0.995] sm:px-5"
                   onClick={() => {
                     if (longPressActivated) {
                       setLongPressActivated(false);
@@ -1121,7 +1122,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                     setExpandedGroups((current) => current.includes(group.key) ? current.filter((item) => item !== group.key) : [...current, group.key]);
                   }}
                 >
-                  <div className="flex min-w-0 items-start gap-3">
+                  <div className="flex items-start gap-3">
                     {showGroupCheckbox ? (
                       <button
                         type="button"
@@ -1131,50 +1132,61 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                           event.stopPropagation();
                           toggleGroupSelection(group.key);
                         }}
-                        className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl border text-[12px] font-black transition ${selected ? "scale-105 border-[#EA7188] bg-[#EA7188] text-white shadow-[0_0_0_4px_rgba(234,113,136,0.18)]" : "border-[#F4C7C4] bg-white text-[#EA7188]"}`}
+                        className={`mt-0.5 grid h-9 w-9 shrink-0 place-items-center rounded-xl border-2 text-[12px] font-black transition ${selected ? "scale-105 border-[#EA7188] bg-[#EA7188] text-white shadow-[0_0_0_4px_rgba(234,113,136,0.18)]" : "border-[#F4C7C4] bg-white text-[#EA7188]"}`}
                       >
                         {selected ? "✓" : ""}
                       </button>
-                    ) : null}
-                    <div className="min-w-0">
-                      <p className="text-xs font-black uppercase tracking-wide text-[#EA7188]">Booking nhóm</p>
-                      <h2 className="mt-1 line-clamp-2 text-lg font-black leading-6 text-[#5B342C]">{group.title}</h2>
-                      <p className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-[#9B746B]">
+                    ) : (
+                      <div className="mt-0.5 grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#EA7188] to-[#D94F73] shadow-[0_6px_18px_rgba(234,113,136,0.35)]">
+                        <Users size={18} className="text-white" strokeWidth={2.5} />
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-[#EA7188]/10 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-[#D94F73]">Nhóm</span>
+                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-white text-[11px] font-black text-[#EA7188] shadow-sm ring-1 ring-[#F4C7C4]">{group.rows.length}</span>
+                      </div>
+                      <h2 className="mt-1.5 line-clamp-2 text-[1.1rem] font-black leading-6 text-[#5B342C]">{group.title}</h2>
+                      <p className="mt-1 text-[13px] font-semibold leading-5 text-[#9B746B]">
                         {group.rows.length} khách · {packageNames.length <= 1 ? (packageNames[0] ?? "Chưa có gói") : `${packageNames.length} gói khác nhau`}
                       </p>
                     </div>
+                    {/* Expand/collapse toggle */}
+                    <div className={`mt-1 grid h-8 w-8 shrink-0 place-items-center rounded-xl transition ${expanded ? "bg-[#EA7188] text-white shadow-sm" : "bg-white text-[#9B746B] ring-1 ring-[#F4C7C4]"}`}>
+                      {expanded ? <ChevronUp size={16} strokeWidth={2.5} /> : <ChevronDown size={16} strokeWidth={2.5} />}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-2 sm:flex sm:shrink-0 sm:items-center">
+
+                  {/* ── Action buttons ── */}
+                  <div className="mt-3 flex flex-wrap gap-2">
                     {!completedOnly ? (
                       <button
                         type="button"
-                        className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-emerald-600 px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(5,150,105,0.24)] transition hover:bg-emerald-700 active:scale-95 sm:px-3"
+                        className="inline-flex min-h-[2.25rem] flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2 text-[13px] font-black text-white shadow-[0_8px_20px_rgba(5,150,105,0.22)] transition hover:bg-emerald-700 active:scale-[0.97]"
                         onClick={(event) => {
                           event.stopPropagation();
                           setPaymentTarget(group.rows[0]);
                         }}
                       >
-                        <CreditCard size={14} /> Thanh toán
+                        <CreditCard size={15} strokeWidth={2.5} /> Thanh toán
                       </button>
                     ) : null}
                     <button
                       type="button"
-                      className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-[#F4C7C4] bg-white px-2.5 py-1.5 text-xs font-black text-[#A84E61] shadow-sm transition hover:bg-[#FFF0F4] active:scale-95 sm:px-3"
+                      className="inline-flex min-h-[2.25rem] items-center justify-center gap-1.5 rounded-xl border-2 border-[#F4C7C4] bg-white px-3 py-2 text-[13px] font-black text-[#A84E61] shadow-sm transition hover:bg-[#FFF0F4] active:scale-[0.97]"
                       onClick={(event) => {
                         event.stopPropagation();
                         void renameGroup(group);
                       }}
                     >
-                      <Pencil size={13} /> Sửa tên
+                      <Pencil size={13} strokeWidth={2.5} /> Sửa tên
                     </button>
-                    <span className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[#FFF0F4] px-2.5 py-1.5 text-xs font-black text-[#A84E61] sm:px-3">
-                      {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-                      {expanded ? "Thu gọn" : "Xem"}
-                    </span>
                   </div>
                 </div>
+
+                {/* ── Expanded children ── */}
                 {expanded ? (
-                  <div className="mt-3 grid gap-2">
+                  <div className="grid gap-2 bg-white/80 p-3">
                     {group.rows.map((row, index) => renderBookingRow(row, index, group.rows.length))}
                   </div>
                 ) : null}
