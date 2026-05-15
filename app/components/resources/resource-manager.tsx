@@ -438,6 +438,8 @@ function cleanSystemNote(row: Row) {
   if (!note) return "";
   const invoiceCode = printableInvoiceData(row).code;
   const withoutReceipt = note
+    .replace(/^GROUP_BOOKING:.+$/gm, "")
+    .replace(/GROUP_BOOKING_DONE:[^\n|]+/g, "")
     .replace(/BOOKING_DONE:[^\s|]+/g, "")
     .replace(/RECEIPT:\{.*?\}(?=\s*\||\n|$)/g, "")
     .replace(/H(?:óa|Ă³a)\s*(?:đơn|Ä‘Æ¡n):\s*[^\s|]+/gi, invoiceCode ? `Hóa đơn: ${invoiceCode}` : "")
@@ -603,7 +605,7 @@ function printGroupInvoiceClean(group: GroupBookingSnapshot) {
     <div class="info row"><span class="label">Khách</span><span class="left">: ${receiptEscape(group.groupName)}</span></div>
     <div class="info row"><span class="label">Giờ</span><span class="left">: ${receiptEscape(formatDateTimeLabel(group.paymentInfo?.paidAt || group.createdAt))}</span></div>
     <div class="sep"></div><div class="section">GÓI CHỤP</div><div>Booking nhóm - ${receiptEscape(group.groupName)}</div><div class="sep"></div><div class="section">CHI TIẾT</div>${rows}<div class="solid"></div>
-    <div class="row info"><span>Tạm tính</span><span class="right">${receiptEscape(formatMoney(group.subtotal))}</span></div>${group.discount > 0 ? `<div class="row info"><span>Giảm giá</span><span class="right">-${receiptEscape(formatMoney(group.discount))}</span></div>` : ""}${group.extraFee > 0 ? `<div class="row info"><span>Phí phát sinh</span><span class="right">${receiptEscape(formatMoney(group.extraFee))}</span></div>` : ""}<div class="row bold total"><span>TỔNG THANH TOÁN</span><span class="right">${receiptEscape(formatMoney(group.totalAmount))}</span></div><div class="sep"></div><div class="status">ĐÃ THANH TOÁN ✓</div><div class="sep"></div><div class="center thanks">Cảm ơn quý khách ♥<br/><span class="bold">MÈOO XINHH STUDIO</span></div></div><script>window.onload=()=>{try{window.print();}catch(e){console.error(e);}};</script></body></html>`;
+    <div class="row info"><span>Tạm tính</span><span class="right">${receiptEscape(formatMoney(group.subtotal))}</span></div>${group.discount > 0 ? `<div class="row info"><span>🏷️ Giảm giá</span><span class="right">-${receiptEscape(formatMoney(group.discount))}</span></div>` : ""}${group.extraFee > 0 ? `<div class="row info"><span>Phí phát sinh</span><span class="right">${receiptEscape(formatMoney(group.extraFee))}</span></div>` : ""}<div class="row bold total"><span>TỔNG THANH TOÁN</span><span class="right">${receiptEscape(formatMoney(group.totalAmount))}</span></div><div class="sep"></div><div class="status">ĐÃ THANH TOÁN ✓</div><div class="sep"></div><div class="center thanks">Cảm ơn quý khách ♥<br/><span class="bold">MÈOO XINHH STUDIO</span></div></div><script>window.onload=()=>{try{window.print();}catch(e){console.error(e);}};</script></body></html>`;
   openPrintHtml(html);
 }
 
