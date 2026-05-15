@@ -141,6 +141,43 @@ function questionDateRange(question: string) {
   return null;
 }
 
+function isBroadStudioQuestion(question: string) {
+  if (!question.trim()) return true;
+  return includesAny(question, [
+    "toàn bộ",
+    "toan bo",
+    "tất cả",
+    "tat ca",
+    "tổng quan",
+    "tong quan",
+    "dữ liệu studio",
+    "du lieu studio",
+    "thông tin dự án",
+    "thong tin du an",
+    "hiểu dự án",
+    "hieu du an",
+    "thông minh",
+    "thong minh",
+    "phân tích",
+    "phan tich",
+    "báo cáo",
+    "bao cao",
+    "dashboard",
+    "rủi ro",
+    "rui ro",
+    "cảnh báo",
+    "canh bao",
+    "cần chú ý",
+    "can chu y",
+  ]);
+}
+
+function nextDaysRange(days: number, date = new Date()) {
+  const end = new Date(date);
+  end.setDate(end.getDate() + days);
+  return { start: date, end };
+}
+
 function searchTokens(question: string) {
   const stopWords = new Set([
     "khach",
@@ -343,6 +380,7 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
   const studioId = user.studioId;
 
   const normalizedQuestion = normalizeText(question);
+  const wantsAll = isBroadStudioQuestion(question);
   const wantsCustomer = includesAny(normalizedQuestion, ["khách", "khach", "sdt", "số điện thoại", "lien he", "contact", "nguyen", "tran", "le", "pham"]);
   const wantsPackage = includesAny(normalizedQuestion, ["gói", "goi", "concept", "dịch vụ", "dich vu", "giá", "gia", "báo giá"]);
   const wantsCategory = includesAny(normalizedQuestion, ["danh mục", "danh muc", "loại", "loai"]);
@@ -351,6 +389,16 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
   const wantsEquipment = includesAny(normalizedQuestion, ["thiết bị", "thiet bi", "đồ", "do", "máy ảnh", "may anh", "đèn", "den", "lens", "phụ kiện", "phu kien"]);
   const wantsAudit = includesAny(normalizedQuestion, ["lịch sử", "lich su", "hoạt động", "hoat dong", "ai đã", "ai da", "vừa xong"]);
   const wantsHistory = includesAny(normalizedQuestion, ["trước", "truoc", "qua", "gần đây", "gan day", "tháng", "thang", "tuần", "tuan"]);
+  const next7Days = nextDaysRange(7, now);
+  const next14Days = nextDaysRange(14, now);
+  const loadCustomers = wantsAll || wantsCustomer;
+  const loadPackages = wantsAll || wantsPackage;
+  const loadCategories = wantsAll || wantsCategory || wantsPackage;
+  const loadProjects = wantsAll || wantsProject;
+  const loadEmployees = wantsAll || wantsEmployee;
+  const loadEquipment = wantsAll || wantsEquipment;
+  const loadAudit = wantsAll || wantsAudit;
+  const loadHistory = wantsAll || wantsHistory;
 
   const [
     studio,
@@ -378,6 +426,14 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
     transactions,
     wallets,
     aiMemories,
+    riskBookings,
+    urgentProjects,
+    overdueInvoices,
+    recentPayments,
+    teamAccounts,
+    mediaRecent,
+    transactionCategories,
+    automationRules,
   ] = await Promise.all([
     prisma.studio.findUnique({
       where: { id: studioId },
@@ -405,50 +461,50 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
       orderBy: { startAt: "asc" },
       take: 15,
     }),
-    wantsHistory ? prisma.booking.findMany({
+    loadHistory ? prisma.booking.findMany({
       where: { studioId, deletedAt: null, status: "COMPLETED", startAt: { gte: month.start, lt: month.end } },
       select: { id: true, title: true, startAt: true, endAt: true, status: true, customerName: true, packageName: true, price: true, total: true, deposit: true, package: { select: { name: true } } },
       orderBy: { startAt: "desc" },
-      take: 10,
+      take: wantsAll ? 20 : 10,
     }) : Promise.resolve([]),
-    wantsHistory ? prisma.booking.findMany({
+    loadHistory ? prisma.booking.findMany({
       where: { studioId, deletedAt: null },
       select: { id: true, title: true, startAt: true, endAt: true, status: true, customerName: true, packageName: true, package: { select: { name: true } } },
       orderBy: { updatedAt: "desc" },
-      take: 10,
+      take: wantsAll ? 20 : 10,
     }) : Promise.resolve([]),
-    wantsCustomer ? prisma.customer.findMany({
+    loadCustomers ? prisma.customer.findMany({
       where: { studioId, deletedAt: null },
       select: { id: true, name: true, phone: true, email: true, note: true, totalSpent: true, source: true },
       orderBy: [{ totalSpent: "desc" }, { updatedAt: "desc" }],
-      take: 15,
+      take: wantsAll ? 30 : 15,
     }) : Promise.resolve([]),
-    wantsPackage ? prisma.package.findMany({
+    loadPackages ? prisma.package.findMany({
       where: { studioId, deletedAt: null },
-      select: { id: true, name: true, price: true, duration: true, suitableFor: true, category: { select: { name: true } }, peopleCount: true, location: true },
+      select: { id: true, name: true, price: true, duration: true, suitableFor: true, includes: true, deliverables: true, customerNote: true, category: { select: { name: true } }, peopleCount: true, location: true },
       orderBy: { updatedAt: "desc" },
-      take: 20,
+      take: wantsAll ? 40 : 20,
     }) : Promise.resolve([]),
-    wantsCategory ? prisma.category.findMany({ where: { studioId, deletedAt: null }, select: { id: true, name: true, description: true }, orderBy: { createdAt: "desc" }, take: 20 }) : Promise.resolve([]),
-    wantsProject ? prisma.project.findMany({
+    loadCategories ? prisma.category.findMany({ where: { studioId, deletedAt: null }, select: { id: true, name: true, description: true }, orderBy: { createdAt: "desc" }, take: wantsAll ? 40 : 20 }) : Promise.resolve([]),
+    loadProjects ? prisma.project.findMany({
       where: { studioId, deletedAt: null },
-      select: { id: true, code: true, name: true, status: true, amount: true, dueAmount: true, deadlineAt: true, customer: { select: { name: true } } },
+      select: { id: true, code: true, name: true, status: true, amount: true, dueAmount: true, deadlineAt: true, folderUrl: true, note: true, customer: { select: { name: true, phone: true } }, booking: { select: { startAt: true, customerName: true, packageName: true } } },
       orderBy: [{ deadlineAt: "asc" }, { updatedAt: "desc" }],
-      take: 15,
+      take: wantsAll ? 30 : 15,
     }) : Promise.resolve([]),
-    wantsEmployee ? prisma.employee.findMany({ where: { studioId, deletedAt: null }, select: { id: true, name: true, phone: true, position: true, salaryType: true, baseSalary: true, workSchedule: true }, orderBy: { updatedAt: "desc" }, take: 20 }) : Promise.resolve([]),
-    wantsEquipment ? prisma.equipment.findMany({
+    loadEmployees ? prisma.employee.findMany({ where: { studioId, deletedAt: null }, select: { id: true, name: true, phone: true, position: true, salaryType: true, baseSalary: true, workSchedule: true, note: true }, orderBy: { updatedAt: "desc" }, take: wantsAll ? 30 : 20 }) : Promise.resolve([]),
+    loadEquipment ? prisma.equipment.findMany({
       where: { studioId, deletedAt: null },
       select: { id: true, name: true, type: true, serial: true, status: true, assignedTo: true, note: true, maintenance: { select: { nextDueAt: true }, orderBy: { servicedAt: "desc" as const }, take: 1 } },
       orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
-      take: 15,
+      take: wantsAll ? 30 : 15,
     }) : Promise.resolve([]),
     prisma.notification.findMany({ where: { studioId, deletedAt: null }, select: { id: true, title: true, message: true, type: true, isRead: true, dueAt: true }, orderBy: { createdAt: "desc" }, take: 10 }),
-    wantsAudit ? prisma.auditLog.findMany({
+    loadAudit ? prisma.auditLog.findMany({
       where: { studioId },
       include: { user: { select: { name: true, role: { select: { name: true } } } } },
       orderBy: { createdAt: "desc" },
-      take: 15,
+      take: wantsAll ? 30 : 15,
     }) : Promise.resolve([]),
     canViewFinance ? prisma.walletShift.findMany({
       where: { studioId, status: "OPEN" },
@@ -459,7 +515,7 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
       orderBy: { openedAt: "desc" },
       take: 5,
     }) : Promise.resolve([]),
-    canViewFinance && wantsHistory ? prisma.walletShift.findMany({
+    canViewFinance && loadHistory ? prisma.walletShift.findMany({
       where: { studioId, status: "CLOSED" },
       include: {
         openedBy: { select: { name: true, role: { select: { name: true } } } },
@@ -492,26 +548,86 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
           _sum: { amount: true },
         })
       : Promise.resolve({ _sum: { amount: 0 } }),
-    canViewFinance && wantsHistory
+    canViewFinance && loadHistory
       ? prisma.invoice.findMany({
           where: { studioId, deletedAt: null },
           select: { id: true, code: true, status: true, issueDate: true, due: true, total: true, paid: true, customer: { select: { name: true } } },
           orderBy: [{ due: "desc" }, { issueDate: "desc" }],
-          take: 10,
+          take: wantsAll ? 20 : 10,
         })
       : Promise.resolve([]),
-    canViewFinance && wantsHistory
+    canViewFinance && loadHistory
       ? prisma.transaction.findMany({
           where: { studioId, deletedAt: null },
           select: { id: true, title: true, type: true, amount: true, method: true, approvalStatus: true, occurredAt: true, note: true, wallet: { select: { name: true } } },
           orderBy: { occurredAt: "desc" },
-          take: 10,
+          take: wantsAll ? 20 : 10,
         })
       : Promise.resolve([]),
     canViewFinance ? prisma.wallet.findMany({ where: { studioId, deletedAt: null }, select: { id: true, name: true, type: true, balance: true, isActive: true, openingBalance: true }, orderBy: { createdAt: "desc" }, take: 10 }) : Promise.resolve([]),
     prisma.aiMemory.findMany({
       where: { studioId, isActive: true, OR: [{ userId: null }, { userId: user.id }] },
       orderBy: [{ updatedAt: "desc" }],
+      take: 15,
+    }),
+    prisma.booking.findMany({
+      where: {
+        studioId,
+        deletedAt: null,
+        startAt: { gte: now, lte: next7Days.end },
+        status: { notIn: ["COMPLETED", "CANCELLED", "CANCELED"] },
+        OR: [{ deposit: { lte: 0 } }, { imageUrl: null }, { imageUrl: "" }, { galleryUrls: null }, { galleryUrls: "" }],
+      },
+      select: { id: true, title: true, customerName: true, packageName: true, startAt: true, status: true, deposit: true, total: true, imageUrl: true, galleryUrls: true, customer: { select: { name: true, phone: true } } },
+      orderBy: { startAt: "asc" },
+      take: 20,
+    }),
+    prisma.project.findMany({
+      where: {
+        studioId,
+        deletedAt: null,
+        status: { notIn: ["COMPLETED", "DELIVERED", "CANCELLED", "CANCELED"] },
+        OR: [{ deadlineAt: { lt: now } }, { deadlineAt: { gte: now, lte: next14Days.end } }, { dueAmount: { gt: 0 } }],
+      },
+      select: { id: true, code: true, name: true, status: true, amount: true, dueAmount: true, deadlineAt: true, customer: { select: { name: true, phone: true } } },
+      orderBy: [{ deadlineAt: "asc" }, { updatedAt: "desc" }],
+      take: 20,
+    }),
+    canViewFinance
+      ? prisma.invoice.findMany({
+          where: { studioId, deletedAt: null, due: { gt: 0 }, OR: [{ dueDate: null }, { dueDate: { lte: next14Days.end } }] },
+          select: { id: true, code: true, status: true, issueDate: true, dueDate: true, due: true, total: true, paid: true, customer: { select: { name: true, phone: true } }, project: { select: { code: true, name: true } } },
+          orderBy: [{ dueDate: "asc" }, { due: "desc" }],
+          take: 20,
+        })
+      : Promise.resolve([]),
+    canViewFinance
+      ? prisma.payment.findMany({
+          where: { studioId },
+          select: { id: true, amount: true, method: true, paidAt: true, note: true, invoice: { select: { code: true, customer: { select: { name: true } } } }, wallet: { select: { name: true } } },
+          orderBy: { paidAt: "desc" },
+          take: 12,
+        })
+      : Promise.resolve([]),
+    prisma.user.findMany({
+      where: { studioId },
+      select: { id: true, name: true, email: true, phone: true, status: true, lastLoginAt: true, role: { select: { name: true } } },
+      orderBy: [{ status: "asc" }, { updatedAt: "desc" }],
+      take: 20,
+    }),
+    prisma.media.findMany({
+      where: { studioId },
+      select: { id: true, filename: true, type: true, mimeType: true, provider: true, createdAt: true },
+      orderBy: { createdAt: "desc" },
+      take: 12,
+    }),
+    canViewFinance
+      ? prisma.transactionCategory.findMany({ where: { studioId }, select: { id: true, name: true, type: true }, orderBy: { createdAt: "desc" }, take: 30 })
+      : Promise.resolve([]),
+    prisma.automationRule.findMany({
+      where: { studioId },
+      select: { id: true, name: true, trigger: true, condition: true, action: true, isActive: true },
+      orderBy: { updatedAt: "desc" },
       take: 15,
     }),
   ]);
@@ -582,6 +698,17 @@ export async function getStudioAIContext(user: SessionUser, question = "") {
     auditLogs,
     aiMemories,
     deepSearch,
+    intelligence: {
+      wantsAll,
+      riskBookings,
+      urgentProjects,
+      overdueInvoices,
+      recentPayments,
+      teamAccounts,
+      mediaRecent,
+      transactionCategories,
+      automationRules,
+    },
   };
 }
 
@@ -676,8 +803,21 @@ export function getMinimalStudioAIContext(user: SessionUser, reason = "khong tai
       missingImageBookings: [],
       matchedCustomers: [],
       matchedTransactions: [],
+      matchedProjects: [],
+      matchedInvoices: [],
       matchedPackages: [],
       matchedEquipment: [],
+    },
+    intelligence: {
+      wantsAll: true,
+      riskBookings: [],
+      urgentProjects: [],
+      overdueInvoices: [],
+      recentPayments: [],
+      teamAccounts: [],
+      mediaRecent: [],
+      transactionCategories: [],
+      automationRules: [],
     },
   } satisfies StudioAIContext;
 }
@@ -700,6 +840,8 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
       missingImageBookings: [],
       matchedCustomers: [],
       matchedTransactions: [],
+      matchedProjects: [],
+      matchedInvoices: [],
       matchedPackages: [],
       matchedEquipment: [],
     };
@@ -711,7 +853,7 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
     ...(range ? { startAt: { gte: range.start, lt: range.end } } : {}),
   };
 
-  const [bookingRows, missingImageRows, customerRows, transactionRows, packageRows, equipmentRows] = await Promise.all([
+  const [bookingRows, missingImageRows, customerRows, transactionRows, projectRows, invoiceRows, packageRows, equipmentRows] = await Promise.all([
     wantsBooking || wantsCustomer
       ? prisma.booking.findMany({
           where: bookingWhere,
@@ -788,6 +930,44 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
           take: 30,
         })
       : Promise.resolve([]),
+    (wantsBooking || wantsCustomer || includesAny(normalizedQuestion, ["du an", "dự án", "deadline", "chua giao", "chưa giao", "project"]))
+      ? prisma.project.findMany({
+          where: { studioId: user.studioId, deletedAt: null, ...(range ? { createdAt: { gte: range.start, lt: range.end } } : {}) },
+          select: {
+            id: true,
+            code: true,
+            name: true,
+            status: true,
+            amount: true,
+            dueAmount: true,
+            deadlineAt: true,
+            note: true,
+            customer: { select: { name: true, phone: true } },
+            booking: { select: { title: true, customerName: true, packageName: true, startAt: true } },
+          },
+          orderBy: [{ deadlineAt: "asc" }, { updatedAt: "desc" }],
+          take: range ? 40 : 30,
+        })
+      : Promise.resolve([]),
+    canViewFinance && isFinanceQuestion(question)
+      ? prisma.invoice.findMany({
+          where: { studioId: user.studioId, deletedAt: null, ...(range ? { issueDate: { gte: range.start, lt: range.end } } : {}) },
+          select: {
+            id: true,
+            code: true,
+            status: true,
+            issueDate: true,
+            dueDate: true,
+            total: true,
+            paid: true,
+            due: true,
+            customer: { select: { name: true, phone: true } },
+            project: { select: { code: true, name: true } },
+          },
+          orderBy: [{ due: "desc" }, { issueDate: "desc" }],
+          take: range ? 40 : 30,
+        })
+      : Promise.resolve([]),
     wantsPackage
       ? prisma.package.findMany({
           where: { studioId: user.studioId, deletedAt: null },
@@ -836,6 +1016,12 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
   const matchedTransactions = transactionRows
     .filter((item) => matchesTokens([item.title, item.note, item.customer?.name, item.project?.name, item.wallet?.name].filter(Boolean).join(" ")))
     .slice(0, 30);
+  const matchedProjects = projectRows
+    .filter((item) => matchesTokens([item.code, item.name, item.note, item.customer?.name, item.customer?.phone, item.booking?.title, item.booking?.customerName, item.booking?.packageName].filter(Boolean).join(" ")))
+    .slice(0, 30);
+  const matchedInvoices = invoiceRows
+    .filter((item) => matchesTokens([item.code, item.status, item.customer?.name, item.customer?.phone, item.project?.code, item.project?.name].filter(Boolean).join(" ")))
+    .slice(0, 30);
   const matchedPackages = packageRows
     .filter((item) => matchesTokens([item.name, item.category?.name, item.description, item.customerNote].filter(Boolean).join(" ")))
     .slice(0, 20);
@@ -858,6 +1044,8 @@ async function getDeepSearchContext(user: SessionUser, question: string, canView
     missingImageBookings: missingImageRows.filter((item) => !hasMedia(item)).slice(0, 40),
     matchedCustomers,
     matchedTransactions,
+    matchedProjects,
+    matchedInvoices,
     matchedPackages,
     matchedEquipment,
   };
@@ -872,8 +1060,13 @@ export function summarizeAIContext(context: StudioAIContext) {
     `Booking khớp tìm sâu: ${context.deepSearch.matchedBookings.length}`,
     `Booking chưa có ảnh: ${context.deepSearch.missingImageBookings.length}`,
     `Khách khớp tìm sâu: ${context.deepSearch.matchedCustomers.length}`,
+    `Dự án khớp tìm sâu: ${context.deepSearch.matchedProjects.length}`,
+    context.canViewFinance ? `Hóa đơn khớp tìm sâu: ${context.deepSearch.matchedInvoices.length}` : "Hóa đơn tìm sâu: ẩn theo quyền",
     `Gói/Thiết bị tìm sâu: ${context.deepSearch.matchedPackages.length}/${context.deepSearch.matchedEquipment.length}`,
     context.canViewFinance ? `Thu chi khớp tìm sâu: ${context.deepSearch.matchedTransactions.length}` : "Thu chi tìm sâu: ẩn theo quyền",
+    `Booking rủi ro: ${context.intelligence.riskBookings.length}`,
+    `Dự án cần chú ý: ${context.intelligence.urgentProjects.length}`,
+    context.canViewFinance ? `Hóa đơn cần thu: ${context.intelligence.overdueInvoices.length}` : "Hóa đơn cần thu: ẩn theo quyền",
     `Nhật ký hoạt động đưa vào context: ${context.auditLogs.length}`,
   ].join(" | ");
 }
@@ -1150,9 +1343,9 @@ export function fallbackStudioAnswer(question: string, context: StudioAIContext,
   }
   if (includesAny(lower, ["tổng quan", "thống kê", "bao nhiêu dữ liệu", "dữ liệu studio"])) {
     if (!context.canViewFinance) {
-      return `${prefix}Tổng quan studio: ${context.counts.bookings} booking, ${context.counts.customers} khách, ${context.counts.packages} gói, ${context.counts.categories} danh mục, ${context.counts.projects} dự án, ${context.counts.employees} nhân sự, ${context.counts.equipment} thiết bị. Mình đã ẩn toàn bộ số liệu tiền bạc vì tài khoản hiện tại là Nhân viên nha.`;
+      return `${prefix}Tổng quan studio: ${context.counts.bookings} booking, ${context.counts.customers} khách, ${context.counts.packages} gói, ${context.counts.categories} danh mục, ${context.counts.projects} dự án, ${context.counts.employees} nhân sự, ${context.counts.equipment} thiết bị. Hiện có ${context.intelligence.riskBookings.length} booking cần chú ý và ${context.intelligence.urgentProjects.length} dự án/deadline cần rà soát. Mình đã ẩn toàn bộ số liệu tiền bạc vì tài khoản hiện tại là Nhân viên nha.`;
     }
-    return `${prefix}Tổng quan studio: ${context.counts.bookings} booking, ${context.counts.customers} khách, ${context.counts.packages} gói, ${context.counts.categories} danh mục, ${context.counts.projects} dự án, ${context.counts.invoices} hóa đơn, ${context.counts.incomeTransactions} khoản thu, ${context.counts.expenseTransactions} khoản chi, ${context.counts.employees} nhân sự, ${context.counts.equipment} thiết bị.`;
+    return `${prefix}Tổng quan studio: ${context.counts.bookings} booking, ${context.counts.customers} khách, ${context.counts.packages} gói, ${context.counts.categories} danh mục, ${context.counts.projects} dự án, ${context.counts.invoices} hóa đơn, ${context.counts.incomeTransactions} khoản thu, ${context.counts.expenseTransactions} khoản chi, ${context.counts.employees} nhân sự, ${context.counts.equipment} thiết bị. Cần chú ý ngay: ${context.intelligence.riskBookings.length} booking rủi ro, ${context.intelligence.urgentProjects.length} dự án/deadline, ${context.intelligence.overdueInvoices.length} hóa đơn cần thu.`;
   }
   if (includesAny(lower, ["doanh thu", "lợi nhuận", "thu chi", "công nợ", "hóa đơn", "ví", "tiền", "ca"])) {
     if (!context.canViewFinance) return `${prefix}${financeAccessDeniedAnswer()}`;
@@ -1226,6 +1419,21 @@ Số lượng dữ liệu: ${context.counts.categories} danh mục, ${context.co
 Bộ nhớ AI đã học:
 ${listOrEmpty(context.aiMemories, (item, index) => `${index + 1}. ${item.value}`, 12)}
 
+Bản đồ vận hành đã nạp: ${context.intelligence.wantsAll ? "đang ở chế độ tổng quan toàn studio" : "đang ở chế độ theo câu hỏi"}.
+Booking cần chú ý trong 7 ngày tới:
+${listOrEmpty(context.intelligence.riskBookings, (item, index) => `${index + 1}. ${item.customerName || item.customer?.name || item.title} - ${item.packageName ?? "chưa có gói"} - ${dateText(item.startAt)} - ${statusLabel(item.status)} - cọc ${money(item.deposit)} - ảnh ${hasMedia(item) ? "đã có" : "chưa có"} - SĐT ${item.customer?.phone ?? "chưa có"}`, 12)}
+Dự án/deadline/công nợ cần chú ý:
+${listOrEmpty(context.intelligence.urgentProjects, (item, index) => `${index + 1}. ${item.code} - ${item.name} - khách ${item.customer?.name ?? "chưa gắn"} - ${statusLabel(item.status)} - deadline ${dateText(item.deadlineAt)} - còn nợ ${context.canViewFinance ? money(item.dueAmount) : "ẩn theo quyền"}`, 12)}
+${context.canViewFinance ? `Hóa đơn cần thu/đến hạn:\n${listOrEmpty(context.intelligence.overdueInvoices, (item, index) => `${index + 1}. ${item.code} - ${item.customer?.name ?? "khách chưa gắn"} - tổng ${money(item.total)} - đã trả ${money(item.paid)} - còn ${money(item.due)} - hạn ${dateText(item.dueDate)} - dự án ${item.project?.code ?? "chưa gắn"}`, 12)}` : "Hóa đơn cần thu/đến hạn: đã ẩn theo quyền."}
+${context.canViewFinance ? `Thanh toán gần đây:\n${listOrEmpty(context.intelligence.recentPayments, (item, index) => `${index + 1}. ${item.invoice?.code ?? "không gắn hóa đơn"} - ${item.invoice?.customer?.name ?? "khách chưa gắn"} - ${money(item.amount)} - ${item.method} - ví ${item.wallet?.name ?? "chưa gắn"} - ${dateText(item.paidAt)}`, 10)}` : "Thanh toán gần đây: đã ẩn theo quyền."}
+Tài khoản/nhân sự đăng nhập:
+${listOrEmpty(context.intelligence.teamAccounts, (item, index) => `${index + 1}. ${item.name} - ${roleLabel(item.role?.name)} - ${item.status} - email ${item.email} - SĐT ${item.phone ?? "chưa có"} - đăng nhập cuối ${dateText(item.lastLoginAt)}`, 12)}
+Media mới tải lên:
+${listOrEmpty(context.intelligence.mediaRecent, (item, index) => `${index + 1}. ${item.filename} - ${item.type}/${item.mimeType} - ${item.provider} - ${dateText(item.createdAt)}`, 8)}
+Quy tắc tự động:
+${listOrEmpty(context.intelligence.automationRules, (item, index) => `${index + 1}. ${item.name} - ${item.isActive ? "đang bật" : "đang tắt"} - trigger ${item.trigger} - action ${item.action}`, 8)}
+${context.canViewFinance ? `Danh mục thu chi:\n${listOrEmpty(context.intelligence.transactionCategories, (item, index) => `${index + 1}. ${item.name} - ${item.type}`, 12)}` : "Danh mục thu chi: đã ẩn theo quyền."}
+
 Tìm kiếm sâu theo câu hỏi:
 Lý do: ${context.deepSearch.reason}
 Từ khóa: ${context.deepSearch.tokens.join(", ") || "không có"}
@@ -1235,6 +1443,9 @@ Booking chưa có ảnh:
 ${listOrEmpty(context.deepSearch.missingImageBookings, (item, index) => `${index + 1}. ${item.customerName || item.customer?.name || item.title} - gói ${item.packageName || item.package?.name || "chưa có gói"} - ngày ${dateText(item.startAt)} - trạng thái ${statusLabel(item.status)}`, 14)}
 Khách khớp câu hỏi:
 ${listOrEmpty(context.deepSearch.matchedCustomers, (item, index) => `${index + 1}. ${item.name} - SĐT ${item.phone ?? "chưa có"} - email ${item.email ?? "chưa có"} - ghi chú ${item.note ?? "không có"}`, 10)}
+Dự án khớp câu hỏi:
+${listOrEmpty(context.deepSearch.matchedProjects, (item, index) => `${index + 1}. ${item.code} - ${item.name} - khách ${item.customer?.name ?? item.booking?.customerName ?? "chưa gắn"} - ${statusLabel(item.status)} - deadline ${dateText(item.deadlineAt)} - booking ${item.booking?.packageName ?? "chưa gắn"} - còn nợ ${context.canViewFinance ? money(item.dueAmount) : "ẩn theo quyền"}`, 10)}
+${context.canViewFinance ? `Hóa đơn khớp câu hỏi:\n${listOrEmpty(context.deepSearch.matchedInvoices, (item, index) => `${index + 1}. ${item.code} - ${item.customer?.name ?? "khách chưa gắn"} - tổng ${money(item.total)} - đã trả ${money(item.paid)} - còn ${money(item.due)} - ${statusLabel(item.status)} - hạn ${dateText(item.dueDate)}`, 10)}` : "Hóa đơn khớp câu hỏi: đã ẩn theo quyền."}
 ${context.canViewFinance ? `Thu chi khớp câu hỏi:\n${listOrEmpty(context.deepSearch.matchedTransactions, (item, index) => `${index + 1}. ${item.title} - ${item.type === "INCOME" ? "khoản thu" : "khoản chi"} - ${money(item.amount)} - ${dateText(item.occurredAt)} - ví ${item.wallet?.name ?? "chưa gắn ví"}`, 10)}` : "Thu chi khớp câu hỏi: đã ẩn theo quyền."}
 Gói chụp khớp câu hỏi:
 ${listOrEmpty(context.deepSearch.matchedPackages, (item, index) => `${index + 1}. ${item.name} - giá ${money(item.price)} - danh mục ${item.category?.name ?? "chưa có"}`, 10)}
