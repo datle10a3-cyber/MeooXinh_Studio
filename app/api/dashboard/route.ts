@@ -162,7 +162,7 @@ export async function GET(request: Request) {
       prisma.transaction.findMany({
         where: { studioId: user.studioId, deletedAt: null, type: { in: ["INCOME", "EXPENSE"] } },
         take: 30,
-        orderBy: { occurredAt: "desc" },
+        orderBy: [{ occurredAt: "desc" }, { createdAt: "desc" }],
       }),
       prisma.invoice.findMany({
         where: { studioId: user.studioId, due: { gt: 0 }, deletedAt: null },
@@ -171,8 +171,8 @@ export async function GET(request: Request) {
       }),
       prisma.booking.findMany({
         where: { studioId: user.studioId, startAt: { gte: now }, status: { not: "COMPLETED" }, deletedAt: null },
-        take: 30,
-        orderBy: { startAt: "asc" },
+        take: 40,
+        orderBy: [{ startAt: "asc" }, { createdAt: "desc" }],
       }),
       prisma.wallet.findMany({
         where: { studioId: user.studioId, isActive: true, deletedAt: null },

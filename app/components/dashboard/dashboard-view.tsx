@@ -91,6 +91,50 @@ export function DashboardView() {
 
     return { margin, cashFlowText, debtText, bookingText, expenseText };
   }, [dashboard]);
+  const displayBookings = useMemo(() => {
+    const raw = dashboard.upcomingBookings || [];
+    const final: Record<string, unknown>[] = [];
+    const groups = new Map<string, Record<string, unknown>[]>();
+    
+    for (const item of raw) {
+      const gName = bookingGroupName(item.note as string);
+      const dateKey = String(item.startAt ?? item.startTime ?? "").substring(0, 13);
+      const key = gName ? `${gName.toLowerCase().trim()}_${dateKey}` : null;
+      
+      if (key) {
+        const arr = groups.get(key) || [];
+        arr.push(item);
+        groups.set(key, arr);
+      } else {
+        final.push(item);
+      }
+    }
+    
+    for (const rows of Array.from(groups.values())) {
+      if (rows.length === 1) {
+        final.push(rows[0]);
+        continue;
+      }
+      const first = rows[0];
+      const names = rows.map(r => String(r.customerName ?? "").trim()).filter(Boolean);
+      const customerNamesJoined = [...new Set(names)].join(", ");
+      const pkName = String(first.packageName ?? "").trim();
+      
+      final.push({
+        ...first,
+        customerName: customerNamesJoined,
+        title: `${customerNamesJoined || "Nhiều khách"} - ${pkName || "Chưa chọn gói"}`,
+        _isGroupRep: true,
+      });
+    }
+    
+    return final.sort((a, b) => {
+      const tA = new Date(String(a.startAt ?? a.startTime ?? "")).getTime();
+      const tB = new Date(String(b.startAt ?? b.startTime ?? "")).getTime();
+      if (tA !== tB) return tA - tB;
+      return new Date(String(b.createdAt ?? "")).getTime() - new Date(String(a.createdAt ?? "")).getTime();
+    });
+  }, [dashboard.upcomingBookings]);
 
   const loadData = useCallback(async (mode: ChartMode = chartMode) => {
     setLoading(true);
@@ -230,8 +274,8 @@ export function DashboardView() {
             <CardTitle>Lịch sắp tới</CardTitle>
           </div>
           <div className="space-y-3">
-            {dashboard.upcomingBookings.length === 0 ? <p className="text-sm font-semibold text-[#9B746B]">Chưa có booking.</p> : null}
-            {dashboard.upcomingBookings.map((item, index) => {
+            {displayBookings.length === 0 ? <p className="text-sm font-semibold text-[#9B746B]">Chưa có booking.</p> : null}
+            {displayBookings.map((item, index) => {
               const gName = bookingGroupName(item.note as string);
               const titleStr = gName ? `[Nhóm: ${gName}] ${String(item.title ?? "Booking")}` : String(item.title ?? "Booking cá nhân");
               

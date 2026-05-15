@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   BadgeDollarSign,
   BarChart3,
@@ -166,6 +166,49 @@ export function ModuleHome() {
     return () => window.clearTimeout(timer);
   }, []);
 
+  const displayBookings = useMemo(() => {
+    const raw = dashboard?.upcomingBookings || [];
+    const final: Record<string, unknown>[] = [];
+    const groups = new Map<string, Record<string, unknown>[]>();
+    
+    for (const item of raw) {
+      const gName = bookingGroupName(item.note as string);
+      const dateKey = String(item.startAt ?? item.startTime ?? "").substring(0, 13);
+      const key = gName ? `${gName.toLowerCase().trim()}_${dateKey}` : null;
+      
+      if (key) {
+        const arr = groups.get(key) || [];
+        arr.push(item);
+        groups.set(key, arr);
+      } else {
+        final.push(item);
+      }
+    }
+    
+    for (const rows of Array.from(groups.values())) {
+      if (rows.length === 1) {
+        final.push(rows[0]);
+        continue;
+      }
+      const first = rows[0];
+      const names = rows.map(r => String(r.customerName ?? "").trim()).filter(Boolean);
+      const customerNamesJoined = [...new Set(names)].join(", ");
+      
+      final.push({
+        ...first,
+        customerName: customerNamesJoined,
+        _isGroupRep: true,
+      });
+    }
+    
+    return final.sort((a, b) => {
+      const tA = new Date(String(a.startAt ?? a.startTime ?? "")).getTime();
+      const tB = new Date(String(b.startAt ?? b.startTime ?? "")).getTime();
+      if (tA !== tB) return tA - tB;
+      return new Date(String(b.createdAt ?? "")).getTime() - new Date(String(a.createdAt ?? "")).getTime();
+    });
+  }, [dashboard?.upcomingBookings]);
+
   if (!mounted) return null;
 
   return (
@@ -195,20 +238,20 @@ export function ModuleHome() {
         <Card className="min-w-0 overflow-hidden border-[#F7AFC0] p-3 shadow-[0_14px_38px_rgba(184,95,108,0.1)] sm:p-5">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-base sm:text-xl">Lịch sắp tới</CardTitle>
-            {dashboard.upcomingBookings.length > previewLimit ? (
+            {displayBookings.length > previewLimit ? (
               <button type="button" onClick={() => setShowAllBookings((open) => !open)} className="shrink-0 text-xs font-black text-[#EA7188]">
                 {showAllBookings ? "Thu gọn" : "Xem thêm"}
               </button>
             ) : null}
           </div>
           <div className={`studio-ios-scroll mt-3 space-y-2 ${showAllBookings ? "max-h-[18rem] overflow-y-auto pr-1" : ""}`}>
-            {(dashboard?.upcomingBookings || []).length === 0 ? (
+            {displayBookings.length === 0 ? (
               <div className="rounded-2xl bg-[#FFF3EC] p-3">
                 <p className="text-xs font-black text-[#5B342C] sm:text-sm">Không có lịch sắp tới.</p>
                 <p className="mt-1 text-[11px] font-semibold leading-5 text-[#9B746B] sm:text-xs">Khi có booking mới, lịch gần nhất sẽ hiện ở đây để bạn chuẩn bị.</p>
               </div>
             ) : null}
-            {(showAllBookings ? (dashboard?.upcomingBookings || []) : (dashboard?.upcomingBookings || []).slice(0, previewLimit)).map((item, index) => (
+            {(showAllBookings ? displayBookings : displayBookings.slice(0, previewLimit)).map((item, index) => (
               <button key={item?.id ? String(item.id) : `booking-${index}`} type="button" onClick={() => item && goToBooking(item)} className="block w-full min-w-0 rounded-2xl border border-[#F7C4CA] bg-[#FFF3EC] p-2.5 text-left transition hover:bg-[#FFE4EA] sm:p-3">
                 <span className="mb-1 inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-[#EA7188] shadow-sm">
                   {upcomingBookingBadge(item)}
