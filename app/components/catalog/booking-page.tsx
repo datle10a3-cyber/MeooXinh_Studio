@@ -29,6 +29,7 @@ type SearchCustomerItem = {
 type GroupBookingCustomerSnapshot = {
   id: string;
   customerName: string;
+  customerImage?: string | null;
   packageName: string;
   packageImage?: string | null;
   packageImages?: string[];

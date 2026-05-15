@@ -40,6 +40,7 @@ type GroupBookingCustomerSnapshot = {
   id: string;
   customerDbId?: string | null;
   customerName: string;
+  customerImage?: string | null;
   packageName: string;
   packageImage?: string | null;
   packageImages: string[];
@@ -395,8 +396,9 @@ export async function finalizeCompletedBookingGroup(bookings: BookingLike[], act
         id: booking.id,
         customerDbId: booking.customerId ?? null,
         customerName: booking.customerName || booking.customer?.name || "KhĂ¡ch hĂ ng",
+        customerImage: booking.customer?.avatarUrl || booking.imageUrl || null,
         packageName: booking.packageName || booking.title,
-        packageImage: packageImages[0] ?? booking.imageUrl ?? null,
+        packageImage: packageImages[0] ?? null,
         packageImages,
         status: "COMPLETED",
         subtotal: moneyNumber(booking.price),

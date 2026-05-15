@@ -59,6 +59,7 @@ type ShiftData = {
 type GroupBookingCustomerSnapshot = {
   id: string;
   customerName: string;
+  customerImage?: string | null;
   packageName: string;
   packageImage?: string | null;
   packageImages?: string[];
@@ -436,6 +437,12 @@ function printableInvoiceData(row: Row) {
 function cleanSystemNote(row: Row) {
   const note = String(row.note ?? "").trim();
   if (!note) return "";
+  if (note.includes("GROUP_BOOKING_DONE") || note.includes("GROUP_BOOKING:")) {
+    return "Tự động cộng doanh thu khi booking nhóm hoàn tất.";
+  }
+  if (note.includes("BOOKING_DONE") || note.includes("RECEIPT:")) {
+    return "Tự động cộng doanh thu khi booking hoàn tất.";
+  }
   const invoiceCode = printableInvoiceData(row).code;
   const withoutReceipt = note
     .replace(/^GROUP_BOOKING:.+$/gm, "")
@@ -897,30 +904,37 @@ const GroupBookingCard = memo(function GroupBookingCard({
           <div className="mt-3 grid gap-2">
             {group.customers.map((customer) => {
               const images = (customer.packageImages?.length ? customer.packageImages : customer.packageImage ? [customer.packageImage] : []).filter(Boolean) as string[];
+              const customerInitial = customer.customerName.trim().charAt(0).toUpperCase() || "K";
               return (
                 <button
                   key={customer.id}
                   type="button"
-                  className="grid min-h-[88px] w-full grid-cols-[56px_minmax(0,1fr)_auto] items-center gap-3 rounded-[1.1rem] border border-[#F4C7C4] bg-[#FFFDFB] p-3 text-left transition hover:bg-[#FFF8F1] active:scale-[0.99]"
+                  className="grid min-h-[112px] w-full grid-cols-[64px_minmax(0,1fr)_auto] items-center gap-3 rounded-[1.1rem] border border-[#F4C7C4] bg-[#FFFDFB] p-3 text-left transition hover:bg-[#FFF8F1] active:scale-[0.99]"
                   onClick={() => setDetail(customer)}
                 >
-                  <span
-                    role="button"
-                    tabIndex={0}
-                    className="h-14 w-14 overflow-hidden rounded-xl border border-[#F4C7C4] bg-[#FFF3EC]"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      if (images.length) setPreview({ images, index: 0, alt: customer.packageName });
-                    }}
-                    onKeyDown={(event) => {
-                      if ((event.key === "Enter" || event.key === " ") && images.length) {
-                        event.preventDefault();
+                  <span className="flex w-16 shrink-0 flex-col items-center gap-1">
+                    <span className="grid h-14 w-14 place-items-center overflow-hidden rounded-xl border border-[#F4C7C4] bg-[#FFF3EC] text-base font-black text-[#A84E61] shadow-sm">
+                      {customer.customerImage ? <img src={customer.customerImage} alt="" className="h-full w-full object-cover" /> : customerInitial}
+                    </span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      className="relative h-12 w-12 overflow-hidden rounded-xl border border-[#F4C7C4] bg-[#FFF3EC] shadow-sm"
+                      onClick={(event) => {
                         event.stopPropagation();
-                        setPreview({ images, index: 0, alt: customer.packageName });
-                      }
-                    }}
-                  >
-                    {images[0] ? <img src={images[0]} alt="" className="h-full w-full object-cover" /> : <span className="grid h-full w-full place-items-center"><ImageIcon size={18} className="text-[#B9857D]" /></span>}
+                        if (images.length) setPreview({ images, index: 0, alt: customer.packageName });
+                      }}
+                      onKeyDown={(event) => {
+                        if ((event.key === "Enter" || event.key === " ") && images.length) {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          setPreview({ images, index: 0, alt: customer.packageName });
+                        }
+                      }}
+                    >
+                      {images[0] ? <img src={images[0]} alt="" className="h-full w-full object-cover" /> : <span className="grid h-full w-full place-items-center"><ImageIcon size={16} className="text-[#B9857D]" /></span>}
+                      <span className="absolute bottom-0 left-0 right-0 bg-white/92 px-0.5 py-0.5 text-center text-[8px] font-black text-[#A84E61]">Gói</span>
+                    </span>
                   </span>
                   <span className="min-w-0">
                     <span className="block truncate text-sm font-black text-[#5B342C]">{customer.customerName}</span>
