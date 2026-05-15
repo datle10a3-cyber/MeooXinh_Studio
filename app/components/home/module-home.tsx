@@ -50,6 +50,28 @@ const fallbackDashboard: DashboardData = {
   wallets: [],
 };
 
+function upcomingBookingTitle(item: Record<string, unknown>) {
+  const customerName = String(item.customerName ?? "").trim();
+  const packageName = String(item.packageName ?? "").trim();
+  if (customerName && packageName) return `${customerName} · ${packageName}`;
+  return String(item.title ?? customerName ?? packageName ?? "Booking sắp tới");
+}
+
+function upcomingBookingTime(item: Record<string, unknown>) {
+  const value = item.startAt ?? item.startTime ?? item.createdAt;
+  return value ? formatDate(value as string | Date) : "Chưa có thời gian";
+}
+
+function upcomingBookingBadge(item: Record<string, unknown>) {
+  const raw = item.startAt ?? item.startTime;
+  const date = raw ? new Date(String(raw)) : null;
+  if (!date || Number.isNaN(date.getTime())) return "Sắp tới";
+  const today = new Date();
+  const sameDay = date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
+  if (sameDay) return "Hôm nay";
+  return "Sắp tới";
+}
+
 export function ModuleHome() {
   const setActiveResource = useUiStore((state) => state.setActiveResource);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
@@ -163,11 +185,19 @@ export function ModuleHome() {
             ) : null}
           </div>
           <div className={`studio-ios-scroll mt-3 space-y-2 ${showAllBookings ? "max-h-[18rem] overflow-y-auto pr-1" : ""}`}>
-            {(dashboard?.upcomingBookings || []).length === 0 ? <p className="text-xs font-semibold text-[#9B746B] sm:text-sm">Chưa có booking sắp tới.</p> : null}
+            {(dashboard?.upcomingBookings || []).length === 0 ? (
+              <div className="rounded-2xl bg-[#FFF3EC] p-3">
+                <p className="text-xs font-black text-[#5B342C] sm:text-sm">Không có lịch sắp tới.</p>
+                <p className="mt-1 text-[11px] font-semibold leading-5 text-[#9B746B] sm:text-xs">Khi có booking mới, lịch gần nhất sẽ hiện ở đây để bạn chuẩn bị.</p>
+              </div>
+            ) : null}
             {(showAllBookings ? (dashboard?.upcomingBookings || []) : (dashboard?.upcomingBookings || []).slice(0, previewLimit)).map((item, index) => (
-              <button key={item?.id ? String(item.id) : `booking-${index}`} type="button" onClick={() => item && goToBooking(item)} className="block w-full min-w-0 rounded-2xl bg-[#FFF3EC] p-2.5 text-left transition hover:bg-[#FFE4EA] sm:p-3">
-                <p className="line-clamp-2 break-words text-xs font-black leading-5 text-[#5B342C] sm:text-sm">{String(item?.title ?? "Booking")}</p>
-                <p className="mt-1 text-[11px] font-semibold text-[#9B746B] sm:text-xs">{formatDate(item?.startAt as string | Date)}</p>
+              <button key={item?.id ? String(item.id) : `booking-${index}`} type="button" onClick={() => item && goToBooking(item)} className="block w-full min-w-0 rounded-2xl border border-[#F7C4CA] bg-[#FFF3EC] p-2.5 text-left transition hover:bg-[#FFE4EA] sm:p-3">
+                <span className="mb-1 inline-flex rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-[#EA7188] shadow-sm">
+                  {upcomingBookingBadge(item)}
+                </span>
+                <p className="line-clamp-2 break-words text-xs font-black leading-5 text-[#5B342C] sm:text-sm">{upcomingBookingTitle(item)}</p>
+                <p className="mt-1 text-[11px] font-semibold text-[#9B746B] sm:text-xs">{upcomingBookingTime(item)}</p>
               </button>
             ))}
           </div>

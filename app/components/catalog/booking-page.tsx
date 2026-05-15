@@ -1107,7 +1107,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                 <div
                   role="button"
                   tabIndex={0}
-                  className="flex w-full cursor-pointer items-center justify-between gap-3 rounded-[1.25rem] bg-white px-3 py-3 text-left shadow-sm transition active:scale-[0.99]"
+                  className="grid w-full cursor-pointer gap-3 rounded-[1.25rem] bg-white px-3 py-3 text-left shadow-sm transition active:scale-[0.99] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center"
                   onClick={() => {
                     if (longPressActivated) {
                       setLongPressActivated(false);
@@ -1121,7 +1121,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                     setExpandedGroups((current) => current.includes(group.key) ? current.filter((item) => item !== group.key) : [...current, group.key]);
                   }}
                 >
-                  <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex min-w-0 items-start gap-3">
                     {showGroupCheckbox ? (
                       <button
                         type="button"
@@ -1138,17 +1138,17 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                     ) : null}
                     <div className="min-w-0">
                       <p className="text-xs font-black uppercase tracking-wide text-[#EA7188]">Booking nhóm</p>
-                      <h2 className="mt-1 whitespace-normal break-words text-lg font-black text-[#5B342C]">{group.title}</h2>
-                      <p className="mt-1 whitespace-normal break-words text-sm font-semibold text-[#9B746B]">
+                      <h2 className="mt-1 line-clamp-2 text-lg font-black leading-6 text-[#5B342C]">{group.title}</h2>
+                      <p className="mt-1 line-clamp-2 text-sm font-semibold leading-5 text-[#9B746B]">
                         {group.rows.length} khách · {packageNames.length <= 1 ? (packageNames[0] ?? "Chưa có gói") : `${packageNames.length} gói khác nhau`}
                       </p>
                     </div>
                   </div>
-                  <div className="flex shrink-0 items-center gap-2">
+                  <div className="grid grid-cols-3 gap-2 sm:flex sm:shrink-0 sm:items-center">
                     {!completedOnly ? (
                       <button
                         type="button"
-                        className="inline-flex items-center gap-1.5 rounded-full bg-emerald-600 px-3 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(5,150,105,0.24)] transition hover:bg-emerald-700 active:scale-95"
+                        className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-emerald-600 px-2.5 py-1.5 text-xs font-black text-white shadow-[0_10px_22px_rgba(5,150,105,0.24)] transition hover:bg-emerald-700 active:scale-95 sm:px-3"
                         onClick={(event) => {
                           event.stopPropagation();
                           setPaymentTarget(group.rows[0]);
@@ -1159,7 +1159,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                     ) : null}
                     <button
                       type="button"
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[#F4C7C4] bg-white px-3 py-1.5 text-xs font-black text-[#A84E61] shadow-sm transition hover:bg-[#FFF0F4] active:scale-95"
+                      className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full border border-[#F4C7C4] bg-white px-2.5 py-1.5 text-xs font-black text-[#A84E61] shadow-sm transition hover:bg-[#FFF0F4] active:scale-95 sm:px-3"
                       onClick={(event) => {
                         event.stopPropagation();
                         void renameGroup(group);
@@ -1167,7 +1167,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                     >
                       <Pencil size={13} /> Sửa tên
                     </button>
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFF0F4] px-3 py-1.5 text-xs font-black text-[#A84E61]">
+                    <span className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-full bg-[#FFF0F4] px-2.5 py-1.5 text-xs font-black text-[#A84E61] sm:px-3">
                       {expanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                       {expanded ? "Thu gọn" : "Xem"}
                     </span>
@@ -1653,7 +1653,7 @@ function PaymentConfirmModal({
                 {groupRows.map((row) => (
                   <div key={row.id} className="grid grid-cols-[40px_1fr_auto] items-center gap-2 rounded-2xl bg-white px-3 py-2">
                     <CustomerAvatar booking={row} />
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-black text-[#5B342C]">{row.customerName || "Khách hàng"}</p>
                       <p className="truncate text-xs font-bold text-[#9B746B]">{row.packageName || "Gói dịch vụ"}</p>
                     </div>
