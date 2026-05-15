@@ -94,9 +94,14 @@ const devSession: CurrentSession = {
 };
 
 const mobilePrimary: NavItem[] = [
+  { id: "booking", label: "Booking", href: "/booking", icon: CalendarDays },
+  { id: "ai", label: "AI", href: "/ai", icon: Bot },
   { id: "home", label: "Trang chủ", href: "/", icon: Home },
   { id: "wallets", label: "Ví tiền", href: "/wallets", icon: WalletCards },
 ];
+
+const mobilePrimaryOrder = ["home", "booking", "wallets", "ai"];
+const bottomMobileItems = [...mobilePrimary].sort((a, b) => mobilePrimaryOrder.indexOf(a.id) - mobilePrimaryOrder.indexOf(b.id));
 
 const mobileGroups: { title: string; items: NavItem[] }[] = [
   {
@@ -372,7 +377,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={darkMode ? "min-h-dvh bg-[#2B1C1A] text-white" : "min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
+    <div className={darkMode ? "studio-mobile-page min-h-dvh bg-[#2B1C1A] text-white" : "studio-mobile-page min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
       <div className="flex min-h-dvh">
         <Sidebar session={session} />
         <main className="min-w-0 flex-1 touch-pan-y">
@@ -382,7 +387,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Button
                    variant="secondary"
                   size="icon"
-                  className="h-11 w-11 shrink-0 touch-manipulation rounded-2xl border-2 border-[#F4A7B9] bg-white text-[#5B342C] shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] xl:hidden"
+                  className="h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 border-[#F4A7B9] bg-white text-[#5B342C] shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl xl:hidden"
                   aria-label="Mở menu"
                   onClick={() => setMobileMenuOpen(true)}
                 >
@@ -453,7 +458,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
-          <div className="studio-ios-scroll studio-mobile-bottom-safe px-2.5 py-3 sm:px-4 sm:py-5 lg:pb-6 xl:px-8">{children}</div>
+          <div className="studio-ios-scroll studio-mobile-bottom-safe studio-xs-tight px-2.5 py-3 sm:px-4 sm:py-5 lg:pb-6 xl:px-8">{children}</div>
         </main>
       </div>
 
@@ -498,8 +503,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
 
       {searchOpen ? (
-        <div className="fixed inset-0 z-[90] bg-[#2B1C1A]/35 p-3 backdrop-blur-sm" onClick={() => setSearchOpen(false)}>
-          <div className="mx-auto mt-16 w-full max-w-2xl overflow-hidden rounded-[1.5rem] border border-[#F4C7C4] bg-white shadow-2xl" onClick={(event) => event.stopPropagation()}>
+        <div className="fixed inset-0 z-[90] bg-[#2B1C1A]/35 p-2 pt-[calc(env(safe-area-inset-top)+0.5rem)] backdrop-blur-sm sm:p-3" onClick={() => setSearchOpen(false)}>
+          <div className="mx-auto flex max-h-[calc(100dvh-1rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-2xl flex-col overflow-hidden rounded-[1.15rem] border border-[#F4C7C4] bg-white shadow-2xl sm:mt-16 sm:rounded-[1.5rem]" onClick={(event) => event.stopPropagation()}>
             <div className="flex items-center gap-3 border-b border-[#F4C7C4] px-4 py-3">
               <Search size={19} className="text-[#EA7188]" />
               <input
@@ -528,7 +533,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </Button>
               ) : null}
             </div>
-            <div className="max-h-[60vh] overflow-y-auto p-3">
+            <div className="studio-ios-scroll min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
               {searchQuery.trim().length < 2 ? (
                 <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Nhập ít nhất 2 ký tự để tìm toàn bộ studio.</p>
               ) : searching ? (
@@ -559,9 +564,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <nav className={`fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC]/60 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg supports-[backdrop-filter]:bg-[#FFF3EC]/40 transition-all duration-300 ease-in-out xl:hidden ${shouldHideMobileNav ? 'hidden' : ''}`} style={{ transform: "translateZ(0)" }}>
-        <div className="mx-auto flex h-14 w-full max-w-md items-center justify-around px-8">
-          {mobilePrimary.map((item) => {
+      <nav className={`fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC]/78 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg supports-[backdrop-filter]:bg-[#FFF3EC]/58 transition-all duration-300 ease-in-out xl:hidden ${shouldHideMobileNav ? 'hidden' : ''}`} style={{ transform: "translateZ(0)" }}>
+        <div className="mx-auto flex h-14 w-full max-w-md items-center justify-around px-3">
+          {bottomMobileItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item);
             return (
@@ -572,7 +577,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               >
                 <div className={`flex flex-col items-center gap-0.5 transition-colors ${active ? "text-[#EA7188]" : "text-[#9B746B] group-hover:text-[#5B342C]"}`}>
                   <Icon size={20} strokeWidth={active ? 2.8 : 2} />
-                  <span className="text-[10px] font-black uppercase tracking-tighter">{item.label}</span>
+                  <span className="max-w-full truncate text-[10px] font-black uppercase">{item.label}</span>
                 </div>
                 {active && (
                   <div className="absolute -bottom-[2px] h-1 w-6 rounded-full bg-[#EA7188] shadow-[0_0_8px_rgba(234,113,136,0.5)]" />

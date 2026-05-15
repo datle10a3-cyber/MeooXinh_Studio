@@ -22,6 +22,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   touch-action: manipulation;
+  overflow-x: hidden;
 }
 
 html,
@@ -38,6 +39,57 @@ html {
 
 * {
   box-sizing: border-box;
+}
+
+#__next,
+main,
+section,
+article,
+header,
+footer,
+nav,
+aside,
+div {
+  min-width: 0;
+}
+
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+span,
+label,
+button,
+a,
+td,
+th {
+  overflow-wrap: anywhere;
+}
+
+button,
+a {
+  max-width: 100%;
+}
+
+button > span,
+a > span {
+  min-width: 0;
+}
+
+.studio-text-balance {
+  text-wrap: balance;
+}
+
+.studio-no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.studio-no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 
 ::selection {
@@ -146,6 +198,12 @@ video {
   padding-bottom: calc(2.5rem + env(safe-area-inset-bottom));
 }
 
+.studio-mobile-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
 /* ─── Mobile-specific performance ─── */
 @media (hover: none), (pointer: coarse) {
   /* Faster transitions on touch devices for snappy feel */
@@ -214,6 +272,27 @@ video {
     min-height: 44px;
   }
 
+  h1 {
+    font-size: clamp(1.45rem, 1.18rem + 1.1vw, 1.875rem);
+    line-height: 1.12;
+  }
+
+  h2 {
+    font-size: clamp(1.15rem, 1rem + 0.7vw, 1.5rem);
+    line-height: 1.18;
+  }
+
+  .mobile-compact-text {
+    font-size: clamp(0.78rem, 0.72rem + 0.28vw, 0.9rem);
+    line-height: 1.35;
+  }
+
+  .mobile-fit-number {
+    font-size: clamp(1.35rem, 1rem + 2.5vw, 2rem) !important;
+    line-height: 1.05;
+    overflow-wrap: anywhere;
+  }
+
   .studio-mobile-form-sheet {
     position: fixed !important;
     inset: auto 0 0 0 !important;
@@ -256,7 +335,7 @@ video {
   }
 
   .studio-mobile-card {
-    border-radius: 1.5rem !important;
+    border-radius: 1.15rem !important;
     box-shadow: var(--shadow-premium) !important;
   }
 
@@ -268,6 +347,37 @@ video {
 
   .shadow-premium {
     box-shadow: var(--shadow-premium);
+  }
+}
+
+@media (max-width: 390px) {
+  body {
+    font-size: 14px;
+  }
+
+  [class*="text-3xl"],
+  [class*="text-4xl"],
+  [class*="text-5xl"],
+  [class*="text-6xl"] {
+    font-size: clamp(1.45rem, 1.05rem + 2.4vw, 2rem) !important;
+    line-height: 1.1 !important;
+  }
+
+  .studio-mobile-bottom-safe {
+    padding-bottom: calc(4.25rem + env(safe-area-inset-bottom));
+  }
+
+  .studio-xs-tight {
+    padding-left: 0.65rem !important;
+    padding-right: 0.65rem !important;
+  }
+
+  .studio-xs-hide {
+    display: none !important;
+  }
+
+  [class*="tracking-["] {
+    letter-spacing: 0.04em !important;
   }
 }
 
