@@ -110,7 +110,7 @@ export function DetailModal({
   }, [scrollKey]);
 
   const modal = (
-    <div className="studio-modal-open-element fixed inset-0 z-[100]">
+    <div className="studio-modal-open-element fixed inset-0 z-[320]">
       {/* Scroll container — absolute fills the fixed shell */}
       <div
         ref={scrollRef}
