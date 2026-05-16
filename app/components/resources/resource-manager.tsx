@@ -2945,14 +2945,33 @@ function WalletAppView({
     await loadShiftData(String(activeWallet.id ?? ""));
   }
 
-  const historyGroups = useMemo(() => {
-    const groups = new Map<string, Row[]>();
-    for (const row of currentShiftTransactions) {
-      const label = formatDayLabel(row.occurredAt ?? row.createdAt);
-      groups.set(label, [...(groups.get(label) ?? []), row]);
-    }
-    return Array.from(groups.entries()).map(([label, groupRows]) => ({ label, rows: groupRows.slice(0, 8) }));
-  }, [currentShiftTransactions]);
+  const walletHistoryColumns = useMemo(
+    () => [
+      {
+        key: "income",
+        title: "Thu",
+        total: currentShiftIncome,
+        icon: <ArrowDownLeft size={16} />,
+        panelClass: "border-emerald-100 bg-emerald-50/65",
+        headerClass: "bg-emerald-600 text-white",
+        amountClass: "text-emerald-700",
+        iconClass: "bg-emerald-100 text-emerald-700",
+        rows: currentShiftTransactions.filter((row) => String(row.type ?? "") === "INCOME").slice(0, 24),
+      },
+      {
+        key: "expense",
+        title: "Chi",
+        total: currentShiftExpense,
+        icon: <ArrowUpRight size={16} />,
+        panelClass: "border-rose-100 bg-rose-50/65",
+        headerClass: "bg-rose-600 text-white",
+        amountClass: "text-rose-700",
+        iconClass: "bg-rose-100 text-rose-700",
+        rows: currentShiftTransactions.filter((row) => String(row.type ?? "") === "EXPENSE").slice(0, 24),
+      },
+    ],
+    [currentShiftTransactions, currentShiftExpense, currentShiftIncome],
+  );
   const transactionsForSelectedShift = selectedShift
     ? activeWalletTransactions.filter((row) => {
         const occurredAt = new Date(String(row.occurredAt ?? row.createdAt ?? ""));
@@ -3484,56 +3503,69 @@ function WalletAppView({
 
         </section>
 
-        <section className="rounded-[2rem] bg-white p-4 shadow-sm sm:p-5">
+        <section className="rounded-[1.5rem] bg-white p-3 shadow-sm sm:rounded-[2rem] sm:p-5">
           <div className="flex items-center justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <p className="text-xs font-black uppercase tracking-[0.16em] text-[#7A7A7A]">Lịch sử giao dịch</p>
-              <h3 className="mt-1 text-2xl font-black text-[#2F2F2F]">Dòng tiền</h3>
+              <h3 className="mt-1 text-xl font-black leading-tight text-[#2F2F2F] sm:text-2xl">Dòng tiền</h3>
             </div>
-            <span className="rounded-full bg-[#F6F7FB] px-3 py-2 text-sm font-black text-[#7A7A7A]">{currentShiftTransactions.length} mục</span>
+            <span className="shrink-0 rounded-full bg-[#F6F7FB] px-3 py-2 text-xs font-black text-[#7A7A7A] sm:text-sm">{currentShiftTransactions.length} mục</span>
           </div>
 
-          <div className="mt-5 space-y-5">
-            {historyGroups.length ? (
-              historyGroups.map((group) => (
-                <div key={group.label} className="space-y-2">
-                  <p className="text-sm font-black text-[#7A7A7A]">{group.label}</p>
-                  <div className="space-y-2">
-                    {group.rows.map((row, index) => {
-                      const id = String(row.id ?? "");
-                      const isIncome = String(row.type ?? "") === "INCOME";
-                      return (
-                        <div
-                          key={id || `${group.label}-${index}`}
-                          className="flex cursor-pointer items-start gap-3 rounded-[1.35rem] bg-[#F6F7FB] p-3 transition hover:bg-white hover:shadow-sm"
-                          onClick={() => onOpenDetail(row)}
-                        >
-                          <div className={cn("grid h-11 w-11 shrink-0 place-items-center rounded-2xl", isIncome ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>
-                            {isIncome ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+          <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3">
+            {currentShiftTransactions.length ? (
+              walletHistoryColumns.map((column) => (
+                <div key={column.key} className={cn("min-w-0 rounded-[1.25rem] border p-2 sm:rounded-[1.5rem] sm:p-3", column.panelClass)}>
+                  <div className={cn("flex min-h-[4.35rem] items-center justify-between gap-2 rounded-[1rem] px-2.5 py-2 sm:px-3", column.headerClass)}>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-black uppercase tracking-wide opacity-80">{column.title}</p>
+                      <p className="mt-0.5 truncate text-sm font-black sm:text-base">{formatMoney(column.total)}</p>
+                    </div>
+                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/18">{column.icon}</span>
+                  </div>
+
+                  <div className="studio-ios-scroll mt-2 max-h-[52dvh] space-y-2 overflow-y-auto pr-0.5">
+                    {column.rows.length ? (
+                      column.rows.map((row, index) => {
+                        const id = String(row.id ?? "");
+                        return (
+                          <div
+                            key={id || `${column.key}-${index}`}
+                            role="button"
+                            tabIndex={0}
+                            className="grid min-h-[7.15rem] cursor-pointer grid-rows-[auto_1fr_auto] rounded-[1rem] bg-white p-2.5 text-left shadow-sm ring-1 ring-black/5 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#EA7188]/35 active:scale-[0.99] sm:min-h-[7.4rem] sm:p-3"
+                            onClick={() => onOpenDetail(row)}
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                onOpenDetail(row);
+                              }
+                            }}
+                          >
+                            <div className="flex items-start justify-between gap-2">
+                              <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-xl", column.iconClass)}>
+                                {column.icon}
+                              </span>
+                              <PrintInvoiceMenu row={row} />
+                            </div>
+                            <div className="min-w-0 py-1">
+                              <p className="line-clamp-2 text-xs font-black leading-4 text-[#2F2F2F] sm:text-sm sm:leading-5">{String(row.title ?? "Giao dịch")}</p>
+                              <p className="mt-1 truncate text-[11px] font-bold text-[#7A7A7A]">{formatDateTimeLabel(row.occurredAt ?? row.createdAt)}</p>
+                            </div>
+                            <p className={cn("truncate text-sm font-black sm:text-base", column.amountClass)}>{column.key === "income" ? "+" : "-"}{formatMoney(row.amount as string | number | null | undefined)}</p>
                           </div>
-                          <div className="min-w-0 flex-1">
-                            <span className="inline-flex rounded-full bg-white px-2.5 py-1 text-[11px] font-black text-[#9B746B] shadow-sm">
-                              {formatDateTimeLabel(row.occurredAt ?? row.createdAt)}
-                            </span>
-                            <p className="whitespace-normal break-words text-sm font-black leading-5 text-[#2F2F2F]">{String(row.title ?? "Giao dịch")}</p>
-                            <p className="mt-0.5 text-xs font-bold text-[#7A7A7A]">
-                              Tạo: {formatDateTimeLabel(row.createdAt)} · Phát sinh: {formatDateTimeLabel(row.occurredAt)} · {viOption(row.approvalStatus)}
-                            </p>
-                          </div>
-                          <div className="flex shrink-0 items-center gap-2">
-                            <p className={cn("text-right text-sm font-black", isIncome ? "text-emerald-700" : "text-rose-700")}>
-                              {isIncome ? "+" : "-"}{formatMoney(row.amount as string | number | null | undefined)}
-                            </p>
-                            <PrintInvoiceMenu row={row} />
-                          </div>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    ) : (
+                      <div className="grid min-h-[7.15rem] place-items-center rounded-[1rem] bg-white p-3 text-center text-xs font-bold text-[#7A7A7A] shadow-sm ring-1 ring-black/5">
+                        Chưa có khoản {column.title.toLowerCase()}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="rounded-[1.5rem] bg-[#F6F7FB] p-6 text-center">
+              <div className="col-span-2 rounded-[1.5rem] bg-[#F6F7FB] p-6 text-center">
                 <WalletCards className="mx-auto text-[#7A7A7A]" size={28} />
                 <p className="mt-3 text-sm font-black text-[#2F2F2F]">Chưa có giao dịch</p>
                 <p className="mt-1 text-xs font-semibold text-[#7A7A7A]">Mở ca và tạo giao dịch để dòng tiền của ca hiện tại hiện ở đây.</p>
