@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Bell, CheckCheck, Volume2 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { Button } from "@/app/components/ui/button";
@@ -69,6 +69,10 @@ function isStandalonePwa() {
   return window.matchMedia("(display-mode: standalone)").matches || navigatorWithStandalone.standalone === true;
 }
 
+function isAppleMobileDevice() {
+  return /iPad|iPhone|iPod/.test(window.navigator.userAgent) || (window.navigator.platform === "MacIntel" && window.navigator.maxTouchPoints > 1);
+}
+
 function pushRequirementMessage() {
   const isLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
   const isInternalIp = /^192\.168\.|^10\.|^172\.(1[6-9]|2\d|3[0-1])\./.test(window.location.hostname);
@@ -78,9 +82,9 @@ function pushRequirementMessage() {
     if (!isLocalhost) return "Thông báo điện thoại cần chạy trên HTTPS.";
   }
 
-  if (!isStandalonePwa()) return "iPhone cần mở app từ biểu tượng đã thêm vào màn hình chính.";
   if (!("serviceWorker" in navigator)) return "Trình duyệt này chưa hỗ trợ service worker.";
   if (!("PushManager" in window) || !("Notification" in window)) return "Thiết bị này chưa hỗ trợ thông báo nền.";
+  if (isAppleMobileDevice() && !isStandalonePwa()) return "iPhone/iPad cần mở app từ biểu tượng đã thêm vào màn hình chính.";
   return "";
 }
 
@@ -100,6 +104,19 @@ export function NotificationBell() {
     setToast(message);
     window.setTimeout(() => setToast(""), duration);
   }
+
+  const savePushSubscription = useCallback(async (subscription: PushSubscription) => {
+    const saved = await fetch("/api/push/subscribe", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(subscription),
+    })
+      .then((res) => res.json())
+      .catch(() => null);
+    const enabled = Boolean(saved?.data?.enabled);
+    setPushEnabled(enabled);
+    return enabled;
+  }, []);
 
   async function enablePushNotifications() {
     const requirementMessage = pushRequirementMessage();
@@ -135,23 +152,37 @@ export function NotificationBell() {
       }
 
       const registration = await navigator.serviceWorker.ready;
-      const subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(publicKey),
-      });
-      const saved = await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(subscription),
-      })
-        .then((res) => res.json())
-        .catch(() => null);
-      setPushEnabled(Boolean(saved?.data?.enabled));
-      showToast(saved?.data?.enabled ? "Đã bật thông báo trên thiết bị này." : "Chưa bật được thông báo.");
+      const currentSubscription = await registration.pushManager.getSubscription();
+      const subscription =
+        currentSubscription ??
+        (await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(publicKey),
+        }));
+      const enabled = await savePushSubscription(subscription);
+      showToast(enabled ? "Đã bật thông báo trên thiết bị này." : "Chưa bật được thông báo.");
     } catch {
-      showToast("Chưa bật được thông báo. iPhone cần mở app PWA từ màn hình chính và dùng HTTPS.", 5500);
+      showToast("Chưa bật được thông báo. iPhone/iPad cần mở app PWA từ màn hình chính; Android cần Chrome/Edge trên HTTPS và cho phép thông báo.", 6500);
     }
   }
+
+  useEffect(() => {
+    let cancelled = false;
+    async function syncCurrentDeviceSubscription() {
+      if (!("serviceWorker" in navigator) || !("PushManager" in window)) return;
+      if ("Notification" in window && Notification.permission !== "granted") return;
+      const registration = await navigator.serviceWorker.ready.catch(() => null);
+      const subscription = await registration?.pushManager.getSubscription().catch(() => null);
+      if (!subscription || cancelled) return;
+      const enabled = await savePushSubscription(subscription).catch(() => false);
+      if (!cancelled) setPushEnabled(enabled);
+    }
+
+    void syncCurrentDeviceSubscription();
+    return () => {
+      cancelled = true;
+    };
+  }, [savePushSubscription]);
 
   useEffect(() => {
     if (!open) return;
@@ -192,7 +223,7 @@ export function NotificationBell() {
           return current;
         });
 
-        const urgent = next.find((item) => item.type === "booking" && !item.isRead && !read.has(item.id));
+        const urgent = next.find((item) => !item.isRead && !read.has(item.id));
         if (urgent) {
           showToast(urgent.title);
           if ("Notification" in window && canSendBrowserNotification(urgent.id)) {
@@ -209,7 +240,7 @@ export function NotificationBell() {
     }
 
     const first = window.setTimeout(() => void load(), 0);
-    const timer = window.setInterval(() => void load(), 30000);
+    const timer = window.setInterval(() => void load(), 10000);
     return () => {
       window.clearTimeout(first);
       window.clearInterval(timer);
