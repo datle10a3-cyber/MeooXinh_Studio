@@ -2657,61 +2657,6 @@ function TransactionDateList({
   );
 }
 
-function ShiftTransactionRow({ row, index, onOpenDetail }: { row: Row; index: number; onOpenDetail: (row: Row) => void }) {
-  if (groupBookingSnapshotFromRow(row)) {
-    return (
-      <GroupBookingCard
-        row={row}
-        resource="wallets"
-        indexLabel={index + 1}
-        selected={false}
-        selectionMode={false}
-        canRemove={false}
-        onToggleSelect={() => undefined}
-        onDelete={() => undefined}
-        onOpenDetail={onOpenDetail}
-      />
-    );
-  }
-  const isIncome = String(row.type ?? "") === "INCOME";
-  const amountPrefix = isIncome ? "+" : "-";
-
-  return (
-    <div
-      role="button"
-      tabIndex={0}
-      className="group flex cursor-pointer items-start justify-between gap-3 rounded-[1.25rem] bg-[#F6F7FB] p-3 text-left transition hover:bg-white hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-[#EA7188]/35 active:scale-[0.99]"
-      onClick={() => onOpenDetail(row)}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          onOpenDetail(row);
-        }
-      }}
-    >
-      <div className="flex min-w-0 flex-1 items-start gap-3">
-        <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-2xl", isIncome ? "bg-emerald-100 text-emerald-700" : "bg-rose-100 text-rose-700")}>
-          {isIncome ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
-        </span>
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="whitespace-normal break-words text-sm font-black text-[#2F2F2F]">{String(row.title ?? "Giao dịch")}</p>
-            <span className="rounded-full bg-white px-2 py-0.5 text-[10px] font-black text-[#9B746B] shadow-sm">#{index + 1}</span>
-          </div>
-          <p className="mt-1 text-xs font-bold text-[#7A7A7A]">{formatDateTimeLabel(row.occurredAt ?? row.createdAt)}</p>
-          <p className="mt-1 text-xs font-black text-[#EA7188] opacity-0 transition group-hover:opacity-100">Bấm để xem đầy đủ thông tin</p>
-        </div>
-      </div>
-      <div className="flex shrink-0 items-start gap-2">
-        <p className={cn("pt-2 text-right text-sm font-black", isIncome ? "text-emerald-700" : "text-rose-700")}>
-          {amountPrefix}{formatMoney(row.amount as string | number | null | undefined)}
-        </p>
-        <PrintInvoiceMenu row={row} />
-      </div>
-    </div>
-  );
-}
-
 function WalletAppView({
   rows,
   transactions,
@@ -2972,17 +2917,114 @@ function WalletAppView({
     ],
     [currentShiftTransactions, currentShiftExpense, currentShiftIncome],
   );
-  const transactionsForSelectedShift = selectedShift
-    ? activeWalletTransactions.filter((row) => {
-        const occurredAt = new Date(String(row.occurredAt ?? row.createdAt ?? ""));
-        const openedAt = new Date(String(selectedShift.openedAt ?? ""));
-        const closedAt = selectedShift.closedAt ? new Date(String(selectedShift.closedAt)) : new Date();
-        return occurredAt >= openedAt && occurredAt <= closedAt;
-      })
-    : [];
+  const transactionsForSelectedShift = useMemo(
+    () =>
+      selectedShift
+        ? activeWalletTransactions.filter((row) => {
+            const occurredAt = new Date(String(row.occurredAt ?? row.createdAt ?? ""));
+            const openedAt = new Date(String(selectedShift.openedAt ?? ""));
+            const closedAt = selectedShift.closedAt ? new Date(String(selectedShift.closedAt)) : new Date();
+            return occurredAt >= openedAt && occurredAt <= closedAt;
+          })
+        : [],
+    [activeWalletTransactions, selectedShift],
+  );
+  const selectedShiftTransactionColumns = useMemo(
+    () => [
+      {
+        key: "income",
+        title: "Thu",
+        total: sumByType(transactionsForSelectedShift, "INCOME"),
+        icon: <ArrowDownLeft size={16} />,
+        panelClass: "border-emerald-100 bg-emerald-50/65",
+        headerClass: "bg-emerald-600 text-white",
+        amountClass: "text-emerald-700",
+        iconClass: "bg-emerald-100 text-emerald-700",
+        rows: transactionsForSelectedShift.filter((row) => String(row.type ?? "") === "INCOME"),
+      },
+      {
+        key: "expense",
+        title: "Chi",
+        total: sumByType(transactionsForSelectedShift, "EXPENSE"),
+        icon: <ArrowUpRight size={16} />,
+        panelClass: "border-rose-100 bg-rose-50/65",
+        headerClass: "bg-rose-600 text-white",
+        amountClass: "text-rose-700",
+        iconClass: "bg-rose-100 text-rose-700",
+        rows: transactionsForSelectedShift.filter((row) => String(row.type ?? "") === "EXPENSE"),
+      },
+    ],
+    [transactionsForSelectedShift],
+  );
   const closingExpected = Number(openShift?.expectedClosingBalance ?? 0);
   const closingActual = actualClosingBalance === "" ? closingExpected : Number(actualClosingBalance);
   const closingDifference = closingActual - closingExpected;
+
+  const renderSelectedShiftTransactions = () => (
+    <div className="mt-5">
+      <div className="flex items-center justify-between gap-3">
+        <h4 className="text-base font-black text-[#2F2F2F]">Giao dịch trong ca</h4>
+        <span className="rounded-full bg-[#F6F7FB] px-3 py-1 text-xs font-black text-[#7A7A7A]">{transactionsForSelectedShift.length} mục</span>
+      </div>
+      {transactionsForSelectedShift.length ? (
+        <div className="mt-3 grid grid-cols-2 gap-2 sm:gap-3">
+          {selectedShiftTransactionColumns.map((column) => (
+            <div key={column.key} className={cn("min-w-0 rounded-[1.25rem] border p-2 sm:rounded-[1.5rem] sm:p-3", column.panelClass)}>
+              <div className={cn("flex min-h-[4rem] items-center justify-between gap-2 rounded-[1rem] px-2.5 py-2 sm:px-3", column.headerClass)}>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-black uppercase tracking-wide opacity-80">{column.title}</p>
+                  <p className="mt-0.5 truncate text-sm font-black sm:text-base">{formatMoney(column.total)}</p>
+                </div>
+                <span className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/18">{column.icon}</span>
+              </div>
+              <div className="studio-ios-scroll mt-2 max-h-[42dvh] space-y-2 overflow-y-auto pr-0.5">
+                {column.rows.length ? (
+                  column.rows.map((row, index) => {
+                    const id = String(row.id ?? "");
+                    return (
+                      <div
+                        key={id || `${column.key}-${index}`}
+                        role="button"
+                        tabIndex={0}
+                        className="grid min-h-[6.9rem] cursor-pointer grid-rows-[auto_1fr_auto] rounded-[1rem] bg-white p-2.5 text-left shadow-sm ring-1 ring-black/5 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#EA7188]/35 active:scale-[0.99] sm:p-3"
+                        onClick={() => onOpenDetail(row)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            onOpenDetail(row);
+                          }
+                        }}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <span className={cn("grid h-8 w-8 shrink-0 place-items-center rounded-xl", column.iconClass)}>
+                            {column.icon}
+                          </span>
+                          <PrintInvoiceMenu row={row} />
+                        </div>
+                        <div className="min-w-0 py-1">
+                          <p className="line-clamp-2 text-xs font-black leading-4 text-[#2F2F2F] sm:text-sm sm:leading-5">{String(row.title ?? "Giao dịch")}</p>
+                          <p className="mt-1 truncate text-[11px] font-bold text-[#7A7A7A]">{formatDateTimeLabel(row.occurredAt ?? row.createdAt)}</p>
+                        </div>
+                        <p className={cn("truncate text-sm font-black sm:text-base", column.amountClass)}>{column.key === "income" ? "+" : "-"}{formatMoney(row.amount as string | number | null | undefined)}</p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <div className="grid min-h-[6.9rem] place-items-center rounded-[1rem] bg-white p-3 text-center text-xs font-bold text-[#7A7A7A] shadow-sm ring-1 ring-black/5">
+                    Chưa có khoản {column.title.toLowerCase()}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="mt-3 rounded-[1.5rem] bg-[#F6F7FB] p-5 text-center text-sm font-bold text-[#7A7A7A]">
+          Ca này chưa có giao dịch.
+        </div>
+      )}
+    </div>
+  );
 
   const renderClosedShiftList = () => (
     <div className="mt-6">
@@ -3181,8 +3223,8 @@ function WalletAppView({
 
         {selectedShift ? (
           <Portal>
-            <div className="fixed inset-0 z-[150] grid place-items-center bg-black/40 p-4" onClick={() => setSelectedShift(null)}>
-              <Card className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-[1.75rem] border-white bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+            <div className="fixed inset-0 z-[220] grid place-items-start bg-black/45 p-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:place-items-center sm:p-4" onClick={() => setSelectedShift(null)}>
+              <Card className="max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-3xl overflow-y-auto rounded-[1.5rem] border-white bg-white p-4 shadow-2xl sm:rounded-[1.75rem] sm:p-5" onClick={(event) => event.stopPropagation()}>
                 <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết ca</p>
@@ -3197,20 +3239,7 @@ function WalletAppView({
                   <InfoPill label="Tổng chi" value={formatMoney(selectedShift.totalExpense as string | number | null | undefined)} />
                   <InfoPill label="Chênh lệch" value={formatMoney(selectedShift.difference as string | number | null | undefined)} />
                 </div>
-                <div className="mt-5">
-                  <h4 className="text-base font-black text-[#2F2F2F]">Giao dịch trong ca</h4>
-                  {transactionsForSelectedShift.length ? (
-                    <div className="mt-3 space-y-2">
-                      {transactionsForSelectedShift.map((row, index) => (
-                        <ShiftTransactionRow key={String(row.id ?? index)} row={row} index={index} onOpenDetail={onOpenDetail} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="mt-3 rounded-[1.5rem] bg-[#F6F7FB] p-5 text-center text-sm font-bold text-[#7A7A7A]">
-                      Ca này chưa có giao dịch.
-                    </div>
-                  )}
-                </div>
+                {renderSelectedShiftTransactions()}
               </Card>
             </div>
           </Portal>
@@ -3463,8 +3492,8 @@ function WalletAppView({
 
           {selectedShift ? (
             <Portal>
-              <div className="fixed inset-0 z-[150] grid place-items-center bg-black/40 p-4" onClick={() => setSelectedShift(null)}>
-                <Card className="max-h-[88vh] w-full max-w-2xl overflow-y-auto rounded-[1.75rem] border-white bg-white p-5 shadow-2xl" onClick={(event) => event.stopPropagation()}>
+              <div className="fixed inset-0 z-[220] grid place-items-start bg-black/45 p-3 pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:place-items-center sm:p-4" onClick={() => setSelectedShift(null)}>
+                <Card className="max-h-[calc(100dvh-1.5rem-env(safe-area-inset-top)-env(safe-area-inset-bottom))] w-full max-w-3xl overflow-y-auto rounded-[1.5rem] border-white bg-white p-4 shadow-2xl sm:rounded-[1.75rem] sm:p-5" onClick={(event) => event.stopPropagation()}>
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Chi tiết ca</p>
@@ -3482,20 +3511,7 @@ function WalletAppView({
                     <InfoPill label="Tổng chi" value={formatMoney(selectedShift.totalExpense as string | number | null | undefined)} />
                     <InfoPill label="Chênh lệch" value={formatMoney(selectedShift.difference as string | number | null | undefined)} />
                   </div>
-                  <div className="mt-5">
-                    <h4 className="text-base font-black text-[#2F2F2F]">Giao dịch trong ca</h4>
-                    {transactionsForSelectedShift.length ? (
-                      <div className="mt-3 space-y-2">
-                        {transactionsForSelectedShift.map((row, index) => (
-                          <ShiftTransactionRow key={String(row.id ?? index)} row={row} index={index} onOpenDetail={onOpenDetail} />
-                        ))}
-                      </div>
-                    ) : (
-                      <div className="mt-3 rounded-[1.5rem] bg-[#F6F7FB] p-5 text-center text-sm font-bold text-[#7A7A7A]">
-                        Ca này chưa có giao dịch.
-                      </div>
-                    )}
-                  </div>
+                  {renderSelectedShiftTransactions()}
                 </Card>
               </div>
             </Portal>
