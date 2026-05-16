@@ -27,7 +27,7 @@ export async function GET() {
     const nowTime = Date.now();
     const lastCheck = studioGenerationLock.get(user.studioId) ?? 0;
 
-    if (nowTime - lastCheck > 10000) {
+    if (nowTime - lastCheck > 2500) {
       studioGenerationLock.set(user.studioId, nowTime);
       await generateStudioNotifications(user.studioId, user.id);
     }

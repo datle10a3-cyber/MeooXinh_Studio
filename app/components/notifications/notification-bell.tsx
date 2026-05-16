@@ -44,8 +44,8 @@ function saveReadIds(ids: Set<string>) {
 }
 
 function notificationKey(id: string) {
-  const day = new Date().toISOString().slice(0, 10);
-  return `studio_notify_count_${day}_${id}`;
+  const halfDayBucket = Math.floor(Date.now() / (12 * 60 * 60 * 1000));
+  return `studio_notify_count_${halfDayBucket}_${id}`;
 }
 
 function canSendBrowserNotification(id: string) {
@@ -239,11 +239,20 @@ export function NotificationBell() {
       }
     }
 
+    const reloadWhenVisible = () => {
+      if (document.visibilityState === "visible") void load();
+    };
     const first = window.setTimeout(() => void load(), 0);
-    const timer = window.setInterval(() => void load(), 10000);
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === "visible") void load();
+    }, 3000);
+    window.addEventListener("focus", reloadWhenVisible);
+    document.addEventListener("visibilitychange", reloadWhenVisible);
     return () => {
       window.clearTimeout(first);
       window.clearInterval(timer);
+      window.removeEventListener("focus", reloadWhenVisible);
+      document.removeEventListener("visibilitychange", reloadWhenVisible);
     };
   }, [read]);
 

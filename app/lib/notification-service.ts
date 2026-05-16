@@ -68,7 +68,7 @@ async function createNotificationOnce(input: {
 
 export async function generateStudioNotifications(studioId: string, userId?: string | null) {
   const now = new Date();
-  const inOneDay = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+  const inTwelveHours = new Date(now.getTime() + 12 * 60 * 60 * 1000);
   const inThreeDays = new Date(now.getTime() + 3 * 24 * 60 * 60 * 1000);
 
   const [bookings, invoices, projects] = await Promise.all([
@@ -77,7 +77,7 @@ export async function generateStudioNotifications(studioId: string, userId?: str
         studioId,
         deletedAt: null,
         status: { notIn: ["CANCELLED", "COMPLETED"] },
-        startAt: { gt: now, lte: inOneDay },
+        startAt: { gt: now, lte: inTwelveHours },
       },
       orderBy: { startAt: "asc" },
       take: 20,
@@ -125,8 +125,8 @@ export async function generateStudioNotifications(studioId: string, userId?: str
       studioId,
       userId,
       type: "BOOKING",
-      title: isGroup ? "Nhắc booking nhóm sắp tới" : "Nhắc lịch chụp sắp tới",
-      message: `${customerText} bắt đầu lúc ${bookingTimeLabel(booking.startAt)}.${isGroup ? bookingPackageSummary(group) : ""}`,
+      title: isGroup ? "Còn 12 tiếng tới booking nhóm" : "Còn 12 tiếng tới lịch chụp",
+      message: `${customerText} còn dưới 12 tiếng, bắt đầu lúc ${bookingTimeLabel(booking.startAt)}.${isGroup ? bookingPackageSummary(group) : ""}`,
       dueAt: booking.startAt,
       url: "/booking",
     });
