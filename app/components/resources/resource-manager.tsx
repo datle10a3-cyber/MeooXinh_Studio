@@ -43,6 +43,7 @@ import { cn } from "@/app/utils/cn";
 import { useUiStore } from "@/app/store/ui-store";
 import { navigateStudioView } from "@/app/utils/studio-navigation";
 import { useProgressiveList, ProgressiveListSentinel } from "@/app/components/ui/progressive-list";
+import { buildStudioReceiptHtml, openReceiptPrintWindow } from "@/app/utils/receipt-template";
 
 type Row = Record<string, unknown>;
 type TransactionView = "income" | "expense" | null;
@@ -596,6 +597,36 @@ function printGroupCustomerBill(group: GroupBookingSnapshot, customer: GroupBook
 }
 
 function printGroupInvoiceClean(group: GroupBookingSnapshot) {
+  {
+    const code = groupInvoiceCode(group);
+    openReceiptPrintWindow(buildStudioReceiptHtml({
+      title: "HÓA ĐƠN THANH TOÁN",
+      code,
+      customer: group.groupName,
+      time: formatDateTimeLabel(group.paymentInfo?.paidAt || group.createdAt),
+      packageTitle: `Booking nhóm - ${group.groupName}`,
+      lines: group.customers.map((customer) => {
+        const original = Number(customer.subtotal ?? customer.totalAmount);
+        const finalAmount = Number(customer.totalAmount);
+        return {
+          name: customer.customerName,
+          description: customer.packageName,
+          amount: finalAmount,
+          originalAmount: original,
+          discountText: finalAmount < original ? `Giảm ${formatMoney(original - finalAmount)}` : undefined,
+        };
+      }),
+      subtotal: group.subtotal,
+      discount: group.discount,
+      extraFee: group.extraFee,
+      total: group.totalAmount,
+      statusText: "ĐÃ THANH TOÁN ✓",
+      qrUrl: buildPaymentQrUrl(group.totalAmount, code),
+      qrAmountLabel: `Số tiền: ${formatMoney(group.totalAmount)}`,
+      printButtonLabel: "In hóa đơn",
+    }));
+    return;
+  }
   const code = groupInvoiceCode(group);
   const rows = group.customers.map((customer, index) => `
     <div class="item">
@@ -617,6 +648,35 @@ function printGroupInvoiceClean(group: GroupBookingSnapshot) {
 }
 
 function printGroupCustomerBillClean(group: GroupBookingSnapshot, customer: GroupBookingCustomerSnapshot) {
+  {
+    const code = customer.invoiceCode || groupInvoiceCode(group);
+    const subtotal = Number(customer.subtotal ?? customer.totalAmount);
+    const total = Number(customer.totalAmount);
+    openReceiptPrintWindow(buildStudioReceiptHtml({
+      title: "HÓA ĐƠN THANH TOÁN",
+      code,
+      customer: customer.customerName,
+      time: formatDateTimeLabel(group.paymentInfo?.paidAt || group.createdAt),
+      packageTitle: customer.packageName,
+      packageSubtitle: `Booking nhóm - ${group.groupName}`,
+      lines: [{
+        name: customer.packageName,
+        description: group.groupName,
+        quantity: "x1",
+        amount: total,
+        originalAmount: subtotal,
+        discountText: total < subtotal ? `Giảm ${formatMoney(subtotal - total)}` : undefined,
+      }],
+      subtotal,
+      extraFee: customer.extraFee ?? 0,
+      total,
+      statusText: "ĐÃ THANH TOÁN ✓",
+      qrUrl: buildPaymentQrUrl(total, code),
+      qrAmountLabel: `Số tiền: ${formatMoney(total)}`,
+      printButtonLabel: "In hóa đơn",
+    }));
+    return;
+  }
   const code = customer.invoiceCode || groupInvoiceCode(group);
   const qr = buildPaymentQrUrl(customer.totalAmount, code);
   const qrBlock = qr ? `<div class="sep"></div><div class="center qr"><img src="${receiptEscape(qr)}" alt="QR"/><div class="small bold">Quét mã thanh toán</div></div>` : "";

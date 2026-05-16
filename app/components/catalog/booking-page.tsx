@@ -16,6 +16,7 @@ import { viOption } from "@/app/lib/vietnamese-labels";
 import { useUiStore } from "@/app/store/ui-store";
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { Portal } from "@/app/components/ui/portal";
+import { buildStudioReceiptHtml, openReceiptPrintWindow, type StudioReceiptLine } from "@/app/utils/receipt-template";
 
 type CustomerItem = { id: string; name: string; phone?: string | null; avatarUrl?: string | null };
 type CustomerPage = { items: CustomerItem[] };
@@ -1412,7 +1413,14 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         groupName={paymentGroup?.title ?? bookingGroupName(paymentTarget?.note)}
         onCancel={() => setPaymentTarget(null)}
         onPay={() => paymentTarget ? void changeStatus(paymentTarget, "COMPLETED") : undefined}
-        onPrintEstimate={() => paymentTarget ? printGroupEstimateInvoice(paymentGroup?.title ?? bookingGroupName(paymentTarget.note) ?? "Booking nhóm", paymentGroupRows) : undefined}
+        onPrintEstimate={() => {
+          if (!paymentTarget) return;
+          if (paymentGroupRows.length > 1) {
+            printGroupEstimateInvoice(paymentGroup?.title ?? bookingGroupName(paymentTarget.note) ?? "Booking nhóm", paymentGroupRows);
+            return;
+          }
+          printPersonalEstimateInvoice(paymentTarget);
+        }}
         onPayAndPrint={() => {
           if (!paymentTarget) return;
           const printWindow = window.open("", "_blank", "width=900,height=1000");
@@ -1680,15 +1688,13 @@ function PaymentConfirmModal({
               <span className="break-words text-right text-lg font-black text-[#EA7188] sm:text-xl">{formatMoney(totalAmount)}</span>
             </div>
           </div>
-          <div className={`mt-3 grid shrink-0 gap-2 sm:mt-5 ${isGroup ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
+          <div className="mt-3 grid shrink-0 gap-2 sm:mt-5 sm:grid-cols-4">
             <Button variant="secondary" className="min-h-11" onClick={onCancel} disabled={loading}>
               Hủy
             </Button>
-            {isGroup ? (
-              <Button variant="secondary" className="min-h-11" onClick={onPrintEstimate} disabled={loading}>
-                <ReceiptText size={16} /> In tạm tính
-              </Button>
-            ) : null}
+            <Button variant="secondary" className="min-h-11" onClick={onPrintEstimate} disabled={loading}>
+              <ReceiptText size={16} /> In tạm tính
+            </Button>
             <Button className="min-h-11" onClick={onPay} disabled={loading}>
               {loading ? <Loader2 size={16} className="animate-spin mr-2" /> : null}
               Thanh toán
@@ -1742,7 +1748,76 @@ function formatReceiptDateTime(value: unknown) {
   }).format(safeDate);
 }
 
+function bookingDiscountText(originalAmount: unknown, finalAmount: unknown) {
+  const discount = Math.max(0, moneyNumber(originalAmount) - moneyNumber(finalAmount));
+  return discount > 0 ? `Giảm ${formatMoney(discount)}` : undefined;
+}
+
+function personalReceiptLines(booking: BookingItem): StudioReceiptLine[] {
+  const originalPrice = moneyNumber(booking.price);
+  const finalPrice = moneyNumber(booking.invoiceTotal ?? booking.invoiceItems?.[0]?.total ?? booking.total ?? booking.price);
+  const packageName = booking.invoicePackageName || booking.invoiceItems?.[0]?.description || booking.packageName || "Gói dịch vụ";
+  return [{
+    name: packageName,
+    description: booking.invoiceCategoryName || booking.categoryName || booking.package?.category?.name || "STUDIO",
+    quantity: "x1",
+    amount: finalPrice,
+    originalAmount: originalPrice,
+    discountText: bookingDiscountText(originalPrice, finalPrice),
+  }];
+}
+
+function printPersonalEstimateInvoice(booking: BookingItem) {
+  const total = moneyNumber(booking.total ?? booking.price);
+  const code = `TT-${booking.id.slice(-6).toUpperCase()}`;
+  openReceiptPrintWindow(buildStudioReceiptHtml({
+    title: "BILL TẠM TÍNH",
+    code,
+    customer: booking.customerName || "Khách hàng",
+    time: formatReceiptDateTime(new Date()),
+    packageTitle: booking.packageName || "Gói dịch vụ",
+    packageSubtitle: booking.categoryName || booking.package?.category?.name || "STUDIO",
+    lines: personalReceiptLines(booking),
+    total,
+    totalLabel: "TỔNG TẠM TÍNH",
+    statusText: "TẠM TÍNH",
+    qrUrl: buildPaymentQrUrl(total, code),
+    qrAmountLabel: `Số tiền: ${formatMoney(total)}`,
+    printButtonLabel: "In tạm tính",
+  }));
+}
+
 function printGroupEstimateInvoice(groupName: string, rows: BookingItem[]) {
+  {
+  const total = rows.reduce((sum, row) => sum + moneyNumber(row.total ?? row.price), 0);
+  const code = `TT-${groupName.replace(/\s+/g, "").slice(0, 10) || "GROUP"}`;
+  openReceiptPrintWindow(buildStudioReceiptHtml({
+    title: "BILL TẠM TÍNH",
+    code,
+    customer: groupName,
+    time: formatReceiptDateTime(new Date()),
+    packageTitle: `Booking nhóm - ${groupName}`,
+    lines: rows.map((row) => {
+      const original = moneyNumber(row.price);
+      const finalAmount = moneyNumber(row.total ?? row.price);
+      return {
+        name: row.customerName || "Khách hàng",
+        description: row.packageName || "Gói dịch vụ",
+        quantity: "x1",
+        amount: finalAmount,
+        originalAmount: original,
+        discountText: bookingDiscountText(original, finalAmount),
+      };
+    }),
+    total,
+    totalLabel: "TỔNG TẠM TÍNH",
+    statusText: "TẠM TÍNH",
+    qrUrl: buildPaymentQrUrl(total, code),
+    qrAmountLabel: `Số tiền: ${formatMoney(total)}`,
+    printButtonLabel: "In tạm tính",
+  }));
+    return;
+  }
   const total = rows.reduce((sum, row) => sum + moneyNumber(row.total ?? row.price), 0);
   const items = rows.map((row, index) => {
     const orig = moneyNumber(row.price);
@@ -1755,11 +1830,42 @@ function printGroupEstimateInvoice(groupName: string, rows: BookingItem[]) {
   </style></head><body><div class="no-print toolbar"><button class="btn btn-print" onclick="window.print()">In tạm tính</button><button class="btn btn-close" onclick="window.close()">Đóng</button></div><div class="receipt"><div class="brand-box"><img class="logo" src="/be-meo-studio-avatar.svg" alt="Mèoo Xinhh"/><div><div class="brand">Mèoo Xinhh Studio</div><div class="address">make & photo</div><div class="address">☎ ${receiptEscape(STUDIO_PHONE)}</div><div class="address">⌂ ${receiptEscape(STUDIO_ADDRESS)}</div></div></div><div class="title">BILL TẠM TÍNH</div><div class="info row"><span class="label">Nhóm</span><span class="left">: ${receiptEscape(groupName)}</span></div><div class="info row"><span class="label">Giờ</span><span class="left">: ${receiptEscape(formatReceiptDateTime(new Date()))}</span></div><div class="sep"></div><div class="section">GÓI CHỤP</div><div>Booking nhóm - ${receiptEscape(groupName)}</div><div class="sep"></div><div class="section">CHI TIẾT</div>${items}<div class="solid"></div><div class="row bold total"><span>TỔNG TẠM TÍNH</span><span class="right">${receiptEscape(formatMoney(total))}</span></div><div class="sep"></div><div class="center qr"><img src="${receiptEscape(buildPaymentQrUrl(total, `TT-${groupName.replace(/\\s+/g, "").slice(0, 10)}`))}" alt="QR" style="width:128px;height:128px;object-fit:contain;margin:4px auto;display:block"/><div class="small bold">Quét mã để thanh toán</div></div><div class="sep"></div><div class="center thanks">Cảm ơn quý khách ♥<br/><span class="bold">MÈOO XINHH STUDIO</span></div></div><script>window.onload=()=>{try{window.print();}catch(e){console.error(e);}};</script></body></html>`;
   const popup = window.open("", "_blank", "width=900,height=1000");
   if (!popup) return;
-  popup.document.write(html);
-  popup.document.close();
+  popup!.document.write(html);
+  popup!.document.close();
 }
 
 function printGroupBookingInvoice(groupBooking: GroupBookingSnapshot, targetWindow?: Window | null) {
+  {
+    const invoiceCode = groupBooking.paymentInfo?.invoiceCode || groupBooking.customers[0]?.invoiceCode || "Group-meoxinh--";
+    const paidAt = groupBooking.paymentInfo?.paidAt || groupBooking.createdAt || new Date();
+    openReceiptPrintWindow(buildStudioReceiptHtml({
+      title: "HÓA ĐƠN THANH TOÁN",
+      code: invoiceCode,
+      customer: groupBooking.groupName,
+      time: formatReceiptDateTime(paidAt),
+      packageTitle: `Booking nhóm - ${groupBooking.groupName}`,
+      lines: groupBooking.customers.map((customer) => {
+        const original = moneyNumber(customer.subtotal ?? customer.totalAmount);
+        const finalAmount = moneyNumber(customer.totalAmount);
+        return {
+          name: customer.customerName,
+          description: customer.packageName,
+          amount: finalAmount,
+          originalAmount: original,
+          discountText: bookingDiscountText(original, finalAmount),
+        };
+      }),
+      subtotal: groupBooking.subtotal,
+      discount: groupBooking.discount,
+      extraFee: groupBooking.extraFee,
+      total: groupBooking.totalAmount,
+      statusText: "ĐÃ THANH TOÁN ✓",
+      qrUrl: buildPaymentQrUrl(groupBooking.totalAmount, invoiceCode),
+      qrAmountLabel: `Số tiền: ${formatMoney(groupBooking.totalAmount)}`,
+      printButtonLabel: "In hóa đơn",
+    }), targetWindow);
+    return;
+  }
   const invoiceCode = groupBooking.paymentInfo?.invoiceCode || groupBooking.customers[0]?.invoiceCode || "Group-meoxinh--";
   const paidAt = groupBooking.paymentInfo?.paidAt || groupBooking.createdAt || new Date();
   const rows = groupBooking.customers.map((customer, index) => {
@@ -1856,11 +1962,30 @@ function printGroupBookingInvoice(groupBooking: GroupBookingSnapshot, targetWind
 </html>`;
   const popup = targetWindow ?? window.open("", "_blank", "width=900,height=1000");
   if (!popup) return;
-  popup.document.write(html);
-  popup.document.close();
+  popup!.document.write(html);
+  popup!.document.close();
 }
 
 function printBookingInvoice(booking: BookingItem, targetWindow?: Window | null) {
+  {
+    const invoiceCode = booking.invoiceCode || `meoxinh--`;
+    const total = moneyNumber(booking.invoiceTotal ?? booking.invoiceItems?.[0]?.total ?? booking.total ?? booking.price);
+    openReceiptPrintWindow(buildStudioReceiptHtml({
+      title: "HÓA ĐƠN THANH TOÁN",
+      code: invoiceCode,
+      customer: booking.invoiceCustomerName || booking.customerName || "Khách hàng",
+      time: formatReceiptDateTime(booking.invoiceIssueDate || new Date()),
+      packageTitle: booking.invoicePackageName || booking.invoiceItems?.[0]?.description || booking.packageName || "Gói dịch vụ",
+      packageSubtitle: booking.invoiceCategoryName || booking.categoryName || booking.package?.category?.name || "STUDIO",
+      lines: personalReceiptLines(booking),
+      total,
+      statusText: "ĐÃ THANH TOÁN ✓",
+      qrUrl: buildPaymentQrUrl(total, invoiceCode),
+      qrAmountLabel: `Số tiền: ${formatMoney(total)}`,
+      printButtonLabel: "In hóa đơn",
+    }), targetWindow);
+    return;
+  }
   const invoiceCode = booking.invoiceCode || `meoxinh--`;
   const customerName = booking.invoiceCustomerName || booking.customerName || "Khách hàng";
   const packageName = booking.invoicePackageName || booking.invoiceItems?.[0]?.description || booking.packageName || "Gói dịch vụ";
@@ -1875,14 +2000,11 @@ function printBookingInvoice(booking: BookingItem, targetWindow?: Window | null)
 
   let discountLabel = "";
   let discountPercent = "";
-  if (booking.note) {
-    const match = /Giảm giá:\s*([^\n\r()]+)(?:\s*\((\d+%)\))?/.exec(booking.note);
-    if (match) {
-      discountLabel = match[1].trim();
-      if (match[2]) {
-        discountPercent = match[2];
-      }
-    }
+  const legacyNote = String(booking.note ?? "");
+  if (legacyNote) {
+    const match = /Giảm giá:\s*([^\n\r()]+)(?:\s*\((\d+%)\))?/.exec(legacyNote);
+    discountLabel = match?.[1]?.trim() ?? "";
+    discountPercent = match?.[2] ?? "";
   }
 
   if (!discountLabel && discountAmount > 0) {
@@ -2006,6 +2128,6 @@ function printBookingInvoice(booking: BookingItem, targetWindow?: Window | null)
 </html>`;
   const popup = targetWindow ?? window.open("", "_blank", "width=900,height=1000");
   if (!popup) return;
-  popup.document.write(html);
-  popup.document.close();
+  popup!.document.write(html);
+  popup!.document.close();
 }
