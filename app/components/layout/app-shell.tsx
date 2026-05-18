@@ -20,6 +20,7 @@ import {
   Moon,
   Package,
   Search,
+  ShieldCheck,
   Settings,
   Sun,
   Trash2,
@@ -33,6 +34,7 @@ import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/com
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { studioViewPath } from "@/app/utils/studio-navigation";
+import { isRootAdminSession } from "@/app/utils/root-admin";
 
 const Sidebar = dynamic(
   () =>
@@ -102,6 +104,7 @@ const mobilePrimary: NavItem[] = [
 
 const mobilePrimaryOrder = ["home", "booking", "wallets", "ai"];
 const bottomMobileItems = [...mobilePrimary].sort((a, b) => mobilePrimaryOrder.indexOf(a.id) - mobilePrimaryOrder.indexOf(b.id));
+const rootAdminNavItem: NavItem = { id: "root-admins", label: "Admin", href: "/root-admins", icon: ShieldCheck };
 
 const mobileGroups: { title: string; items: NavItem[] }[] = [
   {
@@ -185,6 +188,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
+  const canManageRootAdmins = isRootAdminSession(session);
+  const visibleMobileGroups = canManageRootAdmins
+    ? mobileGroups.map((group) => group.title === "Quản lý" || group.title === "Quáº£n lĂ½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
+    : mobileGroups;
 
   // Sync session from localStorage instantly on client render
   useEffect(() => {
@@ -473,7 +480,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </Button>
             </div>
             <div className="studio-ios-scroll flex-1 space-y-4 overflow-y-auto p-3 pb-[max(env(safe-area-inset-bottom),2rem)] sm:p-4">
-              {mobileGroups.map((group) => (
+              {visibleMobileGroups.map((group) => (
                 <section key={group.title}>
                   <p className="mb-2 px-1 text-xs font-black uppercase tracking-wide text-[#C87888]">{group.title}</p>
                   <div className="grid gap-2">

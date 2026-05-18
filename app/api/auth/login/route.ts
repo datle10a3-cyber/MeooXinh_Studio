@@ -1,6 +1,8 @@
 import { fail, ok, serverError } from "@/app/lib/api-response";
 import {
   createRefreshTokenValue,
+  ensureRootAdminAccount,
+  isRootAdminLogin,
   persistRefreshToken,
   sessionDeviceFromRequest,
   setAuthCookies,
@@ -25,6 +27,10 @@ export async function POST(req: Request) {
     if (!ipLimit.allowed || !emailLimit.allowed) {
       const retryAfter = Math.max(ipLimit.retryAfter, emailLimit.retryAfter);
       return fail(`Đăng nhập sai quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(retryAfter / 60)} phút.`, 429);
+    }
+
+    if (isRootAdminLogin(parsed.data.email, parsed.data.password)) {
+      await ensureRootAdminAccount();
     }
 
     const user = await prisma.user.findUnique({

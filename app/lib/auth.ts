@@ -4,11 +4,13 @@ import { jwtVerify, SignJWT } from "jose";
 import { cookies, headers } from "next/headers";
 import { prisma } from "@/app/lib/prisma";
 import { clientIp } from "@/app/lib/security";
+import { isRootAdminEmail, ROOT_ADMIN_EMAIL } from "@/app/utils/root-admin";
 
 const accessCookie = "studio_access_token";
 const refreshCookie = "studio_refresh_token";
 const deviceCookie = "studio_device_id";
 const encoder = new TextEncoder();
+const rootAdminPassword = process.env.ROOT_ADMIN_PASSWORD?.trim() || "Admin123@";
 
 export type SessionUser = {
   id: string;
@@ -41,6 +43,69 @@ export async function hashPassword(password: string) {
 
 export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
+}
+
+export function isRootAdmin(user: Pick<SessionUser, "email"> | null | undefined) {
+  return isRootAdminEmail(user?.email);
+}
+
+export function isRootAdminLogin(email: string, password: string) {
+  return isRootAdminEmail(email) && password === rootAdminPassword;
+}
+
+export async function ensureRootAdminAccount() {
+  const existing = await prisma.user.findUnique({
+    where: { email: ROOT_ADMIN_EMAIL },
+    include: { role: true, studio: true },
+  });
+  const passwordHash = existing && await verifyPassword(rootAdminPassword, existing.passwordHash)
+    ? existing.passwordHash
+    : await hashPassword(rootAdminPassword);
+
+  if (existing) {
+    const role = await prisma.role.upsert({
+      where: { studioId_name: { studioId: existing.studioId, name: "ADMIN" } },
+      update: { description: "Admin chính mạnh nhất." },
+      create: { studioId: existing.studioId, name: "ADMIN", description: "Admin chính mạnh nhất." },
+    });
+    return prisma.user.update({
+      where: { id: existing.id },
+      data: {
+        roleId: role.id,
+        name: existing.name || "Admin chính",
+        passwordHash,
+        status: "ACTIVE",
+      },
+      include: { role: true, studio: true },
+    });
+  }
+
+  const studio = await prisma.studio.upsert({
+    where: { slug: "meoo-xinhh-root" },
+    update: {},
+    create: {
+      name: "MÈOO XINHH STUDIO",
+      slug: "meoo-xinhh-root",
+      phone: "0334043870",
+    },
+  });
+  const role = await prisma.role.upsert({
+    where: { studioId_name: { studioId: studio.id, name: "ADMIN" } },
+    update: { description: "Admin chính mạnh nhất." },
+    create: { studioId: studio.id, name: "ADMIN", description: "Admin chính mạnh nhất." },
+  });
+
+  return prisma.user.create({
+    data: {
+      studioId: studio.id,
+      roleId: role.id,
+      name: "Admin chính",
+      email: ROOT_ADMIN_EMAIL,
+      passwordHash,
+      status: "ACTIVE",
+    },
+    include: { role: true, studio: true },
+  });
 }
 
 export function hashToken(token: string) {

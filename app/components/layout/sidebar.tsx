@@ -16,6 +16,7 @@ import {
   LayoutDashboard,
   Package,
   Settings,
+  ShieldCheck,
   Sparkles,
   Trash2,
   Users,
@@ -35,6 +36,7 @@ import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { cn } from "@/app/utils/cn";
 import { studioViewPath } from "@/app/utils/studio-navigation";
+import { isRootAdminSession } from "@/app/utils/root-admin";
 
 type NavItem = {
   id: string;
@@ -158,6 +160,12 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
     ],
   },
 ];
+const rootAdminNavItem: NavItem = {
+  id: "root-admins",
+  label: "Admin",
+  icon: ShieldCheck,
+  href: "/root-admins",
+};
 
 export const Sidebar = memo(function Sidebar({ session }: { session: CurrentSession | null }) {
   const pathname = usePathname();
@@ -166,6 +174,9 @@ export const Sidebar = memo(function Sidebar({ session }: { session: CurrentSess
   const setActiveResource = useUiStore((state) => state.setActiveResource);
 
   const role = session?.user.role;
+  const visibleNavGroups = isRootAdminSession(session)
+    ? navGroups.map((group) => group.title === "Quản lý" || group.title === "Quáº£n lĂ½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
+    : navGroups;
 
   function classes(active: boolean) {
     return cn(
@@ -213,7 +224,7 @@ export const Sidebar = memo(function Sidebar({ session }: { session: CurrentSess
       ) : null}
 
       <nav className="space-y-4">
-        {navGroups.map((group) => (
+        {visibleNavGroups.map((group) => (
           <div key={group.title}>
             <p className="mb-2 px-2 text-xs font-black uppercase tracking-wide text-[#C17D8A]">
               {group.title}
