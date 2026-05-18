@@ -11,6 +11,7 @@ import { assertProductionSafe } from "@/app/lib/deploy-safety";
 import { registrationOtpPurpose, verifyAndConsumeOtp } from "@/app/lib/otp";
 import { prisma } from "@/app/lib/prisma";
 import { clientIp, rateLimit, strongPasswordMessage } from "@/app/lib/security";
+import { registrationInviteCode } from "@/app/lib/system-settings";
 import { registerSchema } from "@/app/lib/validators";
 
 function slugify(value: string) {
@@ -21,14 +22,6 @@ function slugify(value: string) {
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/(^-|-$)/g, "")
     .slice(0, 48);
-}
-
-function configuredInviteCode() {
-  return process.env.STUDIO_REGISTRATION_CODE?.trim() ?? "";
-}
-
-function expectedInviteCode() {
-  return configuredInviteCode() || "MEOXINH08012006";
 }
 
 export async function POST(req: Request) {
@@ -48,7 +41,7 @@ export async function POST(req: Request) {
     const existed = await prisma.user.findUnique({ where: { email }, select: { id: true } });
     if (existed) return fail("Email nay da duoc su dung. Moi email chi duoc tao 1 tai khoan.", 409);
 
-    const inviteOk = String(inviteCode ?? "").trim() === expectedInviteCode();
+    const inviteOk = String(inviteCode ?? "").trim() === await registrationInviteCode();
     if (!inviteOk) return fail("Ma moi khong dung. Khong the tao studio moi.", 403);
 
     if (otp) {

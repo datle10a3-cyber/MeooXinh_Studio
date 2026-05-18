@@ -10,6 +10,7 @@ import { DeleteConfirmation } from "@/app/components/ui/delete-confirmation";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
+import { Input } from "@/app/components/ui/input";
 
 type AdminRow = {
   id: string;
@@ -22,6 +23,11 @@ type AdminRow = {
 };
 
 type ApiResult<T> = { data?: T; error?: { message: string } };
+type RootSettings = {
+  inviteCode: string;
+  inviteCodeLockedByEnv: boolean;
+  hasCustomShiftPassword: boolean;
+};
 
 export function RootAdminList() {
   const router = useRouter();
@@ -31,12 +37,24 @@ export function RootAdminList() {
   const [deleting, setDeleting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<AdminRow | null>(null);
   const [message, setMessage] = useState("");
+  const [settings, setSettings] = useState<RootSettings | null>(null);
+  const [inviteCode, setInviteCode] = useState("");
+  const [shiftPassword, setShiftPassword] = useState("");
+  const [savingSettings, setSavingSettings] = useState(false);
 
   async function loadRows() {
     setLoading(true);
-    const result = await fetch("/api/root-admin/admins").then((res) => res.json() as Promise<ApiResult<AdminRow[]>>);
-    if (result.data) setRows(result.data);
-    if (result.error) setMessage(result.error.message);
+    const [adminsResult, settingsResult] = await Promise.all([
+      fetch("/api/root-admin/admins").then((res) => res.json() as Promise<ApiResult<AdminRow[]>>),
+      fetch("/api/root-admin/settings").then((res) => res.json() as Promise<ApiResult<RootSettings>>),
+    ]);
+    if (adminsResult.data) setRows(adminsResult.data);
+    if (adminsResult.error) setMessage(adminsResult.error.message);
+    if (settingsResult.data) {
+      setSettings(settingsResult.data);
+      setInviteCode(settingsResult.data.inviteCode);
+    }
+    if (settingsResult.error) setMessage(settingsResult.error.message);
     setLoading(false);
   }
 
@@ -75,6 +93,26 @@ export function RootAdminList() {
     }
   }
 
+  async function saveSettings() {
+    setSavingSettings(true);
+    const result = await fetch("/api/root-admin/settings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        inviteCode: settings?.inviteCodeLockedByEnv ? "" : inviteCode,
+        shiftPassword,
+      }),
+    }).then((res) => res.json() as Promise<ApiResult<RootSettings>>);
+    setSavingSettings(false);
+    if (result.error) return setMessage(result.error.message);
+    if (result.data) {
+      setSettings(result.data);
+      setInviteCode(result.data.inviteCode);
+      setShiftPassword("");
+    }
+    setMessage("Đã lưu cấu hình admin chính.");
+  }
+
   if (loading) return <PageSpinner label="Đang tải danh sách admin..." />;
 
   return (
@@ -85,6 +123,34 @@ export function RootAdminList() {
       </div>
 
       <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
+
+      <section className="grid gap-3 rounded-[1.25rem] border border-[#F4C7C4] bg-white p-3 shadow-sm sm:grid-cols-[1fr_1fr_auto]">
+        <label className="min-w-0 text-xs font-black uppercase tracking-wide text-[#9B746B]">
+          Mã mời đăng ký
+          <Input
+            className="mt-2"
+            value={inviteCode}
+            disabled={settings?.inviteCodeLockedByEnv}
+            onChange={(event) => setInviteCode(event.target.value)}
+          />
+          {settings?.inviteCodeLockedByEnv ? <span className="mt-1 block normal-case text-[11px] text-[#EA7188]">Đang khóa bằng biến môi trường Vercel.</span> : null}
+        </label>
+        <label className="min-w-0 text-xs font-black uppercase tracking-wide text-[#9B746B]">
+          Mật khẩu xóa ca mặc định
+          <Input
+            className="mt-2"
+            type="password"
+            inputMode="numeric"
+            placeholder={settings?.hasCustomShiftPassword ? "Đã có mật khẩu" : "000000"}
+            value={shiftPassword}
+            onChange={(event) => setShiftPassword(event.target.value.replace(/\D/g, "").slice(0, 6))}
+          />
+        </label>
+        <Button className="min-h-12 self-end rounded-2xl" onClick={() => void saveSettings()} disabled={savingSettings}>
+          {savingSettings ? <Loader2 size={16} className="animate-spin" /> : null}
+          Lưu
+        </Button>
+      </section>
 
       <section className="grid gap-3">
         {rows.length ? rows.map((row) => (

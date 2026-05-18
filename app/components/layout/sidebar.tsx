@@ -36,7 +36,7 @@ import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { cn } from "@/app/utils/cn";
 import { studioViewPath } from "@/app/utils/studio-navigation";
-import { isRootAdminSession } from "@/app/utils/root-admin";
+import { isRootAdminSession, isViewingAsAdmin } from "@/app/utils/root-admin";
 
 type NavItem = {
   id: string;
@@ -174,8 +174,11 @@ export const Sidebar = memo(function Sidebar({ session }: { session: CurrentSess
   const setActiveResource = useUiStore((state) => state.setActiveResource);
 
   const role = session?.user.role;
+  const rootAdminCentralOnly = isRootAdminSession(session) && !isViewingAsAdmin(session);
   const visibleNavGroups = isRootAdminSession(session)
-    ? navGroups.map((group) => group.title === "Quản lý" || group.title === "Quáº£n lĂ½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
+    ? rootAdminCentralOnly
+      ? [{ title: "Quản lý", items: [rootAdminNavItem] }]
+      : navGroups.map((group) => group.title === "Quản lý" || group.title === "Quáº£n lĂ½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
     : navGroups;
 
   function classes(active: boolean) {

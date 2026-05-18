@@ -4,6 +4,7 @@ import { jwtVerify, SignJWT } from "jose";
 import { cookies, headers } from "next/headers";
 import { prisma } from "@/app/lib/prisma";
 import { clientIp } from "@/app/lib/security";
+import { verifyDefaultShiftPassword } from "@/app/lib/system-settings";
 import { isRootAdminEmail, ROOT_ADMIN_EMAIL } from "@/app/utils/root-admin";
 
 const accessCookie = "studio_access_token";
@@ -298,7 +299,7 @@ export async function verifyStudioEditPassword(user: SessionUser, password: unkn
     select: { shiftPasswordHash: true },
   });
   if (studio?.shiftPasswordHash) return verifyPassword(value, studio.shiftPasswordHash);
-  return process.env.NODE_ENV !== "production" && value === "000000";
+  return verifyDefaultShiftPassword(value);
 }
 
 export async function persistRefreshToken(userId: string, refreshToken: string, device?: ReturnType<typeof sessionDeviceFromRequest>) {

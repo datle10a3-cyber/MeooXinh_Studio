@@ -2,6 +2,7 @@ import { fail, ok, created, serverError } from "@/app/lib/api-response";
 import { writeAuditLog } from "@/app/lib/audit";
 import { requireUser, verifyPassword } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
+import { verifyDefaultShiftPassword } from "@/app/lib/system-settings";
 
 type ShiftRow = Record<string, unknown>;
 
@@ -214,7 +215,7 @@ export async function DELETE(req: Request) {
     if (!shift) return fail("Không tìm thấy ca đã đóng.", 404);
     const validPassword = studio?.shiftPasswordHash
       ? await verifyPassword(password, studio.shiftPasswordHash)
-      : process.env.NODE_ENV !== "production" && password === "000000";
+      : await verifyDefaultShiftPassword(password);
     if (!validPassword) return fail("Mật khẩu studio không đúng.", 401);
 
     await prisma.walletShift.delete({ where: { id: shiftId } });

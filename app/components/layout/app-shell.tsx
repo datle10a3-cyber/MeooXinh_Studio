@@ -190,8 +190,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [sessionLoading, setSessionLoading] = useState(true);
   const canManageRootAdmins = isRootAdminSession(session);
   const viewingAsAdmin = isViewingAsAdmin(session);
+  const rootAdminCentralOnly = canManageRootAdmins && !viewingAsAdmin;
   const visibleMobileGroups = canManageRootAdmins
-    ? mobileGroups.map((group) => group.title === "Quản lý" || group.title === "Quáº£n lĂ½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
+    ? rootAdminCentralOnly
+      ? [{ title: "Quản lý", items: [rootAdminNavItem] }]
+      : mobileGroups.map((group) => group.title === "Quản lý" || group.title === "Quáº£n lĂ½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
     : mobileGroups;
 
   // Sync session from localStorage instantly on client render
@@ -266,6 +269,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setSessionLoading(false);
     }
   }, [session, setSession, pathname]);
+
+  useEffect(() => {
+    if (rootAdminCentralOnly && pathname !== "/root-admins") {
+      router.replace("/root-admins", { scroll: false });
+    }
+  }, [pathname, rootAdminCentralOnly, router]);
+
   // Sync activeResource với pathname thực tế
   useEffect(() => {
     if (!pathname) return;
@@ -419,7 +429,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               </div>
 
               <div className="flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-2">
-                <div className="hidden items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-2 py-1 shadow-sm xl:flex">
+                {!rootAdminCentralOnly ? <div className="hidden items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-2 py-1 shadow-sm xl:flex">
                   <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/categories">
                     Danh mục
                   </Link>
@@ -429,20 +439,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/booking">
                     Booking
                   </Link>
-                </div>
-                {session?.user.role !== "STAFF" ? (
+                </div> : null}
+                {session?.user.role !== "STAFF" && !rootAdminCentralOnly ? (
                   <a className="hidden h-11 items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-4 text-sm font-black text-[#5B342C] shadow-sm hover:bg-[#FFF0F4] xl:flex" href="/api/reports?type=transactions">
                     <Download size={16} />
                     CSV
                   </a>
                 ) : null}
-                <button
+                {!rootAdminCentralOnly ? <button
                   className="hidden h-11 items-center gap-2 rounded-2xl bg-[#EA7188] px-4 text-white shadow-sm transition hover:bg-[#DA5E79] xl:flex"
                   onClick={() => goTo({ id: "ai", label: "AI", icon: Bot })}
                 >
                   <Bot size={17} />
                   <span className="text-sm font-black">AI</span>
-                </button>
+                </button> : null}
                 <button
                   type="button"
                   className="hidden h-11 items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-4 text-[#9B746B] shadow-sm transition hover:bg-[#FFF0F4] xl:flex"
