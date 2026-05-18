@@ -35,6 +35,7 @@ import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { studioViewPath } from "@/app/utils/studio-navigation";
 import { isRootAdminSession, isViewingAsAdmin } from "@/app/utils/root-admin";
+import { cn } from "@/app/utils/cn";
 
 const Sidebar = dynamic(
   () =>
@@ -276,6 +277,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, rootAdminCentralOnly, router]);
 
+  useEffect(() => {
+    const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
+    if (meta) meta.content = rootAdminCentralOnly ? "#050A12" : "#EA7188";
+  }, [rootAdminCentralOnly]);
+
   // Sync activeResource với pathname thực tế
   useEffect(() => {
     if (!pathname) return;
@@ -404,27 +410,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={darkMode ? "studio-mobile-page min-h-dvh bg-[#2B1C1A] text-white" : "studio-mobile-page min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
+    <div className={rootAdminCentralOnly ? "studio-mobile-page min-h-dvh bg-[#050A12] text-slate-100" : darkMode ? "studio-mobile-page min-h-dvh bg-[#2B1C1A] text-white" : "studio-mobile-page min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
       <div className="flex min-h-dvh">
-        <Sidebar session={session} />
+        <Sidebar session={session} rootAdminTheme={rootAdminCentralOnly} />
         <main className="min-w-0 flex-1 touch-pan-y">
-          <header className="sticky top-0 z-30 border-b border-[#F4C7C4] bg-[#FFF3EC]/95 px-2.5 py-2 backdrop-blur supports-[backdrop-filter]:bg-[#FFF3EC]/86 sm:px-4 lg:py-3 xl:px-8" style={{ transform: "translateZ(0)" }}>
+          <header className={cn("sticky top-0 z-30 px-2.5 py-2 backdrop-blur sm:px-4 lg:py-3 xl:px-8", rootAdminCentralOnly ? "border-b border-cyan-300/15 bg-[#050A12]/95 supports-[backdrop-filter]:bg-[#050A12]/90" : "border-b border-[#F4C7C4] bg-[#FFF3EC]/95 supports-[backdrop-filter]:bg-[#FFF3EC]/86")} style={{ transform: "translateZ(0)" }}>
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <Button
                    variant="secondary"
                   size="icon"
-                  className="h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 border-[#F4A7B9] bg-white text-[#5B342C] shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl xl:hidden"
+                  className={cn("h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-cyan-300/25 bg-cyan-400/10 text-cyan-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
                   aria-label="Mở menu"
                   onClick={() => setMobileMenuOpen(true)}
                 >
                   <Menu size={24} strokeWidth={2.8} />
                 </Button>
                 <div className="min-w-0">
-                  <p className="line-clamp-1 text-xs font-black leading-4 text-[#E88498] sm:text-sm">
+                  <p className={cn("line-clamp-1 text-xs font-black leading-4 sm:text-sm", rootAdminCentralOnly ? "text-cyan-200" : "text-[#E88498]")}>
                     Studio: {displayStudioName(session)}
                   </p>
-                  <h2 className="hidden whitespace-nowrap text-base font-black leading-5 text-[#5B342C] sm:block sm:text-lg">Booking, finance, CRM</h2>
+                  <h2 className={cn("hidden whitespace-nowrap text-base font-black leading-5 sm:block sm:text-lg", rootAdminCentralOnly ? "text-white" : "text-[#5B342C]")}>Booking, finance, CRM</h2>
                 </div>
               </div>
 
@@ -455,7 +461,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </button> : null}
                 <button
                   type="button"
-                  className="hidden h-11 items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-4 text-[#9B746B] shadow-sm transition hover:bg-[#FFF0F4] xl:flex"
+                  className={cn("hidden h-11 items-center gap-2 rounded-2xl border px-4 shadow-sm transition xl:flex", rootAdminCentralOnly ? "border-cyan-300/20 bg-cyan-400/10 text-slate-200 hover:bg-cyan-400/20" : "border-[#F4C7C4] bg-white text-[#9B746B] hover:bg-[#FFF0F4]")}
                   onClick={() => setSearchOpen(true)}
                 >
                   <Search size={17} />
@@ -464,7 +470,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="grid h-10 w-10 rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl xl:hidden"
+                  className={cn("grid h-10 w-10 rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-cyan-300/20 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/20" : "")}
                   aria-label="Tìm kiếm"
                   onClick={() => setSearchOpen(true)}
                 >
@@ -473,19 +479,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Button
                   variant="secondary"
                   size="icon"
-                  className="grid h-10 w-10 rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl"
+                  className={cn("grid h-10 w-10 rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl", rootAdminCentralOnly ? "border-cyan-300/20 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/20" : "")}
                   aria-label={darkMode ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
                   onClick={() => setDarkMode(!darkMode)}
                 >
                   {darkMode ? <Sun size={17} /> : <Moon size={17} />}
                 </Button>
-                {session ? <NotificationBell /> : null}
-                <UserMenu session={session} onLogout={() => setSession(null)} />
+                {session && !rootAdminCentralOnly ? <NotificationBell /> : null}
+                <UserMenu session={session} onLogout={() => setSession(null)} rootAdminTheme={rootAdminCentralOnly} />
               </div>
             </div>
           </header>
 
-          <div className="studio-ios-scroll studio-mobile-bottom-safe studio-xs-tight px-2.5 py-3 sm:px-4 sm:py-5 lg:pb-6 xl:px-8">{children}</div>
+          <div className={cn("studio-ios-scroll studio-mobile-bottom-safe studio-xs-tight px-2.5 py-3 sm:px-4 sm:py-5 lg:pb-6 xl:px-8", rootAdminCentralOnly ? "bg-[#050A12]" : "")}>{children}</div>
         </main>
       </div>
 

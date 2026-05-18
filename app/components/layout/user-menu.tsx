@@ -4,6 +4,7 @@ import Link from "next/link";
 import { LogIn, ShieldCheck, UserPlus } from "lucide-react";
 import { AvatarDropdown } from "@/app/components/profile/avatar-dropdown";
 import type { CurrentSession } from "@/app/types/auth";
+import { isRootAdminSession, isViewingAsAdmin } from "@/app/utils/root-admin";
 
 function roleLabel(role?: string) {
   if (role === "ADMIN") return "Quản trị viên";
@@ -11,7 +12,7 @@ function roleLabel(role?: string) {
   return "Nhân viên";
 }
 
-export function UserMenu({ session, onLogout }: { session: CurrentSession | null; onLogout: () => void }) {
+export function UserMenu({ session, onLogout, rootAdminTheme = false }: { session: CurrentSession | null; onLogout: () => void; rootAdminTheme?: boolean }) {
   if (!session) {
     return (
       <div className="flex items-center gap-1 sm:gap-2">
@@ -27,16 +28,17 @@ export function UserMenu({ session, onLogout }: { session: CurrentSession | null
     );
   }
 
+  const rootTheme = rootAdminTheme || (isRootAdminSession(session) && !isViewingAsAdmin(session));
   return (
     <div className="flex items-center gap-2 sm:gap-3">
       <div className="hidden text-right sm:block">
-        <p className="text-sm font-semibold text-[#5B342C]">{session.user.name}</p>
-        <p className="flex items-center justify-end gap-1 text-xs text-[#9B746B]">
+        <p className={rootTheme ? "text-sm font-semibold text-slate-100" : "text-sm font-semibold text-[#5B342C]"}>{session.user.name}</p>
+        <p className={rootTheme ? "flex items-center justify-end gap-1 text-xs text-slate-400" : "flex items-center justify-end gap-1 text-xs text-[#9B746B]"}>
           <ShieldCheck size={13} />
           {roleLabel(session.user.role)}
         </p>
       </div>
-      <AvatarDropdown session={session} onLogout={onLogout} />
+      <AvatarDropdown session={session} onLogout={onLogout} rootAdminTheme={rootTheme} />
     </div>
   );
 }

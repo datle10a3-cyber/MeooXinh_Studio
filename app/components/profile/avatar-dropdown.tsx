@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Building2, CalendarPlus, LogOut, Moon, Settings, ShieldCheck, Sun, User, Loader2, type LucideIcon } from "lucide-react";
+import { Building2, CalendarPlus, Loader2, LogOut, Moon, Settings, ShieldCheck, Sun, User, type LucideIcon } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { AvatarUser } from "@/app/components/profile/avatar-user";
 import { Button } from "@/app/components/ui/button";
@@ -15,7 +15,7 @@ function roleText(role: string) {
   return "STAFF";
 }
 
-export function AvatarDropdown({ session, onLogout }: { session: CurrentSession; onLogout: () => void }) {
+export function AvatarDropdown({ session, onLogout, rootAdminTheme = false }: { session: CurrentSession; onLogout: () => void; rootAdminTheme?: boolean }) {
   const router = useRouter();
   const pathname = usePathname();
   const boxRef = useRef<HTMLDivElement>(null);
@@ -52,16 +52,30 @@ export function AvatarDropdown({ session, onLogout }: { session: CurrentSession;
   return (
     <div ref={boxRef} className="relative">
       <button type="button" className="rounded-full transition active:scale-95" onClick={() => setOpen((value) => !value)} aria-label="Mở tài khoản">
-        <AvatarUser name={session.user.name} avatarUrl={session.user.avatarUrl} />
+        {rootAdminTheme ? (
+          <span className="grid h-12 w-12 place-items-center rounded-full border border-cyan-300/35 bg-cyan-400/10 text-cyan-100 shadow-[0_0_22px_rgba(34,211,238,0.16)]">
+            <ShieldCheck size={20} />
+          </span>
+        ) : (
+          <AvatarUser name={session.user.name} avatarUrl={session.user.avatarUrl} />
+        )}
       </button>
 
       {open ? (
-        <div className="absolute right-0 top-14 z-50 w-[260px] rounded-xl border border-[#F4C7C4] bg-white p-3 shadow-xl">
-          <div className="flex items-center gap-3 rounded-xl bg-[#FFF3EC] p-3">
-            <AvatarUser name={session.user.name} avatarUrl={session.user.avatarUrl} size="lg" />
+        <div className={rootAdminTheme ? "absolute right-0 top-14 z-50 w-[260px] rounded-xl border border-cyan-300/20 bg-[#08111F] p-3 text-slate-100 shadow-2xl" : "absolute right-0 top-14 z-50 w-[260px] rounded-xl border border-[#F4C7C4] bg-white p-3 shadow-xl"}>
+          <div className={rootAdminTheme ? "flex items-center gap-3 rounded-xl bg-cyan-400/10 p-3 ring-1 ring-cyan-300/15" : "flex items-center gap-3 rounded-xl bg-[#FFF3EC] p-3"}>
+            {rootAdminTheme ? (
+              <span className="grid h-12 w-12 place-items-center rounded-2xl border border-cyan-300/25 bg-[#020617] text-cyan-100">
+                <ShieldCheck size={18} />
+              </span>
+            ) : (
+              <AvatarUser name={session.user.name} avatarUrl={session.user.avatarUrl} size="lg" />
+            )}
             <div className="min-w-0">
-              <p className="whitespace-normal break-words text-sm font-bold leading-5 text-[#5B342C]">{session.user.name}</p>
-              <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[11px] font-bold text-[#9B746B]">
+              <p className={rootAdminTheme ? "whitespace-normal break-words text-sm font-bold leading-5 text-white" : "whitespace-normal break-words text-sm font-bold leading-5 text-[#5B342C]"}>
+                {session.user.name}
+              </p>
+              <span className={rootAdminTheme ? "mt-1 inline-flex items-center gap-1 rounded-full bg-[#020617] px-2 py-1 text-[11px] font-bold text-cyan-100" : "mt-1 inline-flex items-center gap-1 rounded-full bg-white px-2 py-1 text-[11px] font-bold text-[#9B746B]"}>
                 <ShieldCheck size={12} />
                 {roleText(session.user.role)}
               </span>
@@ -69,12 +83,13 @@ export function AvatarDropdown({ session, onLogout }: { session: CurrentSession;
           </div>
 
           <div className="mt-3 space-y-1">
-            <MenuButton icon={User} label="Trang cá nhân" onClick={() => go("profile")} />
-            <MenuButton icon={Building2} label="Thông tin studio" onClick={() => go("home")} />
-            <MenuButton icon={Settings} label="Cài đặt" onClick={() => go("home")} />
+            <MenuButton icon={User} label="Trang cá nhân" onClick={() => go("profile")} rootAdminTheme={rootAdminTheme} />
+            <MenuButton icon={Building2} label="Thông tin studio" onClick={() => go("home")} rootAdminTheme={rootAdminTheme} />
+            <MenuButton icon={Settings} label="Cài đặt" onClick={() => go("home")} rootAdminTheme={rootAdminTheme} />
             <MenuButton
               icon={CalendarPlus}
               label="Tạo booking nhanh"
+              rootAdminTheme={rootAdminTheme}
               onClick={() => {
                 setOpen(false);
                 setActiveResource("booking");
@@ -84,18 +99,18 @@ export function AvatarDropdown({ session, onLogout }: { session: CurrentSession;
             <button
               type="button"
               onClick={() => setDarkMode(!darkMode)}
-              className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-[#5B342C] transition hover:bg-[#FFF3EC]"
+              className={rootAdminTheme ? "flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-slate-200 transition hover:bg-cyan-400/8" : "flex w-full items-center justify-between rounded-xl px-3 py-2 text-sm font-semibold text-[#5B342C] transition hover:bg-[#FFF3EC]"}
             >
               <span className="inline-flex items-center gap-2">{darkMode ? <Sun size={16} /> : <Moon size={16} />} Dark mode</span>
-              <span className={`h-5 w-9 rounded-full p-0.5 ${darkMode ? "bg-[#EA7188]" : "bg-[#F4C7C4]"}`}>
+              <span className={`h-5 w-9 rounded-full p-0.5 ${rootAdminTheme ? (darkMode ? "bg-cyan-400" : "bg-slate-600") : darkMode ? "bg-[#EA7188]" : "bg-[#F4C7C4]"}`}>
                 <span className={`block h-4 w-4 rounded-full bg-white transition ${darkMode ? "translate-x-4" : ""}`} />
               </span>
             </button>
           </div>
 
-          <div className="mt-3 border-t border-[#F4C7C4] pt-3">
-            <Button variant="ghost" className="w-full justify-start text-rose-600 hover:bg-rose-50" onClick={logout} disabled={loggingOut}>
-              {loggingOut ? <Loader2 size={16} className="animate-spin mr-2" /> : <LogOut size={16} className="mr-2" />}
+          <div className={rootAdminTheme ? "mt-3 border-t border-cyan-300/15 pt-3" : "mt-3 border-t border-[#F4C7C4] pt-3"}>
+            <Button variant="ghost" className={rootAdminTheme ? "w-full justify-start text-slate-300 hover:bg-cyan-400/8 hover:text-cyan-100" : "w-full justify-start text-rose-600 hover:bg-rose-50"} onClick={logout} disabled={loggingOut}>
+              {loggingOut ? <Loader2 size={16} className="mr-2 animate-spin" /> : <LogOut size={16} className="mr-2" />}
               {loggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
             </Button>
           </div>
@@ -105,9 +120,9 @@ export function AvatarDropdown({ session, onLogout }: { session: CurrentSession;
   );
 }
 
-function MenuButton({ icon: Icon, label, onClick }: { icon: LucideIcon; label: string; onClick: () => void }) {
+function MenuButton({ icon: Icon, label, onClick, rootAdminTheme = false }: { icon: LucideIcon; label: string; onClick: () => void; rootAdminTheme?: boolean }) {
   return (
-    <button type="button" onClick={onClick} className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-[#5B342C] transition hover:bg-[#FFF3EC]">
+    <button type="button" onClick={onClick} className={rootAdminTheme ? "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-200 transition hover:bg-cyan-400/8 hover:text-cyan-100" : "flex w-full items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-[#5B342C] transition hover:bg-[#FFF3EC]"}>
       <Icon size={16} />
       {label}
     </button>
