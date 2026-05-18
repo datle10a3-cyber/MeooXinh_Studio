@@ -16,7 +16,10 @@ async function readSetting(key: string) {
   try {
     return await prisma.systemSetting.findUnique({ where: { key } });
   } catch (error) {
-    if (missingSystemSettingsTable(error)) return null;
+    if (missingSystemSettingsTable(error)) {
+      await ensureSystemSettingsTable();
+      return prisma.systemSetting.findUnique({ where: { key } });
+    }
     throw error;
   }
 }
@@ -30,17 +33,32 @@ async function writeSetting(key: string, value: string) {
     });
   } catch (error) {
     if (missingSystemSettingsTable(error)) {
-      throw new Error("SYSTEM_SETTINGS_TABLE_MISSING");
+      await ensureSystemSettingsTable();
+      return prisma.systemSetting.upsert({
+        where: { key },
+        update: { value },
+        create: { key, value },
+      });
     }
     throw error;
   }
 }
 
+async function ensureSystemSettingsTable() {
+  await prisma.$executeRawUnsafe(`
+    CREATE TABLE IF NOT EXISTS "SystemSetting" (
+      "key" TEXT NOT NULL,
+      "value" TEXT NOT NULL,
+      "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      "updatedAt" TIMESTAMP(3) NOT NULL,
+      CONSTRAINT "SystemSetting_pkey" PRIMARY KEY ("key")
+    )
+  `);
+}
+
 export async function registrationInviteCode() {
-  const configured = process.env.STUDIO_REGISTRATION_CODE?.trim();
-  if (configured) return configured;
   const row = await readSetting(inviteCodeKey);
-  return row?.value || fallbackInviteCode;
+  return row?.value || process.env.STUDIO_REGISTRATION_CODE?.trim() || fallbackInviteCode;
 }
 
 export async function updateRegistrationInviteCode(value: string) {
@@ -62,16 +80,17 @@ export async function updateDefaultShiftPassword(password: string) {
 export async function rootSystemSettingsSummary() {
   const inviteCode = await registrationInviteCode();
   let shiftPasswordRow: Awaited<ReturnType<typeof readSetting>> = null;
-  let settingsStorageReady = true;
+  const settingsStorageReady = true;
   try {
     shiftPasswordRow = await prisma.systemSetting.findUnique({ where: { key: shiftPasswordHashKey } });
   } catch (error) {
     if (!missingSystemSettingsTable(error)) throw error;
-    settingsStorageReady = false;
+    await ensureSystemSettingsTable();
+    shiftPasswordRow = await prisma.systemSetting.findUnique({ where: { key: shiftPasswordHashKey } });
   }
   return {
     inviteCode,
-    inviteCodeLockedByEnv: Boolean(process.env.STUDIO_REGISTRATION_CODE?.trim()),
+    inviteCodeLockedByEnv: false,
     hasCustomShiftPassword: Boolean(shiftPasswordRow?.value),
     settingsStorageReady,
   };
