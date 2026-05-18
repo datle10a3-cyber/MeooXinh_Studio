@@ -223,7 +223,8 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
         where: { tokenHash: hashToken(refreshToken) },
         select: { userId: true, revokedAt: true, expiresAt: true },
       });
-      if (!storedRefresh || storedRefresh.userId !== user.id || storedRefresh.revokedAt || storedRefresh.expiresAt < new Date()) {
+      const tokenOwnerId = user.rootAdminId ?? user.id;
+      if (!storedRefresh || storedRefresh.userId !== tokenOwnerId || storedRefresh.revokedAt || storedRefresh.expiresAt < new Date()) {
         return null;
       }
       return user;

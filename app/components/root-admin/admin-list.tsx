@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, ShieldCheck, Trash2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { Button } from "@/app/components/ui/button";
 import { Card } from "@/app/components/ui/card";
 import { DeleteConfirmation } from "@/app/components/ui/delete-confirmation";
-import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 import { PageSpinner } from "@/app/components/ui/skeleton";
-import { formatDate } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 
@@ -80,34 +78,22 @@ export function RootAdminList() {
   if (loading) return <PageSpinner label="Đang tải danh sách admin..." />;
 
   return (
-    <div className="space-y-5">
-      <StudioBrandPanel
-        eyebrow="Admin chính"
-        title="Quản lý danh sách admin"
-        description="Chỉ admin chính thấy mục này. Admin đăng ký bằng mã mời vẫn giữ nguyên quyền hiện tại cho tới khi bị xóa khỏi danh sách."
-      />
+    <div className="space-y-3">
+      <div className="rounded-[1.5rem] border border-[#F4C7C4] bg-white p-4 shadow-sm">
+        <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Admin chính</p>
+        <h1 className="mt-1 text-2xl font-black text-[#5B342C]">Quản lý admin</h1>
+      </div>
 
       <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
       <section className="grid gap-3">
         {rows.length ? rows.map((row) => (
-          <Card key={row.id} className="rounded-[1.5rem] border-[#F4C7C4] bg-white p-4 shadow-sm">
+          <Card key={row.id} className="rounded-[1.25rem] border-[#F4C7C4] bg-white p-3 shadow-sm">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-2xl bg-[#FFF0F4] text-[#EA7188]">
-                    <ShieldCheck size={18} />
-                  </span>
-                  <div className="min-w-0">
-                    <h2 className="truncate text-base font-black text-[#5B342C]">{row.name || "Admin"}</h2>
-                    <p className="truncate text-sm font-bold text-[#9B746B]">{row.email}</p>
-                  </div>
-                </div>
-                <div className="mt-3 grid gap-2 text-xs font-bold text-[#7B554D] sm:grid-cols-3">
-                  <span className="rounded-2xl bg-[#FFF8F1] px-3 py-2">Studio: {row.studio?.name ?? "Không rõ"}</span>
-                  <span className="rounded-2xl bg-[#FFF8F1] px-3 py-2">Tạo: {formatDate(row.createdAt)}</span>
-                  <span className="rounded-2xl bg-[#FFF8F1] px-3 py-2">Đăng nhập: {row.lastLoginAt ? formatDate(row.lastLoginAt) : "Chưa có"}</span>
-                </div>
+                <h2 className="truncate text-base font-black text-[#5B342C]">{row.name || "Admin"}</h2>
+                <p className="truncate text-sm font-bold text-[#9B746B]">{row.email}</p>
+                <p className="mt-1 truncate text-xs font-bold text-[#7B554D]">{row.studio?.name ?? "Không rõ studio"}</p>
               </div>
               <div className="grid gap-2 sm:w-40">
                 <Button className="min-h-11 rounded-2xl" onClick={() => void viewAsAdmin(row)}>
