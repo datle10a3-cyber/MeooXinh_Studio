@@ -6,7 +6,7 @@ import { Activity, Building2, Copy, Eye, KeyRound, Loader2, LockKeyhole, Refresh
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { Button } from "@/app/components/ui/button";
 import { Card } from "@/app/components/ui/card";
-import { DeleteConfirmation } from "@/app/components/ui/delete-confirmation";
+import { Portal } from "@/app/components/ui/portal";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
@@ -106,7 +106,7 @@ export function RootAdminList() {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        inviteCode: settings?.inviteCodeLockedByEnv ? "" : inviteCode,
+        inviteCode,
         shiftPassword,
       }),
     }).then((res) => res.json() as Promise<ApiResult<RootSettings>>);
@@ -127,18 +127,33 @@ export function RootAdminList() {
 
   if (loading) return <PageSpinner label="Đang tải danh sách admin..." />;
   const protectedStatus = settings?.settingsStorageReady === false ? "SYNC REQUIRED" : "ONLINE";
+  const totals = rows.reduce(
+    (acc, row) => ({
+      customers: acc.customers + (row.counts?.customers ?? 0),
+      bookings: acc.bookings + (row.counts?.bookings ?? 0),
+      transactions: acc.transactions + (row.counts?.transactions ?? 0),
+      invoices: acc.invoices + (row.counts?.invoices ?? 0),
+    }),
+    { customers: 0, bookings: 0, transactions: 0, invoices: 0 },
+  );
+  const overviewCards = [
+    { label: "Admin mã mời", value: rows.length, icon: UserCheck },
+    { label: "Khách toàn hệ thống", value: totals.customers, icon: Building2 },
+    { label: "Booking", value: totals.bookings, icon: Activity },
+    { label: "Hóa đơn", value: totals.invoices, icon: ShieldCheck },
+  ];
 
   return (
     <div className="space-y-4 rounded-[1.75rem] bg-[#050A12] p-3 text-slate-100 shadow-[0_24px_80px_rgba(2,6,23,0.32)] sm:p-4">
       <section className="relative overflow-hidden rounded-[1.5rem] border border-cyan-400/20 bg-[#08111F] shadow-[0_0_42px_rgba(14,165,233,0.16)]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(244,63,94,0.30),transparent_28%),radial-gradient(circle_at_86%_12%,rgba(14,165,233,0.32),transparent_30%),linear-gradient(135deg,rgba(255,255,255,0.08),transparent_35%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_10%,rgba(34,211,238,0.22),transparent_30%),linear-gradient(135deg,rgba(14,165,233,0.14),transparent_42%)]" />
         <div className="relative grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-5">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
               <span className="grid h-10 w-10 place-items-center rounded-2xl border border-cyan-300/35 bg-cyan-400/10 text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.22)]">
                 <ShieldCheck size={18} />
               </span>
-              <span className="rounded-full border border-rose-400/30 bg-rose-500/12 px-3 py-1 text-xs font-black uppercase tracking-wide text-rose-200">Root control</span>
+              <span className="rounded-full border border-cyan-300/25 bg-cyan-400/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-cyan-100">Root control</span>
               <span className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-xs font-black text-cyan-200">{protectedStatus}</span>
             </div>
             <h1 className="mt-3 text-2xl font-black leading-tight text-white sm:text-3xl">Bảng điều khiển admin chính</h1>
@@ -161,23 +176,40 @@ export function RootAdminList() {
 
       <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
+      <section className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+        {overviewCards.map((item) => {
+          const Icon = item.icon;
+          return (
+            <Card key={item.label} className="rounded-[1.25rem] border-cyan-300/15 bg-[#08111F] p-4 text-slate-100 shadow-[0_10px_34px_rgba(2,6,23,0.22)]">
+              <div className="flex items-center justify-between gap-3">
+                <span className="grid h-10 w-10 place-items-center rounded-2xl border border-cyan-300/20 bg-cyan-400/10 text-cyan-200">
+                  <Icon size={17} />
+                </span>
+                <span className="text-2xl font-black tabular-nums text-white">{item.value}</span>
+              </div>
+              <p className="mt-3 text-xs font-black uppercase tracking-wide text-slate-400">{item.label}</p>
+            </Card>
+          );
+        })}
+      </section>
+
       <section className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
         <Card className="rounded-[1.5rem] border-cyan-300/20 bg-[#08111F] p-4 text-slate-100 shadow-[0_0_34px_rgba(14,165,233,0.10)]">
           <div className="flex items-center gap-2">
-            <KeyRound size={18} className="text-rose-300" />
+            <KeyRound size={18} className="text-cyan-300" />
             <h2 className="text-lg font-black text-white">Chính sách truy cập</h2>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <label className="min-w-0 text-xs font-black uppercase tracking-wide text-slate-400">
               Mã mời đăng ký admin
               <Input
-                className="mt-2 border-cyan-300/25 bg-[#020617] text-cyan-100 focus:border-cyan-300 focus:ring-cyan-500/25"
+                className="mt-2 border-cyan-300/25 bg-[#020617] text-cyan-100 placeholder:text-slate-500 focus:border-cyan-300 focus:ring-cyan-500/25"
                 value={inviteCode}
                 onChange={(event) => setInviteCode(event.target.value)}
               />
             </label>
             <div className="grid gap-2 sm:w-36 sm:self-end">
-              <Button variant="secondary" className="h-11 rounded-xl border-rose-300/25 bg-rose-500/10 text-rose-100 hover:bg-rose-500/20" onClick={() => void copyInviteCode()}>
+              <Button variant="secondary" className="h-11 rounded-xl border-cyan-300/25 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/20" onClick={() => void copyInviteCode()}>
                 <Copy size={15} />
                 Sao chép
               </Button>
@@ -187,7 +219,7 @@ export function RootAdminList() {
             <label className="min-w-0 text-xs font-black uppercase tracking-wide text-slate-400">
               Mật khẩu xóa ca mặc định
               <Input
-                className="mt-2 border-rose-300/25 bg-[#020617] text-rose-100 focus:border-rose-300 focus:ring-rose-500/25"
+                className="mt-2 border-cyan-300/25 bg-[#020617] text-cyan-100 placeholder:text-slate-500 focus:border-cyan-300 focus:ring-cyan-500/25"
                 type="password"
                 inputMode="numeric"
                 placeholder={settings?.hasCustomShiftPassword ? "Đã có mật khẩu" : "000000"}
@@ -202,7 +234,7 @@ export function RootAdminList() {
           </div>
         </Card>
 
-        <Card className="rounded-[1.5rem] border-rose-300/20 bg-[#0D101A] p-4 text-slate-100 shadow-[0_0_34px_rgba(244,63,94,0.10)]">
+        <Card className="rounded-[1.5rem] border-cyan-300/20 bg-[#0D101A] p-4 text-slate-100 shadow-[0_0_34px_rgba(14,165,233,0.10)]">
           <div className="flex items-center gap-2">
             <Activity size={18} className="text-cyan-300" />
             <h2 className="text-lg font-black text-white">Trạng thái quản trị</h2>
@@ -210,11 +242,11 @@ export function RootAdminList() {
           <div className="mt-4 grid gap-2">
             <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-cyan-300/15">
               <span className="text-sm font-bold text-slate-300">Lưu cấu hình</span>
-              <span className={settings?.settingsStorageReady === false ? "text-sm font-black text-amber-300" : "text-sm font-black text-cyan-200"}>{settings?.settingsStorageReady === false ? "Tự khởi tạo" : "Sẵn sàng"}</span>
+              <span className="text-sm font-black text-cyan-200">{settings?.settingsStorageReady === false ? "Tự khởi tạo" : "Sẵn sàng"}</span>
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-rose-300/15">
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-cyan-300/15">
               <span className="text-sm font-bold text-slate-300">Mã mời</span>
-              <span className="text-sm font-black text-rose-200">Có thể đổi trong app</span>
+              <span className="text-sm font-black text-cyan-200">Có thể đổi trong app</span>
             </div>
             <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-cyan-300/15">
               <span className="text-sm font-bold text-slate-300">Mật khẩu xóa ca</span>
@@ -256,7 +288,7 @@ export function RootAdminList() {
                   <Eye size={16} />
                   Vào xem
                 </Button>
-                <Button variant="danger" className="min-h-11 rounded-2xl bg-rose-600 text-white hover:bg-rose-500" onClick={() => setDeleteTarget(row)}>
+                <Button variant="secondary" className="min-h-11 rounded-2xl border-slate-500/30 bg-slate-900 text-slate-100 hover:bg-slate-800" onClick={() => setDeleteTarget(row)}>
                   <Trash2 size={16} />
                   Xóa admin
                 </Button>
@@ -271,21 +303,38 @@ export function RootAdminList() {
         </div>
       </section>
 
-      <DeleteConfirmation
-        open={Boolean(deleteTarget)}
-        title="Xóa admin"
-        description={`Xóa quyền đăng nhập admin "${deleteTarget?.email ?? ""}"? Dữ liệu studio của admin đó không bị xóa.`}
-        onHardDelete={() => void deleteAdmin()}
-        onMoveToTrash={() => setDeleteTarget(null)}
-        onCancel={() => deleting ? undefined : setDeleteTarget(null)}
-        hardLabel="Xóa admin"
-        trashLabel="Hủy"
-        loading={deleting}
-      />
+      {deleteTarget ? (
+        <Portal>
+          <div className="fixed inset-0 z-[230] grid place-items-center bg-slate-950/75 p-4 backdrop-blur-sm" onClick={() => (deleting ? undefined : setDeleteTarget(null))}>
+            <Card className="w-full max-w-md rounded-[1.5rem] border-cyan-300/20 bg-[#08111F] p-5 text-slate-100 shadow-[0_24px_80px_rgba(2,6,23,0.65)]" onClick={(event) => event.stopPropagation()}>
+              <div className="flex items-start gap-3">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-cyan-300/25 bg-cyan-400/10 text-cyan-200">
+                  <Trash2 size={18} />
+                </span>
+                <div className="min-w-0">
+                  <h3 className="text-lg font-black text-white">Xóa admin</h3>
+                  <p className="mt-1 text-sm font-semibold leading-6 text-slate-300">
+                    Xóa quyền đăng nhập admin <span className="font-black text-cyan-100">{deleteTarget.email}</span>? Dữ liệu studio của admin đó không bị xóa.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-5 grid gap-2 sm:grid-cols-2">
+                <Button variant="secondary" className="h-11 rounded-xl border-slate-500/30 bg-slate-900 text-slate-100 hover:bg-slate-800" onClick={() => setDeleteTarget(null)} disabled={deleting}>
+                  Hủy
+                </Button>
+                <Button className="h-11 rounded-xl bg-cyan-400 text-[#03111F] hover:bg-cyan-300" onClick={() => void deleteAdmin()} disabled={deleting}>
+                  {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
+                  Xóa admin
+                </Button>
+              </div>
+            </Card>
+          </div>
+        </Portal>
+      ) : null}
 
       {deleting ? (
         <div className="fixed inset-0 z-[240] grid place-items-center bg-black/10">
-          <Loader2 className="animate-spin text-[#EA7188]" size={28} />
+          <Loader2 className="animate-spin text-cyan-300" size={28} />
         </div>
       ) : null}
     </div>
