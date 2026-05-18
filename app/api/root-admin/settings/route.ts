@@ -35,6 +35,9 @@ export async function PATCH(req: Request) {
     return ok(await rootSystemSettingsSummary());
   } catch (error) {
     if ((error as Error).message === "UNAUTHORIZED") return fail("Bạn chưa đăng nhập.", 401);
+    if ((error as Error).message === "SYSTEM_SETTINGS_TABLE_MISSING") {
+      return fail("Database production chưa cập nhật bảng cấu hình. Hãy redeploy/migrate rồi lưu lại.", 409);
+    }
     return serverError(error);
   }
 }

@@ -11,6 +11,12 @@ function adminRow(user: {
   createdAt: Date;
   lastLoginAt: Date | null;
   studio: { id: string; name: string; slug: string } | null;
+  counts?: {
+    customers: number;
+    bookings: number;
+    transactions: number;
+    invoices: number;
+  };
 }) {
   return {
     id: user.id,
@@ -24,6 +30,7 @@ function adminRow(user: {
       name: user.studio.name,
       slug: user.studio.slug,
     } : null,
+    counts: user.counts,
   };
 }
 
@@ -42,7 +49,18 @@ export async function GET() {
       orderBy: { createdAt: "desc" },
     });
 
-    return ok(rows.filter((row) => !isRootAdminEmail(row.email)).map(adminRow));
+    const adminRows = rows.filter((row) => !isRootAdminEmail(row.email));
+    const enrichedRows = await Promise.all(adminRows.map(async (row) => {
+      const [customers, bookings, transactions, invoices] = await Promise.all([
+        prisma.customer.count({ where: { studioId: row.studioId, deletedAt: null } }),
+        prisma.booking.count({ where: { studioId: row.studioId, deletedAt: null } }),
+        prisma.transaction.count({ where: { studioId: row.studioId, deletedAt: null } }),
+        prisma.invoice.count({ where: { studioId: row.studioId, deletedAt: null } }),
+      ]);
+      return { ...row, counts: { customers, bookings, transactions, invoices } };
+    }));
+
+    return ok(enrichedRows.map(adminRow));
   } catch (error) {
     if ((error as Error).message === "UNAUTHORIZED") return fail("Bạn chưa đăng nhập.", 401);
     return serverError(error);
