@@ -7,5 +7,9 @@ export function isRootAdminEmail(email?: string | null) {
 }
 
 export function isRootAdminSession(session: CurrentSession | null) {
-  return isRootAdminEmail(session?.user.email);
+  return isRootAdminEmail(session?.user.email) || isRootAdminEmail(session?.user.rootAdminEmail);
+}
+
+export function isViewingAsAdmin(session: CurrentSession | null) {
+  return Boolean(session?.user.impersonatingAdminId);
 }

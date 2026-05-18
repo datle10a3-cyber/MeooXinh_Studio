@@ -20,6 +20,10 @@ export type SessionUser = {
   email: string;
   phone?: string | null;
   avatarUrl?: string | null;
+  rootAdminId?: string;
+  rootAdminEmail?: string;
+  impersonatingAdminId?: string;
+  impersonatingAdminEmail?: string;
 };
 
 function jwtSecret() {
@@ -45,8 +49,8 @@ export async function verifyPassword(password: string, hash: string) {
   return bcrypt.compare(password, hash);
 }
 
-export function isRootAdmin(user: Pick<SessionUser, "email"> | null | undefined) {
-  return isRootAdminEmail(user?.email);
+export function isRootAdmin(user: Pick<SessionUser, "email" | "rootAdminEmail"> | null | undefined) {
+  return isRootAdminEmail(user?.email) || isRootAdminEmail(user?.rootAdminEmail);
 }
 
 export function isRootAdminLogin(email: string, password: string) {
@@ -166,7 +170,14 @@ export async function setAuthCookies(accessToken: string, refreshToken: string) 
   });
 }
 
-async function setAccessCookie(accessToken: string) {
+export function rootAdminIdentity(user: SessionUser) {
+  return {
+    rootAdminId: user.rootAdminId ?? (isRootAdminEmail(user.email) ? user.id : undefined),
+    rootAdminEmail: user.rootAdminEmail ?? (isRootAdminEmail(user.email) ? user.email : undefined),
+  };
+}
+
+export async function setAccessCookie(accessToken: string) {
   const store = await cookies();
   store.set(accessCookie, accessToken, {
     httpOnly: true,

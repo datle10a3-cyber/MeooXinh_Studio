@@ -34,7 +34,7 @@ import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/com
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { studioViewPath } from "@/app/utils/studio-navigation";
-import { isRootAdminSession } from "@/app/utils/root-admin";
+import { isRootAdminSession, isViewingAsAdmin } from "@/app/utils/root-admin";
 
 const Sidebar = dynamic(
   () =>
@@ -189,6 +189,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [searching, setSearching] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
   const canManageRootAdmins = isRootAdminSession(session);
+  const viewingAsAdmin = isViewingAsAdmin(session);
   const visibleMobileGroups = canManageRootAdmins
     ? mobileGroups.map((group) => group.title === "Quản lý" || group.title === "Quáº£n lĂ½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
     : mobileGroups;
@@ -279,6 +280,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       const target = item.href || studioViewPath(item.id);
       router.push(target, { scroll: false });
     });
+  }
+
+  async function stopViewingAsAdmin() {
+    const result = await fetch("/api/root-admin/impersonate", { method: "DELETE" }).then((res) => res.json() as Promise<{ data?: CurrentSession; error?: { message: string } }>);
+    if (!result.data) return;
+    setSession(result.data);
+    localStorage.setItem("studio-session", JSON.stringify(result.data));
+    window.dispatchEvent(new Event("studio-session-updated"));
+    router.push("/root-admins", { scroll: false });
   }
 
   function goToSearchResult(item: SearchResult) {
@@ -468,6 +478,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className="studio-ios-scroll studio-mobile-bottom-safe studio-xs-tight px-2.5 py-3 sm:px-4 sm:py-5 lg:pb-6 xl:px-8">{children}</div>
         </main>
       </div>
+
+      {viewingAsAdmin ? (
+        <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.3rem)] left-2 right-2 z-[70] rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-2xl sm:left-auto sm:right-4 sm:bottom-4 sm:w-[360px]">
+          <p className="text-xs font-black uppercase tracking-wide text-[#EA7188]">Admin chính đang xem hộ</p>
+          <p className="mt-1 truncate text-sm font-bold text-[#5B342C]">{session?.user.impersonatingAdminEmail}</p>
+          <Button className="mt-2 h-10 w-full rounded-xl" onClick={() => void stopViewingAsAdmin()}>
+            Quay lại admin chính
+          </Button>
+        </div>
+      ) : null}
 
       {mobileMenuOpen ? (
         <div className="fixed inset-0 z-50 xl:hidden" style={{ transform: "translateZ(0)" }}>

@@ -14,5 +14,14 @@ export async function GET() {
     }),
   ]);
 
-  return ok({ user: freshUser ?? user, studio });
+  return ok({
+    user: {
+      ...(freshUser ?? user),
+      rootAdminId: user.rootAdminId,
+      rootAdminEmail: user.rootAdminEmail,
+      impersonatingAdminId: user.impersonatingAdminId,
+      impersonatingAdminEmail: user.impersonatingAdminEmail,
+    },
+    studio,
+  });
 }

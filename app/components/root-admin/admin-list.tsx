@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Loader2, ShieldCheck, Trash2 } from "lucide-react";
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { Button } from "@/app/components/ui/button";
@@ -9,6 +10,8 @@ import { DeleteConfirmation } from "@/app/components/ui/delete-confirmation";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 import { formatDate } from "@/app/utils/format";
+import { useUiStore } from "@/app/store/ui-store";
+import type { CurrentSession } from "@/app/types/auth";
 
 type AdminRow = {
   id: string;
@@ -23,6 +26,8 @@ type AdminRow = {
 type ApiResult<T> = { data?: T; error?: { message: string } };
 
 export function RootAdminList() {
+  const router = useRouter();
+  const setSession = useUiStore((state) => state.setSession);
   const [rows, setRows] = useState<AdminRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
@@ -57,6 +62,21 @@ export function RootAdminList() {
     setMessage("Đã xóa quyền đăng nhập của admin này.");
   }
 
+  async function viewAsAdmin(row: AdminRow) {
+    const result = await fetch("/api/root-admin/impersonate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: row.id }),
+    }).then((res) => res.json() as Promise<ApiResult<CurrentSession>>);
+    if (result.error) return setMessage(result.error.message);
+    if (result.data) {
+      setSession(result.data);
+      localStorage.setItem("studio-session", JSON.stringify(result.data));
+      window.dispatchEvent(new Event("studio-session-updated"));
+      router.push("/", { scroll: false });
+    }
+  }
+
   if (loading) return <PageSpinner label="Đang tải danh sách admin..." />;
 
   return (
@@ -89,10 +109,15 @@ export function RootAdminList() {
                   <span className="rounded-2xl bg-[#FFF8F1] px-3 py-2">Đăng nhập: {row.lastLoginAt ? formatDate(row.lastLoginAt) : "Chưa có"}</span>
                 </div>
               </div>
-              <Button variant="danger" className="min-h-11 rounded-2xl" onClick={() => setDeleteTarget(row)}>
-                <Trash2 size={16} />
-                Xóa admin
-              </Button>
+              <div className="grid gap-2 sm:w-40">
+                <Button className="min-h-11 rounded-2xl" onClick={() => void viewAsAdmin(row)}>
+                  Vào xem
+                </Button>
+                <Button variant="danger" className="min-h-11 rounded-2xl" onClick={() => setDeleteTarget(row)}>
+                  <Trash2 size={16} />
+                  Xóa admin
+                </Button>
+              </div>
             </div>
           </Card>
         )) : (

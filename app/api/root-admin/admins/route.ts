@@ -72,7 +72,7 @@ export async function DELETE(req: Request) {
       }),
       prisma.user.update({
         where: { id: target.id },
-        data: { status: "DISABLED" },
+        data: { status: "DISABLED", email: `disabled-${target.id}-${target.email}` },
       }),
     ]);
 

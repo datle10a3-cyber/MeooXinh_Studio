@@ -8,6 +8,10 @@ export type CurrentSession = {
     phone?: string | null;
     avatarUrl?: string | null;
     notificationsEnabled?: boolean;
+    rootAdminId?: string;
+    rootAdminEmail?: string;
+    impersonatingAdminId?: string;
+    impersonatingAdminEmail?: string;
   };
   studio: {
     id: string;
