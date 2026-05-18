@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Database, Eye, KeyRound, Loader2, LockKeyhole, ShieldCheck, Trash2, Users } from "lucide-react";
+import { Activity, Building2, Copy, Eye, KeyRound, Loader2, LockKeyhole, RefreshCw, ShieldCheck, Trash2, UserCheck } from "lucide-react";
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { Button } from "@/app/components/ui/button";
 import { Card } from "@/app/components/ui/card";
@@ -120,91 +120,117 @@ export function RootAdminList() {
     setMessage("Đã lưu cấu hình admin chính.");
   }
 
+  async function copyInviteCode() {
+    await navigator.clipboard.writeText(inviteCode);
+    setMessage("Đã sao chép mã mời.");
+  }
+
   if (loading) return <PageSpinner label="Đang tải danh sách admin..." />;
-  const totals = rows.reduce(
-    (sum, row) => ({
-      customers: sum.customers + (row.counts?.customers ?? 0),
-      bookings: sum.bookings + (row.counts?.bookings ?? 0),
-      transactions: sum.transactions + (row.counts?.transactions ?? 0),
-      invoices: sum.invoices + (row.counts?.invoices ?? 0),
-    }),
-    { customers: 0, bookings: 0, transactions: 0, invoices: 0 },
-  );
+  const protectedStatus = settings?.settingsStorageReady === false ? "Cần migrate database" : "Đang hoạt động";
 
   return (
     <div className="space-y-4">
-      <div className="rounded-[1.5rem] border border-[#F4C7C4] bg-white p-4 shadow-sm sm:p-5">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-black uppercase tracking-[0.16em] text-[#EA7188]">Admin chính</p>
-            <h1 className="mt-1 text-2xl font-black text-[#5B342C] sm:text-3xl">Trung tâm quản lý</h1>
+      <section className="overflow-hidden rounded-[1.5rem] border border-[#E9B8B4] bg-white shadow-sm">
+        <div className="grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-5">
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl bg-[#5B342C] text-white">
+                <ShieldCheck size={18} />
+              </span>
+              <span className="rounded-full bg-[#FFF0F4] px-3 py-1 text-xs font-black uppercase tracking-wide text-[#A84E61]">Root control</span>
+              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700">{protectedStatus}</span>
+            </div>
+            <h1 className="mt-3 text-2xl font-black leading-tight text-[#3A241F] sm:text-3xl">Bảng điều khiển admin chính</h1>
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-[#7B554D]">
+              Quản lý tài khoản admin mã mời, chính sách đăng ký, bảo mật ca và quyền vào xem từng studio. Admin mã mời vẫn giữ nguyên giao diện và quyền hiện tại.
+            </p>
           </div>
-          <span className="rounded-full bg-[#FFF0F4] px-3 py-1 text-xs font-black text-[#A84E61]">{rows.length} admin mã mời</span>
+          <div className="grid min-w-[220px] gap-2 rounded-[1.25rem] border border-[#F4C7C4] bg-[#FFF8F1] p-3">
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-xs font-black uppercase tracking-wide text-[#9B746B]">Admin mã mời</span>
+              <span className="text-2xl font-black text-[#5B342C]">{rows.length}</span>
+            </div>
+            <Button variant="secondary" className="h-10 rounded-xl" onClick={() => void loadRows()}>
+              <RefreshCw size={15} />
+              Làm mới
+            </Button>
+          </div>
         </div>
-      </div>
+      </section>
 
       <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
-      <section className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {[
-          { label: "Admin", value: rows.length, icon: Users },
-          { label: "Khách", value: totals.customers, icon: Users },
-          { label: "Booking", value: totals.bookings, icon: Database },
-          { label: "Hóa đơn", value: totals.invoices, icon: ShieldCheck },
-        ].map((item) => {
-          const Icon = item.icon;
-          return (
-            <Card key={item.label} className="rounded-[1.25rem] border-[#F4C7C4] bg-white p-3 shadow-sm">
-              <div className="flex items-center justify-between gap-2">
-                <span className="grid h-9 w-9 place-items-center rounded-2xl bg-[#FFF0F4] text-[#EA7188]"><Icon size={17} /></span>
-                <span className="text-xl font-black text-[#5B342C]">{item.value}</span>
-              </div>
-              <p className="mt-2 text-xs font-black uppercase tracking-wide text-[#9B746B]">{item.label}</p>
-            </Card>
-          );
-        })}
-      </section>
+      <section className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
+        <Card className="rounded-[1.5rem] border-[#F4C7C4] bg-white p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <KeyRound size={18} className="text-[#EA7188]" />
+            <h2 className="text-lg font-black text-[#3A241F]">Chính sách truy cập</h2>
+          </div>
+          <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <label className="min-w-0 text-xs font-black uppercase tracking-wide text-[#9B746B]">
+              Mã mời đăng ký admin
+              <Input
+                className="mt-2"
+                value={inviteCode}
+                disabled={settings?.inviteCodeLockedByEnv}
+                onChange={(event) => setInviteCode(event.target.value)}
+              />
+              {settings?.inviteCodeLockedByEnv ? <span className="mt-1 block normal-case text-[11px] text-[#EA7188]">Đang khóa bằng biến môi trường Vercel.</span> : null}
+            </label>
+            <div className="grid gap-2 sm:w-36 sm:self-end">
+              <Button variant="secondary" className="h-11 rounded-xl" onClick={() => void copyInviteCode()}>
+                <Copy size={15} />
+                Sao chép
+              </Button>
+            </div>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
+            <label className="min-w-0 text-xs font-black uppercase tracking-wide text-[#9B746B]">
+              Mật khẩu xóa ca mặc định
+              <Input
+                className="mt-2"
+                type="password"
+                inputMode="numeric"
+                placeholder={settings?.hasCustomShiftPassword ? "Đã có mật khẩu" : "000000"}
+                value={shiftPassword}
+                onChange={(event) => setShiftPassword(event.target.value.replace(/\D/g, "").slice(0, 6))}
+              />
+              {settings?.settingsStorageReady === false ? <span className="mt-1 block normal-case text-[11px] text-amber-700">Production chưa migrate bảng cấu hình, vẫn dùng mã/mật khẩu mặc định.</span> : null}
+            </label>
+            <Button className="h-11 rounded-xl sm:w-36 sm:self-end" onClick={() => void saveSettings()} disabled={savingSettings || settings?.settingsStorageReady === false}>
+              {savingSettings ? <Loader2 size={16} className="animate-spin" /> : <LockKeyhole size={16} />}
+              Lưu
+            </Button>
+          </div>
+        </Card>
 
-      <section className="rounded-[1.5rem] border border-[#F4C7C4] bg-white p-3 shadow-sm sm:p-4">
-        <div className="mb-3 flex items-center gap-2">
-          <KeyRound size={18} className="text-[#EA7188]" />
-          <h2 className="text-lg font-black text-[#5B342C]">Bảo mật hệ thống</h2>
-        </div>
-        <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
-          <label className="min-w-0 text-xs font-black uppercase tracking-wide text-[#9B746B]">
-            Mã mời đăng ký
-            <Input
-              className="mt-2"
-              value={inviteCode}
-              disabled={settings?.inviteCodeLockedByEnv}
-              onChange={(event) => setInviteCode(event.target.value)}
-            />
-            {settings?.inviteCodeLockedByEnv ? <span className="mt-1 block normal-case text-[11px] text-[#EA7188]">Đang khóa bằng biến môi trường Vercel.</span> : null}
-          </label>
-          <label className="min-w-0 text-xs font-black uppercase tracking-wide text-[#9B746B]">
-            Mật khẩu xóa ca mặc định
-            <Input
-              className="mt-2"
-              type="password"
-              inputMode="numeric"
-              placeholder={settings?.hasCustomShiftPassword ? "Đã có mật khẩu" : "000000"}
-              value={shiftPassword}
-              onChange={(event) => setShiftPassword(event.target.value.replace(/\D/g, "").slice(0, 6))}
-            />
-            {settings?.settingsStorageReady === false ? <span className="mt-1 block normal-case text-[11px] text-amber-700">Production chưa migrate bảng cấu hình, vẫn dùng mã/mật khẩu mặc định.</span> : null}
-          </label>
-          <Button className="min-h-12 self-end rounded-2xl" onClick={() => void saveSettings()} disabled={savingSettings || settings?.settingsStorageReady === false}>
-            {savingSettings ? <Loader2 size={16} className="animate-spin" /> : <LockKeyhole size={16} />}
-            Lưu bảo mật
-          </Button>
-        </div>
+        <Card className="rounded-[1.5rem] border-[#F4C7C4] bg-[#FFFDFB] p-4 shadow-sm">
+          <div className="flex items-center gap-2">
+            <Activity size={18} className="text-[#EA7188]" />
+            <h2 className="text-lg font-black text-[#3A241F]">Trạng thái quản trị</h2>
+          </div>
+          <div className="mt-4 grid gap-2">
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2 ring-1 ring-[#F4C7C4]">
+              <span className="text-sm font-bold text-[#7B554D]">Lưu cấu hình</span>
+              <span className={settings?.settingsStorageReady === false ? "text-sm font-black text-amber-700" : "text-sm font-black text-emerald-700"}>{settings?.settingsStorageReady === false ? "Chưa sẵn sàng" : "Sẵn sàng"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2 ring-1 ring-[#F4C7C4]">
+              <span className="text-sm font-bold text-[#7B554D]">Mã mời</span>
+              <span className="text-sm font-black text-[#5B342C]">{settings?.inviteCodeLockedByEnv ? "Khóa bởi Vercel" : "Quản lý trong app"}</span>
+            </div>
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white px-3 py-2 ring-1 ring-[#F4C7C4]">
+              <span className="text-sm font-bold text-[#7B554D]">Mật khẩu xóa ca</span>
+              <span className="text-sm font-black text-[#5B342C]">{settings?.hasCustomShiftPassword ? "Đã cấu hình" : "Mặc định"}</span>
+            </div>
+          </div>
+        </Card>
       </section>
 
       <section className="rounded-[1.5rem] border border-[#F4C7C4] bg-white p-3 shadow-sm sm:p-4">
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <ShieldCheck size={18} className="text-[#EA7188]" />
-            <h2 className="text-lg font-black text-[#5B342C]">Quản lý quyền truy cập</h2>
+            <Building2 size={18} className="text-[#EA7188]" />
+            <h2 className="text-lg font-black text-[#3A241F]">Admin mã mời và studio được quản lý</h2>
           </div>
         </div>
         <div className="grid gap-3">
@@ -212,14 +238,19 @@ export function RootAdminList() {
           <Card key={row.id} className="rounded-[1.25rem] border-[#F4C7C4] bg-[#FFFDFB] p-3 shadow-sm">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
-                <h2 className="truncate text-base font-black text-[#5B342C]">{row.name || "Admin"}</h2>
-                <p className="truncate text-sm font-bold text-[#9B746B]">{row.email}</p>
-                <p className="mt-1 truncate text-xs font-bold text-[#7B554D]">{row.studio?.name ?? "Không rõ studio"}</p>
-                <div className="mt-2 grid grid-cols-4 gap-1 text-center text-[11px] font-black text-[#7B554D]">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="grid h-9 w-9 place-items-center rounded-2xl bg-white text-[#EA7188] ring-1 ring-[#F4C7C4]"><UserCheck size={16} /></span>
+                  <div className="min-w-0">
+                    <h2 className="truncate text-base font-black text-[#5B342C]">{row.name || "Admin"}</h2>
+                    <p className="truncate text-sm font-bold text-[#9B746B]">{row.email}</p>
+                  </div>
+                </div>
+                <p className="mt-2 truncate text-xs font-bold uppercase tracking-wide text-[#7B554D]">{row.studio?.name ?? "Không rõ studio"}</p>
+                <div className="mt-2 grid grid-cols-2 gap-1 text-center text-[11px] font-black text-[#7B554D] sm:grid-cols-4">
                   <span className="rounded-xl bg-white px-2 py-1">{row.counts?.customers ?? 0} khách</span>
-                  <span className="rounded-xl bg-white px-2 py-1">{row.counts?.bookings ?? 0} lịch</span>
+                  <span className="rounded-xl bg-white px-2 py-1">{row.counts?.bookings ?? 0} booking</span>
                   <span className="rounded-xl bg-white px-2 py-1">{row.counts?.transactions ?? 0} thu chi</span>
-                  <span className="rounded-xl bg-white px-2 py-1">{row.counts?.invoices ?? 0} HĐ</span>
+                  <span className="rounded-xl bg-white px-2 py-1">{row.counts?.invoices ?? 0} hóa đơn</span>
                 </div>
               </div>
               <div className="grid gap-2 sm:w-40">
