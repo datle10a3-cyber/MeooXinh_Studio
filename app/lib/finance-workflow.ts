@@ -206,6 +206,170 @@ export async function replaceTransactionWalletDelta(before: TransactionLike | nu
   });
 }
 
+function bookingDoneIdFromNote(note?: string | null) {
+  return /BOOKING_DONE:([^\s|]+)/.exec(String(note ?? ""))?.[1] ?? null;
+}
+
+function replaceReceiptSnapshot(note: string | null | undefined, snapshot: string) {
+  const source = String(note ?? "").trim();
+  if (/RECEIPT:\{.*?\}(?=\s*\||\n|$)/.test(source)) {
+    return source.replace(/RECEIPT:\{.*?\}(?=\s*\||\n|$)/, snapshot);
+  }
+  return [snapshot, source].filter(Boolean).join(" | ");
+}
+
+export async function syncLinkedFinanceFromTransaction(transactionId: string) {
+  const transaction = await prisma.transaction.findUnique({
+    where: { id: transactionId },
+    include: {
+      customer: true,
+      project: { include: { booking: true } },
+    },
+  });
+  if (!transaction || transaction.deletedAt || transaction.type !== "INCOME") return null;
+
+  const bookingId = bookingDoneIdFromNote(transaction.note) ?? transaction.project?.bookingId ?? null;
+  if (!bookingId) return null;
+
+  const booking = await prisma.booking.findFirst({
+    where: { id: bookingId, studioId: transaction.studioId, deletedAt: null },
+    include: { customer: true },
+  });
+  if (!booking) return null;
+
+  const packageName = String(transaction.title || booking.packageName || booking.title).trim();
+  const customerName = booking.customer?.name || booking.customerName || transaction.customer?.name || "Khách hàng";
+  const amount = decimal(transaction.amount);
+  const galleryUrls = transaction.galleryUrls ?? booking.galleryUrls ?? null;
+  const imageUrl = transaction.imageUrl ?? booking.imageUrl ?? null;
+
+  return prisma.$transaction(async (tx) => {
+    const project = transaction.projectId
+      ? await tx.project.findFirst({ where: { id: transaction.projectId, studioId: transaction.studioId, deletedAt: null } })
+      : await tx.project.findFirst({ where: { bookingId: booking.id, studioId: transaction.studioId, deletedAt: null } });
+
+    let invoice = project
+      ? await tx.invoice.findFirst({ where: { projectId: project.id, studioId: transaction.studioId, deletedAt: null }, orderBy: { createdAt: "desc" } })
+      : null;
+    if (!invoice) {
+      invoice = await tx.invoice.findFirst({
+        where: {
+          studioId: transaction.studioId,
+          deletedAt: null,
+          note: { contains: `BOOKING_DONE:${booking.id}` },
+        },
+        orderBy: { createdAt: "desc" },
+      });
+    }
+
+    await tx.booking.update({
+      where: { id: booking.id },
+      data: {
+        customerId: transaction.customerId ?? booking.customerId,
+        customerName,
+        packageName,
+        title: `${customerName} - ${packageName}`,
+        imageUrl,
+        galleryUrls,
+        total: amount,
+      },
+    });
+
+    if (project) {
+      await tx.project.update({
+        where: { id: project.id },
+        data: {
+          customerId: transaction.customerId ?? project.customerId,
+          name: `${customerName} - ${packageName}`,
+          coverUrl: imageUrl,
+          galleryUrls,
+          amount,
+          dueAmount: new Prisma.Decimal(0),
+        },
+      });
+    }
+
+    if (invoice) {
+      const snapshot = receiptSnapshot({
+        id: booking.id,
+        studioId: booking.studioId,
+        customerId: transaction.customerId ?? booking.customerId,
+        customerName,
+        packageId: booking.packageId,
+        packageName,
+        categoryName: booking.categoryName,
+        price: amount,
+        total: amount,
+        deposit: booking.deposit,
+        title: `${customerName} - ${packageName}`,
+        startAt: booking.startAt,
+        endAt: booking.endAt,
+        note: booking.note,
+        imageUrl,
+        galleryUrls,
+      }, invoice.code);
+      const syncedNote = replaceReceiptSnapshot(transaction.note, snapshot);
+
+      await tx.invoice.update({
+        where: { id: invoice.id },
+        data: {
+          customerId: transaction.customerId ?? invoice.customerId,
+          projectId: project?.id ?? invoice.projectId,
+          imageUrl,
+          galleryUrls,
+          subtotal: amount,
+          discount: new Prisma.Decimal(0),
+          total: amount,
+          paid: amount,
+          due: new Prisma.Decimal(0),
+          status: "PAID",
+          note: replaceReceiptSnapshot(invoice.note, snapshot),
+        },
+      });
+      await tx.transaction.update({
+        where: { id: transaction.id },
+        data: {
+          projectId: project?.id ?? transaction.projectId,
+          customerId: transaction.customerId ?? booking.customerId,
+          note: syncedNote,
+        },
+      });
+      await tx.invoiceItem.deleteMany({ where: { invoiceId: invoice.id } });
+      await tx.invoiceItem.create({
+        data: {
+          invoiceId: invoice.id,
+          description: packageName,
+          quantity: 1,
+          unitPrice: amount,
+          total: amount,
+        },
+      });
+    }
+
+    if (booking.customerId && booking.customerId !== transaction.customerId) {
+      await tx.customer.updateMany({
+        where: { id: booking.customerId, studioId: transaction.studioId },
+        data: { totalSpent: { decrement: decimal(booking.total) } },
+      });
+    }
+    if (transaction.customerId) {
+      const previousAmount = booking.customerId === transaction.customerId ? decimal(booking.total) : new Prisma.Decimal(0);
+      const diff = amount.minus(previousAmount);
+      if (!diff.eq(0)) {
+        await tx.customer.updateMany({
+          where: { id: transaction.customerId, studioId: transaction.studioId },
+          data: { totalSpent: { increment: diff } },
+        });
+      }
+    }
+
+    return { bookingId: booking.id, projectId: project?.id ?? null, invoiceId: invoice?.id ?? null };
+  }, {
+    maxWait: 15000,
+    timeout: 30000,
+  });
+}
+
 export async function recalculateInvoiceDebt(invoiceId: string) {
   const invoice = await prisma.invoice.findUnique({ where: { id: invoiceId } });
   if (!invoice) return null;

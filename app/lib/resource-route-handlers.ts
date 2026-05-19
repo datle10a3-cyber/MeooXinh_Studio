@@ -1,7 +1,7 @@
 import { fail, ok, created, serverError } from "@/app/lib/api-response";
 import { canCreate, canUpdate, requireUser, verifyStudioEditPassword } from "@/app/lib/auth";
 import { writeAuditLog } from "@/app/lib/audit";
-import { applyTransactionWalletDelta, recalculateInvoiceDebt, replaceTransactionWalletDelta } from "@/app/lib/finance-workflow";
+import { applyTransactionWalletDelta, recalculateInvoiceDebt, replaceTransactionWalletDelta, syncLinkedFinanceFromTransaction } from "@/app/lib/finance-workflow";
 import { cacheInvalidate } from "@/app/lib/api-cache";
 import { prisma } from "@/app/lib/prisma";
 import { sendStudioPush } from "@/app/lib/push";
@@ -268,6 +268,7 @@ export async function updateResource(req: Request, resourceName: string) {
       data: payload,
     });
     if (resource.key === "transactions") await replaceTransactionWalletDelta(current, row);
+    if (resource.key === "transactions") await syncLinkedFinanceFromTransaction(String(row.id));
     if (resource.key === "invoices") await recalculateInvoiceDebt(String(row.id));
     await writeAuditLog(user, "UPDATE", resource.definition.entity, String(row.id), { name: auditName(row) });
     cacheInvalidate("dashboard:");
