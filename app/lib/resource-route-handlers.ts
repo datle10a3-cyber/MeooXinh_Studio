@@ -37,9 +37,13 @@ function resourceInclude(resource: ResourceKey) {
       booking: {
         select: {
           id: true,
+          title: true,
+          customerName: true,
+          packageName: true,
           package: {
             select: {
               id: true,
+              name: true,
               imageUrl: true,
               galleryUrls: true
             }
@@ -94,13 +98,25 @@ function resourceInclude(resource: ResourceKey) {
       booking: {
         select: {
           id: true,
+          title: true,
+          customerName: true,
+          packageName: true,
           package: {
             select: {
               id: true,
+              name: true,
               imageUrl: true,
               galleryUrls: true
             }
           }
+        }
+      },
+      service: {
+        select: {
+          id: true,
+          name: true,
+          imageUrl: true,
+          galleryUrls: true
         }
       }
     };

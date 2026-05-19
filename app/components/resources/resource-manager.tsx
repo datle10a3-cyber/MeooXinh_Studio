@@ -320,9 +320,12 @@ function imageBadgeLabel(resource: ResourceKey, imageIndex: number) {
   return imageIndex === 0 ? "Ảnh chính" : "Ảnh phụ";
 }
 
-function evidenceImageLabel(row: Row, resource: ResourceKey, imageIndex: number) {
+function evidenceImageLabel(row: Row, resource: ResourceKey, imageIndex: number, imageField?: string) {
   if (resource === "transactions" && !canPrintInvoice(row)) return imageIndex === 0 ? "Chứng từ" : "Ảnh phụ";
-  if (["transactions", "invoices", "projects"].includes(resource) && imageIndex === 0 && !isImageLike(row.imageUrl)) return "Gói chụp";
+  if (["transactions", "invoices", "projects"].includes(resource) && imageIndex === 0) {
+    const primaryImage = imageField ? row[imageField] : row.imageUrl;
+    return isImageLike(primaryImage) ? "Khách hàng" : "Gói chụp";
+  }
   return imageBadgeLabel(resource, imageIndex);
 }
 
@@ -343,6 +346,10 @@ function receiptEscape(value: unknown) {
 
 function nestedName(value: unknown) {
   return value && typeof value === "object" && "name" in value ? String((value as { name?: unknown }).name ?? "") : "";
+}
+
+function nestedText(value: unknown, key: string) {
+  return value && typeof value === "object" && key in value ? String((value as Record<string, unknown>)[key] ?? "").trim() : "";
 }
 
 function firstInvoiceItem(row: Row) {
@@ -389,8 +396,15 @@ function printableInvoiceData(row: Row) {
   const projectName = nestedName(row.project);
   const snapshot = receiptSnapshotFromNote(row.note);
   const projectParts = splitBookingProjectName(projectName);
+  const project = row.project && typeof row.project === "object" ? row.project : null;
+  const linkedBooking = (row.booking && typeof row.booking === "object" ? row.booking : null)
+    ?? (project ? objectValue(project, "booking") : null);
+  const linkedPackage = linkedBooking ? objectValue(linkedBooking, "package") : null;
+  const bookingPackageName = nestedText(linkedBooking, "packageName");
+  const linkedPackageName = nestedName(linkedPackage);
+  const serviceName = nestedName(row.service) || (project ? nestedName(objectValue(project, "service")) : "");
   const customerName = String(snapshot?.customerName || nestedName(row.customer) || row.customerName || projectParts.customerName || "Khách hàng");
-  const title = String(snapshot?.packageName || item?.description || row.packageName || projectParts.packageName || row.title || row.code || "Gói dịch vụ");
+  const title = String(snapshot?.packageName || item?.description || row.packageName || bookingPackageName || linkedPackageName || serviceName || projectParts.packageName || "Gói dịch vụ");
   const amount = item?.total ?? row.total ?? row.paid ?? row.amount ?? 0;
   const code = String(row.code ?? snapshot?.invoiceCode ?? noteCode ?? "meoxinh--");
   
@@ -2366,7 +2380,7 @@ function ResourceDetailModal({
               >
                 <img src={src} alt="" className="h-full w-full object-contain" />
                 <span className="absolute bottom-1 left-1 right-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[10px] font-black text-[#A84E61] shadow-sm">
-                  {evidenceImageLabel(row, resource, index)}
+                  {evidenceImageLabel(row, resource, index, config.imageField)}
                 </span>
               </button>
             ))}
