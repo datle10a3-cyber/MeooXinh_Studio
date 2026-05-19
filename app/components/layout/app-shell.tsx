@@ -99,8 +99,8 @@ const devSession: CurrentSession = {
 const mobilePrimary: NavItem[] = [
   { id: "booking", label: "Booking", href: "/booking", icon: CalendarDays },
   { id: "ai", label: "AI", href: "/ai", icon: Bot },
-  { id: "home", label: "Trang chu", href: "/", icon: Home },
-  { id: "wallets", label: "Vi tien", href: "/wallets", icon: WalletCards },
+  { id: "home", label: "Trang chủ", href: "/", icon: Home },
+  { id: "wallets", label: "Ví tiền", href: "/wallets", icon: WalletCards },
 ];
 
 const mobilePrimaryOrder = ["home", "booking", "wallets", "ai"];
@@ -109,7 +109,7 @@ const rootAdminNavItem: NavItem = { id: "root-admins", label: "Admin", href: "/r
 
 const mobileGroups: { title: string; items: NavItem[] }[] = [
   {
-    title: "Chinh",
+    title: "Chính",
     items: [
       { id: "home", label: "Home", href: "/", icon: Home },
       { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -119,30 +119,30 @@ const mobileGroups: { title: string; items: NavItem[] }[] = [
   {
     title: "Booking",
     items: [
-      { id: "categories", label: "Danh muc", href: "/categories", icon: FolderOpen },
-      { id: "packages", label: "Goi", href: "/packages", icon: Package },
+      { id: "categories", label: "Danh mục", href: "/categories", icon: FolderOpen },
+      { id: "packages", label: "Gói", href: "/packages", icon: Package },
       { id: "booking", label: "Booking", href: "/booking", icon: CalendarDays },
-      { id: "projects", label: "Du an", href: "/projects", icon: BriefcaseBusiness },
+      { id: "projects", label: "Dự án", href: "/projects", icon: BriefcaseBusiness },
     ],
   },
   {
-    title: "Tai chinh",
+    title: "Tài chính",
     items: [
       { id: "transactions", label: "Thu chi", href: "/transactions", icon: BadgeDollarSign },
-      { id: "wallets", label: "Vi", href: "/wallets", icon: WalletCards },
-      { id: "invoices", label: "Hoa don", href: "/invoices", icon: FileText },
-      { id: "reports", label: "Bao cao", href: "/reports", icon: Download },
+      { id: "wallets", label: "Ví", href: "/wallets", icon: WalletCards },
+      { id: "invoices", label: "Hóa đơn", href: "/invoices", icon: FileText },
+      { id: "reports", label: "Báo cáo", href: "/reports", icon: Download },
     ],
   },
   {
-    title: "Quan ly",
+    title: "Quản lý",
     items: [
-      { id: "customers", label: "Khach", href: "/customers", icon: Users },
-      { id: "users", label: "Nhan su", href: "/users", icon: Users },
-      { id: "completed-bookings", label: "Booking hoan tat", href: "/completed-bookings", icon: CalendarCheck2 },
-      { id: "equipment", label: "Thiet bi", href: "/equipment", icon: Wrench },
-      { id: "notifications", label: "Thong bao", href: "/notifications", icon: Settings },
-      { id: "trash", label: "Thung rac", href: "/trash", icon: Trash2 },
+      { id: "customers", label: "Khách", href: "/customers", icon: Users },
+      { id: "users", label: "Nhân sự", href: "/users", icon: Users },
+      { id: "completed-bookings", label: "Booking hoàn tất", href: "/completed-bookings", icon: CalendarCheck2 },
+      { id: "equipment", label: "Thiết bị", href: "/equipment", icon: Wrench },
+      { id: "notifications", label: "Thông báo", href: "/notifications", icon: Settings },
+      { id: "trash", label: "Thùng rác", href: "/trash", icon: Trash2 },
     ],
   },
 ];
@@ -194,8 +194,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const rootAdminCentralOnly = canManageRootAdmins && !viewingAsAdmin;
   const visibleMobileGroups = canManageRootAdmins
     ? rootAdminCentralOnly
-      ? [{ title: "Quan ly", items: [rootAdminNavItem] }]
-      : mobileGroups.map((group) => group.title === "Quan ly" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
+      ? [{ title: "Quản lý", items: [rootAdminNavItem] }]
+      : mobileGroups.map((group) => group.title === "Quản lý" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
     : mobileGroups;
 
   // Sync session from localStorage instantly on client render
@@ -391,7 +391,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <StudioCatMark compact />
               <div>
                 <p className="text-sm font-black uppercase tracking-[0.22em] text-[#EA7188]">Meoo Xinhh Studio</p>
-                <p className="mt-1 text-sm font-semibold text-[#9B746B]">Dang kiem tra bao mat...</p>
+                <p className="mt-1 text-sm font-semibold text-[#9B746B]">Đang kiểm tra bảo mật...</p>
               </div>
             </div>
             <div className="mt-5 space-y-3">
@@ -421,7 +421,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                    variant="secondary"
                   size="icon"
                   className={cn("h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
-                  aria-label="Mo menu"
+                  aria-label="Mở menu"
                   onClick={() => setMobileMenuOpen(true)}
                 >
                   <Menu size={24} strokeWidth={2.8} />
@@ -437,10 +437,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-2">
                 {!rootAdminCentralOnly ? <div className="hidden items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-2 py-1 shadow-sm xl:flex">
                   <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/categories">
-                    Danh muc
+                    Danh mục
                   </Link>
                   <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/packages">
-                    Goi
+                    Gói
                   </Link>
                   <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/booking">
                     Booking
@@ -465,13 +465,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   onClick={() => setSearchOpen(true)}
                 >
                   <Search size={17} />
-                  <span className="text-sm font-semibold">Tim kiem...</span>
+                  <span className="text-sm font-semibold">Tìm kiếm...</span>
                 </button>
                 <Button
                   variant="secondary"
                   size="icon"
                   className={cn("grid h-10 w-10 rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-emerald-300/20 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" : "")}
-                  aria-label="Tim kiem"
+                  aria-label="Tìm kiếm"
                   onClick={() => setSearchOpen(true)}
                 >
                   <Search size={17} />
@@ -480,7 +480,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   variant="secondary"
                   size="icon"
                   className={cn("grid h-10 w-10 rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl", rootAdminCentralOnly ? "border-emerald-300/20 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" : "")}
-                  aria-label={darkMode ? "Chuyen sang giao dien sang" : "Chuyen sang giao dien toi"}
+                  aria-label={darkMode ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
                   onClick={() => setDarkMode(!darkMode)}
                 >
                   {darkMode ? <Sun size={17} /> : <Moon size={17} />}
@@ -497,17 +497,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {viewingAsAdmin ? (
         <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.3rem)] left-2 right-2 z-[70] rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-2xl sm:left-auto sm:right-4 sm:bottom-4 sm:w-[360px]">
-          <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Super Admin dang xem ho</p>
+          <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Super Admin đang xem hộ</p>
           <p className="mt-1 truncate text-sm font-bold text-[#5B342C]">{session?.user.impersonatingAdminEmail}</p>
           <Button className="mt-2 h-10 w-full rounded-xl" onClick={() => void stopViewingAsAdmin()}>
-            Quay lai Super Admin
+            Quay lại Super Admin
           </Button>
         </div>
       ) : null}
 
       {mobileMenuOpen ? (
         <div className="fixed inset-0 z-50 xl:hidden" style={{ transform: "translateZ(0)" }}>
-          <button className={cn("absolute inset-0", rootAdminCentralOnly ? "bg-black/55" : "bg-[#2B1C1A]/35")} style={{ backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }} aria-label="Dong menu" onClick={() => setMobileMenuOpen(false)} />
+          <button className={cn("absolute inset-0", rootAdminCentralOnly ? "bg-black/55" : "bg-[#2B1C1A]/35")} style={{ backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }} aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)} />
           <aside className={cn("absolute left-0 top-0 flex h-dvh w-[88vw] max-w-[360px] flex-col overflow-hidden pt-[env(safe-area-inset-top)] shadow-2xl sm:w-[380px] sm:max-w-md", rootAdminCentralOnly ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4] bg-[#FFF7F0]")} style={{ transform: "translate3d(0,0,0)", willChange: "transform" }}>
             <div className={cn("flex items-center justify-between border-b p-3 sm:p-4", rootAdminCentralOnly ? "border-emerald-300/15" : "border-[#F4C7C4]")}>
               {rootAdminCentralOnly ? (
@@ -523,7 +523,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               ) : (
                 <StudioCatMark compact />
               )}
-              <Button variant="secondary" size="icon" aria-label="Dong menu" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="secondary" size="icon" aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)}>
                 <X size={18} />
               </Button>
             </div>
@@ -571,33 +571,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 autoFocus
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Tim khach, booking, hoa don, thu chi..."
+                placeholder="Tìm khách, booking, hóa đơn, thu chi..."
                 className="h-10 min-w-0 flex-1 bg-transparent text-sm font-bold text-[#5B342C] outline-none placeholder:text-[#B98278]"
               />
-              <Button variant="secondary" size="icon" aria-label="Dong tim kiem" onClick={() => setSearchOpen(false)}>
+              <Button variant="secondary" size="icon" aria-label="Đóng tìm kiếm" onClick={() => setSearchOpen(false)}>
                 <X size={16} />
               </Button>
             </div>
             <div className="grid gap-2 border-b border-[#F4C7C4] px-4 py-3 sm:grid-cols-[1fr_1fr_auto]">
               <label className="text-xs font-black uppercase text-[#B98278]">
-                Tu ngay
+                Từ ngày
                 <input type="date" value={searchFrom} onChange={(event) => setSearchFrom(event.target.value)} className="mt-1 h-10 w-full rounded-xl border border-[#F4C7C4] bg-[#FFF9F4] px-3 text-sm normal-case text-[#5B342C]" />
               </label>
               <label className="text-xs font-black uppercase text-[#B98278]">
-                Den ngay
+                Đến ngày
                 <input type="date" value={searchTo} onChange={(event) => setSearchTo(event.target.value)} className="mt-1 h-10 w-full rounded-xl border border-[#F4C7C4] bg-[#FFF9F4] px-3 text-sm normal-case text-[#5B342C]" />
               </label>
               {(searchFrom || searchTo) ? (
                 <Button variant="ghost" className="self-end" onClick={() => { setSearchFrom(""); setSearchTo(""); }}>
-                  Xoa loc
+                  Xóa lọc
                 </Button>
               ) : null}
             </div>
             <div className="studio-ios-scroll min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
               {searchQuery.trim().length < 2 ? (
-                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Nhap it nhat 2 ky tu de tim toan bo studio.</p>
+                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Nhập ít nhất 2 ký tự để tìm toàn bộ studio.</p>
               ) : searching ? (
-                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Dang tim...</p>
+                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Đang tìm...</p>
               ) : searchResults.length ? (
                 <div className="grid gap-2">
                   {searchResults.map((item) => (
@@ -612,12 +612,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         <span className="block whitespace-normal break-words text-sm font-black text-[#5B342C]">{item.title}</span>
                         <span className="block whitespace-normal break-words text-xs font-semibold text-[#9B746B]">{item.subtitle}</span>
                       </span>
-                      <span className="shrink-0 text-xs font-black text-[#EA7188]">Mo</span>
+                      <span className="shrink-0 text-xs font-black text-[#EA7188]">Mở</span>
                     </button>
                   ))}
                 </div>
               ) : (
-                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Khong co ket qua phu hop.</p>
+                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Không có kết quả phù hợp.</p>
               )}
             </div>
           </div>

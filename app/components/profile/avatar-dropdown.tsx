@@ -51,7 +51,7 @@ export function AvatarDropdown({ session, onLogout, rootAdminTheme = false }: { 
 
   return (
     <div ref={boxRef} className="relative">
-      <button type="button" className="rounded-full transition active:scale-95" onClick={() => setOpen((value) => !value)} aria-label="Mo tai khoan">
+      <button type="button" className="rounded-full transition active:scale-95" onClick={() => setOpen((value) => !value)} aria-label="Mở tài khoản">
         {rootAdminTheme ? (
           <span className="grid h-12 w-12 place-items-center rounded-full border border-emerald-300/35 bg-emerald-400/10 text-emerald-100 shadow-[0_0_22px_rgba(52,211,153,0.16)]">
             <ShieldCheck size={20} />
@@ -83,12 +83,12 @@ export function AvatarDropdown({ session, onLogout, rootAdminTheme = false }: { 
           </div>
 
           <div className="mt-3 space-y-1">
-            <MenuButton icon={User} label="Trang ca nhan" onClick={() => go("profile")} rootAdminTheme={rootAdminTheme} />
-            <MenuButton icon={Building2} label="Thong tin studio" onClick={() => go("home")} rootAdminTheme={rootAdminTheme} />
-            <MenuButton icon={Settings} label="Cai dat" onClick={() => go("home")} rootAdminTheme={rootAdminTheme} />
+            <MenuButton icon={User} label="Trang cá nhân" onClick={() => go("profile")} rootAdminTheme={rootAdminTheme} />
+            <MenuButton icon={Building2} label="Thông tin studio" onClick={() => go("home")} rootAdminTheme={rootAdminTheme} />
+            <MenuButton icon={Settings} label="Cài đặt" onClick={() => go("home")} rootAdminTheme={rootAdminTheme} />
             <MenuButton
               icon={CalendarPlus}
-              label="Tao booking nhanh"
+              label="Tạo booking nhanh"
               rootAdminTheme={rootAdminTheme}
               onClick={() => {
                 setOpen(false);
@@ -111,7 +111,7 @@ export function AvatarDropdown({ session, onLogout, rootAdminTheme = false }: { 
           <div className={rootAdminTheme ? "mt-3 border-t border-emerald-300/15 pt-3" : "mt-3 border-t border-[#F4C7C4] pt-3"}>
             <Button variant="ghost" className={rootAdminTheme ? "w-full justify-start text-slate-300 hover:bg-emerald-400/8 hover:text-emerald-100" : "w-full justify-start text-rose-600 hover:bg-rose-50"} onClick={logout} disabled={loggingOut}>
               {loggingOut ? <Loader2 size={16} className="mr-2 animate-spin" /> : <LogOut size={16} className="mr-2" />}
-              {loggingOut ? "Dang dang xuat..." : "Dang xuat"}
+              {loggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
             </Button>
           </div>
         </div>

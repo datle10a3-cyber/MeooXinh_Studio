@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Activity, Building2, Copy, Eye, KeyRound, Loader2, LockKeyhole, RefreshCw, ShieldCheck, Trash2, UserCheck } from "lucide-react";
+import { Activity, Building2, Copy, Eye, KeyRound, Loader2, Lock, LockKeyhole, RefreshCw, RotateCcw, ShieldCheck, Trash2, UnlockKeyhole, UserCheck } from "lucide-react";
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { Button } from "@/app/components/ui/button";
 import { Card } from "@/app/components/ui/card";
@@ -36,12 +36,27 @@ type RootSettings = {
   settingsStorageReady?: boolean;
 };
 
+function statusLabel(status: string) {
+  if (status === "ACTIVE") return "Đang hoạt động";
+  if (status === "DISABLED") return "Đã khóa";
+  if (status === "DELETED") return "Đã xóa";
+  return status;
+}
+
+function statusClass(status: string) {
+  if (status === "ACTIVE") return "bg-emerald-400/10 text-emerald-100 ring-emerald-300/25";
+  if (status === "DISABLED") return "bg-amber-400/10 text-amber-100 ring-amber-300/25";
+  if (status === "DELETED") return "bg-rose-400/10 text-rose-100 ring-rose-300/25";
+  return "bg-white/5 text-slate-200 ring-white/10";
+}
+
 export function RootAdminList() {
   const router = useRouter();
   const setSession = useUiStore((state) => state.setSession);
   const [rows, setRows] = useState<AdminRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [actioningId, setActioningId] = useState<string | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<AdminRow | null>(null);
   const [message, setMessage] = useState("");
   const [settings, setSettings] = useState<RootSettings | null>(null);
@@ -77,12 +92,25 @@ export function RootAdminList() {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id: deleteTarget.id }),
-    }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
+    }).then((res) => res.json() as Promise<ApiResult<{ id: string; status: string }>>);
     setDeleting(false);
     if (result.error) return setMessage(result.error.message);
-    setRows((current) => current.filter((row) => row.id !== deleteTarget.id));
+    setRows((current) => current.map((row) => row.id === deleteTarget.id ? { ...row, status: result.data?.status ?? "DELETED" } : row));
     setDeleteTarget(null);
-    setMessage("Da xoa quyen dang nhap cua admin nay.");
+    setMessage("Đã xóa tài khoản admin. Email này vẫn bị giữ lại và không thể đăng ký lại.");
+  }
+
+  async function updateAdminStatus(row: AdminRow, action: "disable" | "enable" | "restore") {
+    setActioningId(row.id);
+    const result = await fetch("/api/root-admin/admins", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: row.id, action }),
+    }).then((res) => res.json() as Promise<ApiResult<{ id: string; status: string }>>);
+    setActioningId(null);
+    if (result.error) return setMessage(result.error.message);
+    setRows((current) => current.map((item) => item.id === row.id ? { ...item, status: result.data?.status ?? item.status } : item));
+    setMessage(action === "disable" ? "Đã khóa tài khoản admin." : action === "restore" ? "Đã khôi phục tài khoản admin." : "Đã mở khóa tài khoản admin.");
   }
 
   async function viewAsAdmin(row: AdminRow) {
@@ -114,15 +142,15 @@ export function RootAdminList() {
       setInviteCode(result.data.inviteCode);
       setShiftPassword("");
     }
-    setMessage("Da luu cau hinh Super Admin.");
+    setMessage("Đã lưu cấu hình Super Admin.");
   }
 
   async function copyInviteCode() {
     await navigator.clipboard.writeText(inviteCode);
-    setMessage("Da sao chep ma moi.");
+    setMessage("Đã sao chép mã mời.");
   }
 
-  if (loading) return <PageSpinner label="Dang tai danh sach admin..." />;
+  if (loading) return <PageSpinner label="Đang tải danh sách admin..." />;
 
   const totals = rows.reduce(
     (acc, row) => ({
@@ -135,10 +163,10 @@ export function RootAdminList() {
   );
 
   const overviewCards = [
-    { label: "Admin ma moi", value: rows.length, icon: UserCheck },
-    { label: "Khach toan he thong", value: totals.customers, icon: Building2 },
+    { label: "Admin mã mời", value: rows.length, icon: UserCheck },
+    { label: "Khách toàn hệ thống", value: totals.customers, icon: Building2 },
     { label: "Booking", value: totals.bookings, icon: Activity },
-    { label: "Hoa don", value: totals.invoices, icon: ShieldCheck },
+    { label: "Hóa đơn", value: totals.invoices, icon: ShieldCheck },
   ];
 
   return (
@@ -153,17 +181,17 @@ export function RootAdminList() {
               </span>
               <span className="text-sm font-black uppercase tracking-[0.2em] text-emerald-200">Super Admin</span>
             </div>
-            <h1 className="mt-3 text-2xl font-black leading-tight text-white sm:text-3xl">Bang dieu khien Super Admin</h1>
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-300">Quan ly admin, ma moi dang ky, mat khau xoa ca va quyen xem tung studio.</p>
+            <h1 className="mt-3 text-2xl font-black leading-tight text-white sm:text-3xl">Bảng điều khiển Super Admin</h1>
+            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-300">Quản lý admin, mã mời đăng ký, mật khẩu xóa ca và quyền xem từng studio.</p>
           </div>
           <div className="grid min-w-[220px] gap-2 rounded-[1.25rem] border border-emerald-300/20 bg-black/25 p-3 backdrop-blur">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-xs font-black uppercase tracking-wide text-slate-400">Admin ma moi</span>
+              <span className="text-xs font-black uppercase tracking-wide text-slate-400">Admin mã mời</span>
               <span className="text-2xl font-black text-emerald-200">{rows.length}</span>
             </div>
             <Button variant="secondary" className="h-10 rounded-xl border-emerald-300/20 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" onClick={() => void loadRows()}>
               <RefreshCw size={15} />
-              Lam moi
+              Làm mới
             </Button>
           </div>
         </div>
@@ -192,35 +220,35 @@ export function RootAdminList() {
         <Card className="rounded-[1.5rem] border-emerald-300/20 bg-[#06140D] p-4 text-slate-100 shadow-[0_0_34px_rgba(16,185,129,0.10)]">
           <div className="flex items-center gap-2">
             <KeyRound size={18} className="text-emerald-300" />
-            <h2 className="text-lg font-black text-white">Chinh sach truy cap</h2>
+            <h2 className="text-lg font-black text-white">Chính sách truy cập</h2>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <label className="min-w-0 text-xs font-black uppercase tracking-wide text-slate-400">
-              Ma moi dang ky admin
+              Mã mời đăng ký admin
               <Input className="mt-2 border-emerald-300/25 bg-[#020617] text-emerald-100 placeholder:text-slate-500 focus:border-emerald-300 focus:ring-emerald-500/25" value={inviteCode} onChange={(event) => setInviteCode(event.target.value)} />
             </label>
             <div className="grid gap-2 sm:w-36 sm:self-end">
               <Button variant="secondary" className="h-11 rounded-xl border-emerald-300/25 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" onClick={() => void copyInviteCode()}>
                 <Copy size={15} />
-                Sao chep
+                Sao chép
               </Button>
             </div>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <label className="min-w-0 text-xs font-black uppercase tracking-wide text-slate-400">
-              Mat khau xoa ca mac dinh
+              Mật khẩu xóa ca mặc định
               <Input
                 className="mt-2 border-emerald-300/25 bg-[#020617] text-emerald-100 placeholder:text-slate-500 focus:border-emerald-300 focus:ring-emerald-500/25"
                 type="password"
                 inputMode="numeric"
-                placeholder={settings?.hasCustomShiftPassword ? "Da co mat khau" : "000000"}
+                placeholder={settings?.hasCustomShiftPassword ? "Đã có mật khẩu" : "000000"}
                 value={shiftPassword}
                 onChange={(event) => setShiftPassword(event.target.value.replace(/\D/g, "").slice(0, 6))}
               />
             </label>
             <Button className="h-11 rounded-xl bg-emerald-400 text-[#03140C] shadow-[0_0_22px_rgba(52,211,153,0.28)] hover:bg-emerald-300 sm:w-36 sm:self-end" onClick={() => void saveSettings()} disabled={savingSettings}>
               {savingSettings ? <Loader2 size={16} className="animate-spin" /> : <LockKeyhole size={16} />}
-              Luu
+              Lưu
             </Button>
           </div>
         </Card>
@@ -228,20 +256,20 @@ export function RootAdminList() {
         <Card className="rounded-[1.5rem] border-emerald-300/20 bg-[#0A120D] p-4 text-slate-100 shadow-[0_0_34px_rgba(16,185,129,0.10)]">
           <div className="flex items-center gap-2">
             <Activity size={18} className="text-emerald-300" />
-            <h2 className="text-lg font-black text-white">Trang thai quan tri</h2>
+            <h2 className="text-lg font-black text-white">Trạng thái quản trị</h2>
           </div>
           <div className="mt-4 grid gap-2">
             <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-emerald-300/15">
-              <span className="text-sm font-bold text-slate-300">Luu cau hinh</span>
-              <span className="text-sm font-black text-emerald-200">{settings?.settingsStorageReady === false ? "Tu khoi tao" : "San sang"}</span>
+              <span className="text-sm font-bold text-slate-300">Lưu cấu hình</span>
+              <span className="text-sm font-black text-emerald-200">{settings?.settingsStorageReady === false ? "Tự khởi tạo" : "Sẵn sàng"}</span>
             </div>
             <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-emerald-300/15">
-              <span className="text-sm font-bold text-slate-300">Ma moi</span>
-              <span className="text-sm font-black text-emerald-200">Co the doi trong app</span>
+              <span className="text-sm font-bold text-slate-300">Mã mời</span>
+              <span className="text-sm font-black text-emerald-200">Có thể đổi trong app</span>
             </div>
             <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-emerald-300/15">
-              <span className="text-sm font-bold text-slate-300">Mat khau xoa ca</span>
-              <span className="text-sm font-black text-emerald-200">{settings?.hasCustomShiftPassword ? "Da cau hinh" : "Mac dinh"}</span>
+              <span className="text-sm font-bold text-slate-300">Mật khẩu xóa ca</span>
+              <span className="text-sm font-black text-emerald-200">{settings?.hasCustomShiftPassword ? "Đã cấu hình" : "Mặc định"}</span>
             </div>
           </div>
         </Card>
@@ -251,7 +279,7 @@ export function RootAdminList() {
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Building2 size={18} className="text-emerald-300" />
-            <h2 className="text-lg font-black text-white">Admin ma moi va studio duoc quan ly</h2>
+            <h2 className="text-lg font-black text-white">Admin mã mời và studio được quản lý</h2>
           </div>
         </div>
         <div className="grid gap-3">
@@ -265,30 +293,52 @@ export function RootAdminList() {
                       <h2 className="truncate text-base font-black text-white">{row.name || "Admin"}</h2>
                       <p className="truncate text-sm font-bold text-slate-400">{row.email}</p>
                     </div>
+                    <span className={`rounded-full px-2.5 py-1 text-[11px] font-black ring-1 ${statusClass(row.status)}`}>
+                      {statusLabel(row.status)}
+                    </span>
                   </div>
-                  <p className="mt-2 truncate text-xs font-bold uppercase tracking-wide text-emerald-200">{row.studio?.name ?? "Khong ro studio"}</p>
+                  <p className="mt-2 truncate text-xs font-bold uppercase tracking-wide text-emerald-200">{row.studio?.name ?? "Không rõ studio"}</p>
                   <div className="mt-2 grid grid-cols-2 gap-1 text-center text-[11px] font-black text-slate-300 sm:grid-cols-4">
-                    <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.customers ?? 0} khach</span>
+                    <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.customers ?? 0} khách</span>
                     <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.bookings ?? 0} booking</span>
                     <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.transactions ?? 0} thu chi</span>
-                    <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.invoices ?? 0} hoa don</span>
+                    <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.invoices ?? 0} hóa đơn</span>
                   </div>
                 </div>
-                <div className="grid gap-2 sm:w-40">
+                <div className="grid gap-2 sm:w-44">
                   <Button className="min-h-11 rounded-2xl bg-emerald-400 text-[#03140C] hover:bg-emerald-300" onClick={() => void viewAsAdmin(row)}>
                     <Eye size={16} />
-                    Vao xem
+                    Vào xem
                   </Button>
-                  <Button variant="secondary" className="min-h-11 rounded-2xl border-slate-500/30 bg-slate-900 text-slate-100 hover:bg-slate-800" onClick={() => setDeleteTarget(row)}>
-                    <Trash2 size={16} />
-                    Xoa admin
-                  </Button>
+                  {row.status === "ACTIVE" ? (
+                    <Button variant="secondary" className="min-h-11 rounded-2xl border-amber-300/25 bg-amber-400/10 text-amber-100 hover:bg-amber-400/20" onClick={() => void updateAdminStatus(row, "disable")} disabled={actioningId === row.id}>
+                      {actioningId === row.id ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
+                      Khóa tạm thời
+                    </Button>
+                  ) : null}
+                  {row.status === "DISABLED" ? (
+                    <Button variant="secondary" className="min-h-11 rounded-2xl border-emerald-300/25 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" onClick={() => void updateAdminStatus(row, "enable")} disabled={actioningId === row.id}>
+                      {actioningId === row.id ? <Loader2 size={16} className="animate-spin" /> : <UnlockKeyhole size={16} />}
+                      Mở khóa
+                    </Button>
+                  ) : null}
+                  {row.status === "DELETED" ? (
+                    <Button variant="secondary" className="min-h-11 rounded-2xl border-emerald-300/25 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" onClick={() => void updateAdminStatus(row, "restore")} disabled={actioningId === row.id}>
+                      {actioningId === row.id ? <Loader2 size={16} className="animate-spin" /> : <RotateCcw size={16} />}
+                      Khôi phục
+                    </Button>
+                  ) : (
+                    <Button variant="secondary" className="min-h-11 rounded-2xl border-rose-300/25 bg-rose-400/10 text-rose-100 hover:bg-rose-400/20" onClick={() => setDeleteTarget(row)}>
+                      <Trash2 size={16} />
+                      Xóa tài khoản
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
           )) : (
             <Card className="rounded-[1.5rem] border-white/10 bg-white/[0.04] p-6 text-center">
-              <p className="text-sm font-bold text-slate-300">Chua co admin ma moi nao khac.</p>
+              <p className="text-sm font-bold text-slate-300">Chưa có admin mã mời nào khác.</p>
             </Card>
           )}
         </div>
@@ -303,19 +353,19 @@ export function RootAdminList() {
                   <Trash2 size={18} />
                 </span>
                 <div className="min-w-0">
-                  <h3 className="text-lg font-black text-white">Xoa admin</h3>
+                  <h3 className="text-lg font-black text-white">Xóa tài khoản admin</h3>
                   <p className="mt-1 text-sm font-semibold leading-6 text-slate-300">
-                    Xoa quyen dang nhap admin <span className="font-black text-emerald-100">{deleteTarget.email}</span>? Du lieu studio cua admin do khong bi xoa.
+                    Xóa quyền đăng nhập của <span className="font-black text-emerald-100">{deleteTarget.email}</span>? Email này sẽ không thể đăng ký lại, admin vẫn nằm trong danh sách để khôi phục khi cần.
                   </p>
                 </div>
               </div>
               <div className="mt-5 grid gap-2 sm:grid-cols-2">
                 <Button variant="secondary" className="h-11 rounded-xl border-slate-500/30 bg-slate-900 text-slate-100 hover:bg-slate-800" onClick={() => setDeleteTarget(null)} disabled={deleting}>
-                  Huy
+                  Hủy
                 </Button>
                 <Button className="h-11 rounded-xl bg-emerald-400 text-[#03140C] hover:bg-emerald-300" onClick={() => void deleteAdmin()} disabled={deleting}>
                   {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                  Xoa admin
+                  Xóa tài khoản
                 </Button>
               </div>
             </Card>

@@ -228,6 +228,11 @@ export async function getCurrentUser(): Promise<SessionUser | null> {
       if (!storedRefresh || storedRefresh.userId !== tokenOwnerId || storedRefresh.revokedAt || storedRefresh.expiresAt < new Date()) {
         return null;
       }
+      const tokenOwner = await prisma.user.findUnique({
+        where: { id: tokenOwnerId },
+        select: { status: true },
+      });
+      if (!tokenOwner || tokenOwner.status !== "ACTIVE") return null;
       return user;
     } catch {
             // Trong dev LAN, n?u token c? ho?c l?i th? d?ng fallback b?n d??i.

@@ -33,27 +33,27 @@ export async function POST(req: Request) {
     assertProductionSafe();
 
     const limited = rateLimit(`register:${clientIp(req)}`, { limit: 5, windowMs: 60 * 60 * 1000, blockMs: 60 * 60 * 1000 });
-    if (!limited.allowed) return fail(`Ban thu tao studio qua nhieu lan. Vui long thu lai sau ${Math.ceil(limited.retryAfter / 60)} phut.`, 429);
+    if (!limited.allowed) return fail(`Bạn thử tạo studio quá nhiều lần. Vui lòng thử lại sau ${Math.ceil(limited.retryAfter / 60)} phút.`, 429);
 
     const parsed = registerSchema.safeParse(await req.json());
-    if (!parsed.success) return fail("Du lieu dang ky khong hop le.", 422, parsed.error.flatten());
+    if (!parsed.success) return fail("Dữ liệu đăng ký không hợp lệ.", 422, parsed.error.flatten());
 
     const { studioName, name, email, password, otp, inviteCode } = parsed.data;
     const passwordError = strongPasswordMessage(password);
     if (passwordError) return fail(passwordError, 422);
     if (isReservedSuperAdminName(name) || isReservedSuperAdminName(studioName)) {
-      return fail("Ten Super Admin chi danh cho tai khoan quan tri chinh.", 422);
+      return fail("Tên Super Admin chỉ dành cho tài khoản quản trị chính.", 422);
     }
 
     const existed = await prisma.user.findUnique({ where: { email }, select: { id: true } });
-    if (existed) return fail("Email nay da duoc su dung. Moi email chi duoc tao 1 tai khoan.", 409);
+    if (existed) return fail("Email này đã được sử dụng hoặc đã bị xóa khỏi admin. Không thể đăng ký lại email này.", 409);
 
     const inviteOk = String(inviteCode ?? "").trim() === await registrationInviteCode();
-    if (!inviteOk) return fail("Ma moi khong dung. Khong the tao studio moi.", 403);
+    if (!inviteOk) return fail("Mã mời không đúng. Không thể tạo studio mới.", 403);
 
     if (otp) {
       const verifiedOtp = await verifyAndConsumeOtp(email, registrationOtpPurpose, otp);
-      if (!verifiedOtp.ok) return fail(verifiedOtp.message ?? "Ma OTP khong hop le.", 401);
+      if (!verifiedOtp.ok) return fail(verifiedOtp.message ?? "Mã OTP không hợp lệ.", 401);
     }
 
     const slugBase = slugify(studioName) || "studio";
@@ -71,7 +71,7 @@ export async function POST(req: Request) {
         data: {
           studioId: studio.id,
           name: "ADMIN",
-          description: "Toan quyen quan tri studio.",
+          description: "Toàn quyền quản trị studio.",
         },
       });
       const user = await tx.user.create({
@@ -86,7 +86,7 @@ export async function POST(req: Request) {
       await tx.wallet.create({
         data: {
           studioId: studio.id,
-          name: "Tien mat",
+          name: "Tiền mặt",
           type: "CASH",
         },
       });
@@ -107,7 +107,7 @@ export async function POST(req: Request) {
     return created({ user: sessionUser, studio: result.studio });
   } catch (error) {
     if ((error as Error).message === "EMAIL_ALREADY_EXISTS") {
-      return fail("Email nay da duoc su dung. Moi email chi duoc tao 1 tai khoan.", 409);
+      return fail("Email này đã được sử dụng hoặc đã bị xóa khỏi admin. Không thể đăng ký lại email này.", 409);
     }
     return serverError(error);
   }

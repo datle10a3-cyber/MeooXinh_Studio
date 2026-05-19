@@ -41,7 +41,7 @@ type NavItem = {
 
 const navGroups: Array<{ title: string; items: NavItem[] }> = [
   {
-    title: "Chinh",
+    title: "Chính",
     items: [
       { id: "home", label: "Home", icon: Home },
       { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -51,30 +51,30 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
   {
     title: "Booking",
     items: [
-      { id: "categories", label: "Danh muc", icon: FolderOpen, href: "/categories" },
-      { id: "packages", label: "Goi", icon: Package, href: "/packages" },
+      { id: "categories", label: "Danh mục", icon: FolderOpen, href: "/categories" },
+      { id: "packages", label: "Gói", icon: Package, href: "/packages" },
       { id: "booking", label: "Booking", icon: CalendarDays },
-      { id: "projects", label: "Du an", icon: BriefcaseBusiness },
+      { id: "projects", label: "Dự án", icon: BriefcaseBusiness },
     ],
   },
   {
-    title: "Tai chinh",
+    title: "Tài chính",
     items: [
       { id: "transactions", label: "Thu chi", icon: BadgeDollarSign },
-      { id: "wallets", label: "Vi", icon: WalletCards },
-      { id: "invoices", label: "Hoa don", icon: FileText },
-      { id: "reports", label: "Bao cao", icon: ChartNoAxesCombined, adminOnly: true },
+      { id: "wallets", label: "Ví", icon: WalletCards },
+      { id: "invoices", label: "Hóa đơn", icon: FileText },
+      { id: "reports", label: "Báo cáo", icon: ChartNoAxesCombined, adminOnly: true },
     ],
   },
   {
-    title: "Quan ly",
+    title: "Quản lý",
     items: [
-      { id: "customers", label: "Khach", icon: Users },
-      { id: "completed-bookings", label: "Booking hoan tat", icon: CheckCircle2, href: "/completed-bookings" },
-      { id: "users", label: "Nhan su", icon: Users, adminOnly: true },
-      { id: "equipment", label: "Thiet bi", icon: Camera },
-      { id: "notifications", label: "Thong bao", icon: Bell },
-      { id: "trash", label: "Thung rac", icon: Trash2, adminOnly: true },
+      { id: "customers", label: "Khách", icon: Users },
+      { id: "completed-bookings", label: "Booking hoàn tất", icon: CheckCircle2, href: "/completed-bookings" },
+      { id: "users", label: "Nhân sự", icon: Users, adminOnly: true },
+      { id: "equipment", label: "Thiết bị", icon: Camera },
+      { id: "notifications", label: "Thông báo", icon: Bell },
+      { id: "trash", label: "Thùng rác", icon: Trash2, adminOnly: true },
     ],
   },
 ];
@@ -94,8 +94,8 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
   const rootAdminCentralOnly = isRootAdminSession(session) && !isViewingAsAdmin(session);
   const visibleNavGroups = isRootAdminSession(session)
     ? rootAdminCentralOnly
-      ? [{ title: "Quan ly", items: [rootAdminNavItem] }]
-      : navGroups.map((group) => group.title === "Quan ly" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
+      ? [{ title: "Quản lý", items: [rootAdminNavItem] }]
+      : navGroups.map((group) => group.title === "Quản lý" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
     : navGroups;
 
   function classes(active: boolean) {
@@ -129,7 +129,7 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
         )}
 
         <p className={cn("mt-3 rounded-full px-3 py-2 text-center text-xs font-black", rootAdminTheme ? "bg-emerald-400/10 text-emerald-100 ring-1 ring-emerald-300/15" : "bg-white text-[#74443A]")}>
-          {rootAdminTheme ? "quan ly chinh" : "make & photo"}
+          {rootAdminTheme ? "quản lý chính" : "make & photo"}
         </p>
       </div>
 
@@ -190,7 +190,7 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
       <div className={cn("mt-5 border-t pt-4", rootAdminTheme ? "border-emerald-300/15" : "border-[#F4C7C4]")}>
         <Button variant="ghost" className={cn("w-full justify-start", rootAdminTheme ? "text-slate-400 hover:bg-emerald-400/8 hover:text-emerald-100" : "")}>
           <Settings size={18} />
-          Cai dat
+          Cài đặt
         </Button>
       </div>
     </aside>

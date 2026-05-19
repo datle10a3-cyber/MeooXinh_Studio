@@ -40,6 +40,8 @@ export async function POST(req: Request) {
     if (!user || !(await verifyPassword(parsed.data.password, user.passwordHash))) {
       return fail("Email hoặc mật khẩu không đúng.", 401);
     }
+    if (user.status === "DISABLED") return fail("Tài khoản này đang bị khóa tạm thời.", 403);
+    if (user.status === "DELETED") return fail("Tài khoản này đã bị xóa khỏi danh sách admin.", 403);
     if (user.status !== "ACTIVE") return fail("Tài khoản chưa được kích hoạt.", 403);
 
     const sessionUser: SessionUser = {
