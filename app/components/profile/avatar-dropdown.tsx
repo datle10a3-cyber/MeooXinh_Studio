@@ -93,7 +93,7 @@ export function AvatarDropdown({ session, onLogout, rootAdminTheme = false }: { 
               onClick={() => {
                 setOpen(false);
                 setActiveResource("booking");
-                router.push("/booking", { scroll: false });
+                router.push("/booking", { scroll: true });
               }}
             />
             <button

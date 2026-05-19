@@ -3031,7 +3031,7 @@ function WalletAppView({
       setIsClosing(false);
     });
     await loadShiftData(String(activeWallet.id ?? ""));
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({ top: 0, behavior: "auto" });
     return true;
   }
 

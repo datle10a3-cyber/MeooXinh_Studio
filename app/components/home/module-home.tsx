@@ -123,7 +123,7 @@ export function ModuleHome() {
     setActiveResource("booking");
     setTransactionViewIntent(null);
     if (id) setFocusedItemId(id);
-    router.push("/booking", { scroll: false });
+    router.push("/booking", { scroll: true });
   }
 
   function goToTransaction(item: Record<string, unknown>) {
@@ -323,7 +323,7 @@ export function ModuleHome() {
               </div>
             );
             return item.href ? (
-              <Link key={item.title} href={item.href} onClick={() => setActiveResource(item.id)} scroll={false}>
+              <Link key={item.title} href={item.href} onClick={() => setActiveResource(item.id)}>
                 {tile}
               </Link>
             ) : (

@@ -124,7 +124,7 @@ export function RootAdminList() {
       setSession(result.data);
       localStorage.setItem("studio-session", JSON.stringify(result.data));
       window.dispatchEvent(new Event("studio-session-updated"));
-      router.push("/", { scroll: false });
+      router.push("/", { scroll: true });
     }
   }
 

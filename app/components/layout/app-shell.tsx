@@ -160,6 +160,15 @@ function displayStudioName(session: CurrentSession | null) {
   return name;
 }
 
+function isAuthPath(path: string | null | undefined) {
+  return path === "/login" || path === "/register" || path === "/forgot-password";
+}
+
+function resetViewportScroll() {
+  if (typeof window === "undefined") return;
+  window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+}
+
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 6000) {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -189,6 +198,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [searching, setSearching] = useState(false);
   const [sessionLoading, setSessionLoading] = useState(true);
+  const authPath = isAuthPath(pathname);
   const canManageRootAdmins = isRootAdminSession(session);
   const viewingAsAdmin = isViewingAsAdmin(session);
   const rootAdminCentralOnly = canManageRootAdmins && !viewingAsAdmin;
@@ -198,7 +208,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       : mobileGroups.map((group) => group.title === "Quản lý" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
     : mobileGroups;
 
-  // Sync session from localStorage instantly on client render
+  // Sync session from localStorage instantly on client render.
+  // Do not refetch/rewrite session state on every page tap; that causes jank on iPad Safari.
   useEffect(() => {
     const timers: number[] = [];
     const defer = (callback: () => void) => {
@@ -206,7 +217,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       timers.push(timer);
     };
 
-    if (pathname === "/login" || pathname === "/register" || pathname === "/forgot-password") {
+    if (authPath) {
       defer(() => setSessionLoading(false));
       return () => timers.forEach((timer) => window.clearTimeout(timer));
     }
@@ -223,16 +234,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       console.error("Local session sync error:", err);
     }
     return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [pathname, setSession]);
+  }, [authPath, setSession]);
 
   const loadSession = useCallback(async () => {
-    if (pathname === "/login" || pathname === "/register" || pathname === "/forgot-password") {
+    if (isAuthPath(window.location.pathname)) {
       setSessionLoading(false);
       return;
     }
     try {
       const cached = localStorage.getItem("studio-session");
-      let currentSession = session;
+      let currentSession = useUiStore.getState().session;
       if (cached && !currentSession) {
         currentSession = JSON.parse(cached);
         setSession(currentSession);
@@ -269,13 +280,18 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     } finally {
       setSessionLoading(false);
     }
-  }, [session, setSession, pathname]);
+  }, [setSession]);
 
   useEffect(() => {
     if (rootAdminCentralOnly && pathname !== "/root-admins") {
-      router.replace("/root-admins", { scroll: false });
+      router.replace("/root-admins", { scroll: true });
     }
   }, [pathname, rootAdminCentralOnly, router]);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(resetViewportScroll);
+    return () => window.cancelAnimationFrame(frame);
+  }, [pathname]);
 
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -294,7 +310,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     startTransition(() => {
       setMobileMenuOpen(false);
       const target = item.href || studioViewPath(item.id);
-      router.push(target, { scroll: false });
+      resetViewportScroll();
+      router.push(target, { scroll: true });
     });
   }
 
@@ -304,7 +321,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setSession(result.data);
     localStorage.setItem("studio-session", JSON.stringify(result.data));
     window.dispatchEvent(new Event("studio-session-updated"));
-    router.push("/root-admins", { scroll: false });
+    resetViewportScroll();
+    router.push("/root-admins", { scroll: true });
   }
 
   function goToSearchResult(item: SearchResult) {
@@ -317,7 +335,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setSearchOpen(false);
     setSearchQuery("");
     
-    router.push(item.targetPath, { scroll: false });
+    resetViewportScroll();
+    router.push(item.targetPath, { scroll: true });
   }
 
   function isActive(item: NavItem) {
@@ -436,13 +455,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
               <div className="flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-2">
                 {!rootAdminCentralOnly ? <div className="hidden items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-2 py-1 shadow-sm xl:flex">
-                  <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/categories">
+                  <Link className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/categories">
                     Danh mục
                   </Link>
-                  <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/packages">
+                  <Link className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/packages">
                     Gói
                   </Link>
-                  <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/booking">
+                  <Link className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/booking">
                     Booking
                   </Link>
                 </div> : null}

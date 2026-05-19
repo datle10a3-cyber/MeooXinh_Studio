@@ -33,11 +33,11 @@ export function navigateStudioView(
   options: { tab?: string | null } = {},
 ) {
   const target = studioViewPath(view, options);
-  router.push(target, { scroll: false });
+  router.push(target, { scroll: true });
   return target;
 }
 
 export function navigateStudioPath(router: RouterLike, _pathname: string | null, targetPath: string) {
-  router.push(targetPath, { scroll: false });
+  router.push(targetPath, { scroll: true });
   return targetPath;
 }

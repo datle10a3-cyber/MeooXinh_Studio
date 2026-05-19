@@ -173,7 +173,7 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
                       type="button"
                       onClick={() => {
                         setActiveResource(item.id);
-                        router.push(targetHref, { scroll: false });
+                        router.push(targetHref, { scroll: true });
                       }}
                       className={classes(active)}
                     >
