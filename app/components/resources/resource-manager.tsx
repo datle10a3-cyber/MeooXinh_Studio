@@ -570,7 +570,7 @@ function printResourceInvoice(row: Row) {
       </div>
     </div>
     <div class="title">HÓA ĐƠN THANH TOÁN</div>
-    <div class="info row"><span class="label">Mã HĐ</span><span class="left">: ${receiptEscape(code)}</span></div>
+    <div class="info row"><span class="label">Mã hóa đơn</span><span class="left">: ${receiptEscape(code)}</span></div>
     <div class="info row"><span class="label">👤 Khách</span><span class="left">: ${receiptEscape(printable.customerName)}</span></div>
     <div class="info row"><span class="label">⏰ Giờ</span><span class="left">: ${receiptEscape(formatDateTimeLabel(invoiceDate))}</span></div>
     <div class="sep"></div>
@@ -631,7 +631,7 @@ function printGroupInvoice(group: GroupBookingSnapshot) {
     *{box-sizing:border-box}body{margin:0;background:#fff7fb;color:#4b2a25;font-family:Arial,sans-serif;padding-top:10px}.receipt{width:80mm;max-width:310px;margin:0 auto;padding:10px 9px;font-size:12px;line-height:1.38;background:#fff;border:1px solid #f6c6d4}.center{text-align:center}.bold{font-weight:700}.muted{color:#7a5750}.brand{font-size:15px;font-weight:900;text-transform:uppercase;color:#e86b88}.title{margin:8px 0 6px;padding:7px 0;border-radius:12px;background:#e86b88;color:#fff;font-size:14px;font-weight:900;text-align:center;text-transform:uppercase}.sep{margin:8px 0;border-top:1px dashed #e9a8b8}.solid{margin:8px 0;border-top:1px solid #f0b4c1}.row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.left{flex:1;min-width:0;overflow-wrap:anywhere}.right{flex:0 0 auto;text-align:right;white-space:nowrap}.item{margin-top:6px}.small{font-size:11px}.total{padding:8px;border-radius:12px;background:#fff0f5;font-size:13px;color:#d94f73}.toolbar{display:flex;justify-content:center;gap:10px;margin:0 auto 12px;max-width:310px}.btn{flex:1;padding:10px 14px;font-size:13px;font-weight:700;border:0;border-radius:20px;cursor:pointer}.btn-print{background:#e86b88;color:#fff}.btn-close{background:#f3f4f6;color:#4b5563}@page{margin:0}@media print{.no-print{display:none!important}body{background:#fff;padding-top:0}.receipt{border:0;max-width:80mm}.title,.total{background:#fff;color:#000;border:1px solid #000}}
   </style></head><body><div class="no-print toolbar"><button class="btn btn-print" onclick="window.print()">In hóa đơn tổng</button><button class="btn btn-close" onclick="window.close()">Đóng</button></div><div class="receipt">
     <div class="center"><div class="brand">Mèo Xinhh Studio</div><div class="small muted">${receiptEscape(STUDIO_PHONE)}</div><div class="small muted">${receiptEscape(STUDIO_ADDRESS)}</div></div>
-    <div class="title">Hóa đơn nhóm</div><div class="row"><span>Mã HĐ</span><span class="right">${receiptEscape(code)}</span></div><div class="row"><span>Nhóm</span><span class="right">${receiptEscape(group.groupName)}</span></div><div class="row"><span>Thời gian</span><span class="right">${receiptEscape(formatDateTimeLabel(group.paymentInfo?.paidAt || group.createdAt))}</span></div><div class="sep"></div>${rows}<div class="solid"></div><div class="row"><span>Tạm tính</span><span class="right">${receiptEscape(formatMoney(group.subtotal))}</span></div>${group.discount > 0 ? `<div class="row"><span>Giảm giá</span><span class="right">-${receiptEscape(formatMoney(group.discount))}</span></div>` : ""}${group.extraFee > 0 ? `<div class="row"><span>Phí phát sinh</span><span class="right">${receiptEscape(formatMoney(group.extraFee))}</span></div>` : ""}<div class="row bold total"><span>Tổng thanh toán</span><span class="right">${receiptEscape(formatMoney(group.totalAmount))}</span></div><div class="sep"></div><div class="center bold">ĐÃ THANH TOÁN</div></div><script>window.onload=()=>{try{window.print();}catch(e){console.error(e);}};</script></body></html>`;
+    <div class="title">Hóa đơn nhóm</div><div class="row"><span>Mã hóa đơn</span><span class="right">${receiptEscape(code)}</span></div><div class="row"><span>Nhóm</span><span class="right">${receiptEscape(group.groupName)}</span></div><div class="row"><span>Thời gian</span><span class="right">${receiptEscape(formatDateTimeLabel(group.paymentInfo?.paidAt || group.createdAt))}</span></div><div class="sep"></div>${rows}<div class="solid"></div><div class="row"><span>Tạm tính</span><span class="right">${receiptEscape(formatMoney(group.subtotal))}</span></div>${group.discount > 0 ? `<div class="row"><span>Giảm giá</span><span class="right">-${receiptEscape(formatMoney(group.discount))}</span></div>` : ""}${group.extraFee > 0 ? `<div class="row"><span>Phí phát sinh</span><span class="right">${receiptEscape(formatMoney(group.extraFee))}</span></div>` : ""}<div class="row bold total"><span>Tổng thanh toán</span><span class="right">${receiptEscape(formatMoney(group.totalAmount))}</span></div><div class="sep"></div><div class="center bold">ĐÃ THANH TOÁN</div></div><script>window.onload=()=>{try{window.print();}catch(e){console.error(e);}};</script></body></html>`;
   openPrintHtml(html);
 }
 
@@ -689,7 +689,7 @@ function printGroupInvoiceClean(group: GroupBookingSnapshot) {
   </style></head><body><div class="no-print toolbar"><button class="btn btn-print" onclick="window.print()">In hóa đơn</button><button class="btn btn-close" onclick="window.close()">Đóng</button></div><div class="receipt">
     <div class="brand-box"><img class="logo" src="/be-meo-studio-avatar.svg" alt="Mèoo Xinhh"/><div><div class="brand">Mèoo Xinhh Studio</div><div class="address">make & photo</div><div class="address">☎ ${receiptEscape(STUDIO_PHONE)}</div><div class="address">⌂ ${receiptEscape(STUDIO_ADDRESS)}</div></div></div>
     <div class="title">HÓA ĐƠN THANH TOÁN</div>
-    <div class="info row"><span class="label">Mã HĐ</span><span class="left">: ${receiptEscape(code)}</span></div>
+    <div class="info row"><span class="label">Mã hóa đơn</span><span class="left">: ${receiptEscape(code)}</span></div>
     <div class="info row"><span class="label">Khách</span><span class="left">: ${receiptEscape(group.groupName)}</span></div>
     <div class="info row"><span class="label">Giờ</span><span class="left">: ${receiptEscape(formatDateTimeLabel(group.paymentInfo?.paidAt || group.createdAt))}</span></div>
     <div class="sep"></div><div class="section">GÓI CHỤP</div><div>Booking nhóm - ${receiptEscape(group.groupName)}</div><div class="sep"></div><div class="section">CHI TIẾT</div>${rows}<div class="solid"></div>
@@ -2516,7 +2516,7 @@ function ResourceListWithProgressive({
                 onPointerCancel={clearLongPress}
                 onPointerLeave={clearLongPress}
                 className={cn(
-                  "h-fit rounded-[1.25rem] p-2.5 transition hover:shadow-md sm:rounded-[1.5rem] sm:p-3",
+                  "h-fit rounded-2xl p-2 transition hover:shadow-md sm:rounded-[1.5rem] sm:p-3",
                   compact ? "cursor-pointer" : "",
                   richInfoCard
                     ? "border-[#F4C7C4] bg-[linear-gradient(135deg,#FFFFFF_0%,#FFF8F1_48%,#FFF0F4_100%)] hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(184,95,108,0.16)]"
@@ -2564,7 +2564,7 @@ function ResourceListWithProgressive({
                   <div className="col-span-2 min-w-0 flex-1 sm:col-span-1">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
-                        <h2 className={cn("whitespace-normal break-words font-black leading-6 text-[#5B342C]", richInfoCard ? "text-base sm:text-lg" : "text-lg")}>{displayPrimary}</h2>
+                        <h2 className={cn("whitespace-normal break-words font-black leading-5 text-[#5B342C] sm:leading-6", richInfoCard ? "text-sm sm:text-lg" : "text-base sm:text-lg")}>{displayPrimary}</h2>
                         {displaySecondary ? <p className={cn("mt-0.5 whitespace-normal break-words text-sm font-semibold", richInfoCard ? "text-[#A06F65]" : "text-[#9B746B]")}>{displaySecondary}</p> : null}
                         {compact ? <p className="mt-2 text-lg font-black text-emerald-700">+{formatMoney(invoice.amount as string | number | null | undefined)}</p> : null}
                       </div>
@@ -2575,16 +2575,16 @@ function ResourceListWithProgressive({
                       ) : null}
                     </div>
                     {!compact ? (
-                      <div className={cn("mt-3 grid grid-cols-2 gap-2 sm:gap-2.5", richInfoCard ? "xl:grid-cols-4" : "sm:mt-4 sm:gap-3 xl:grid-cols-3")}>
+                      <div className={cn("mt-2 grid grid-cols-2 gap-1.5 sm:gap-2.5", richInfoCard ? "xl:grid-cols-4" : "sm:mt-4 sm:gap-3 xl:grid-cols-3")}>
                         {detailFields(config, resource)
                           .filter((field) => !richInfoCard || field !== config.primaryField)
                           .slice(0, richInfoCard ? 8 : 4)
                           .map((field) => {
                             const noteLike = ["note", "message"].includes(field);
                             return (
-                              <div key={field} className={cn("min-w-0 rounded-2xl border border-[#F8D8D4] bg-white/78 px-2.5 py-2 shadow-sm sm:px-3", richInfoCard && noteLike ? "col-span-2 xl:col-span-2" : "")}>
+                              <div key={field} className={cn("min-w-0 rounded-xl border border-[#F8D8D4] bg-white/78 px-2 py-1.5 shadow-sm sm:rounded-2xl sm:px-3 sm:py-2", richInfoCard && noteLike ? "col-span-2 xl:col-span-2" : "")}>
                                 <p className="text-[11px] font-black uppercase tracking-wide text-[#C87888]">{fieldLabel(config, field)}</p>
-                                <p className={cn("mt-1 whitespace-normal break-words text-sm font-bold leading-5 text-[#5B342C]", richInfoCard && noteLike ? "max-h-16 overflow-hidden" : "")}>{renderValue(config, field, row[field])}</p>
+                                <p className={cn("mt-0.5 whitespace-normal break-words text-xs font-bold leading-5 text-[#5B342C] sm:mt-1 sm:text-sm", richInfoCard && noteLike ? "max-h-16 overflow-hidden" : "")}>{renderValue(config, field, row[field])}</p>
                               </div>
                             );
                           })}
@@ -3106,7 +3106,7 @@ function WalletAppView({
                         key={id || `${column.key}-${index}`}
                         role="button"
                         tabIndex={0}
-                        className="grid min-h-[6.9rem] cursor-pointer grid-rows-[auto_1fr_auto] rounded-[1rem] bg-white p-2.5 text-left shadow-sm ring-1 ring-black/5 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#EA7188]/35 active:scale-[0.99] sm:p-3"
+                        className="grid min-h-[5.8rem] cursor-pointer grid-rows-[auto_1fr_auto] rounded-[1rem] bg-white p-2 text-left shadow-sm ring-1 ring-black/5 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#EA7188]/35 active:scale-[0.99] sm:min-h-[6.4rem] sm:p-2.5"
                         onClick={() => onOpenDetail(row)}
                         onKeyDown={(event) => {
                           if (event.key === "Enter" || event.key === " ") {
@@ -3130,7 +3130,7 @@ function WalletAppView({
                     );
                   })
                 ) : (
-                  <div className="grid min-h-[6.9rem] place-items-center rounded-[1rem] bg-white p-3 text-center text-xs font-bold text-[#7A7A7A] shadow-sm ring-1 ring-black/5">
+                  <div className="grid min-h-[5.8rem] place-items-center rounded-[1rem] bg-white p-2.5 text-center text-xs font-bold text-[#7A7A7A] shadow-sm ring-1 ring-black/5 sm:min-h-[6.4rem]">
                     Chưa có khoản {column.title.toLowerCase()}
                   </div>
                 )}
@@ -3669,7 +3669,7 @@ function WalletAppView({
                             key={id || `${column.key}-${index}`}
                             role="button"
                             tabIndex={0}
-                            className="grid min-h-[7.15rem] cursor-pointer grid-rows-[auto_1fr_auto] rounded-[1rem] bg-white p-2.5 text-left shadow-sm ring-1 ring-black/5 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#EA7188]/35 active:scale-[0.99] sm:min-h-[7.4rem] sm:p-3"
+                            className="grid min-h-[5.8rem] cursor-pointer grid-rows-[auto_1fr_auto] rounded-[1rem] bg-white p-2 text-left shadow-sm ring-1 ring-black/5 transition hover:shadow-md focus:outline-none focus:ring-2 focus:ring-[#EA7188]/35 active:scale-[0.99] sm:min-h-[6.4rem] sm:p-2.5"
                             onClick={() => onOpenDetail(row)}
                             onKeyDown={(event) => {
                               if (event.key === "Enter" || event.key === " ") {
@@ -3693,7 +3693,7 @@ function WalletAppView({
                         );
                       })
                     ) : (
-                      <div className="grid min-h-[7.15rem] place-items-center rounded-[1rem] bg-white p-3 text-center text-xs font-bold text-[#7A7A7A] shadow-sm ring-1 ring-black/5">
+                      <div className="grid min-h-[5.8rem] place-items-center rounded-[1rem] bg-white p-2.5 text-center text-xs font-bold text-[#7A7A7A] shadow-sm ring-1 ring-black/5 sm:min-h-[6.4rem]">
                         Chưa có khoản {column.title.toLowerCase()}
                       </div>
                     )}

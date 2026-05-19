@@ -232,10 +232,10 @@ export function ModuleHome() {
 
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-4 overflow-hidden sm:space-y-5">
-      <section className="overflow-hidden rounded-[1.5rem] border border-[#F7C4CA] bg-[#FFF8F1] p-4 shadow-[0_18px_50px_rgba(184,95,108,0.12)] sm:rounded-[2rem] sm:p-6">
+      <section className="overflow-hidden rounded-[1.25rem] border border-[#F7C4CA] bg-[#FFF8F1] p-3 shadow-[0_18px_50px_rgba(184,95,108,0.12)] sm:rounded-[2rem] sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">
-            <div className="mb-4 flex w-full max-w-xl items-center rounded-[1.35rem] border-4 border-[#F7AFC0] bg-white px-4 py-3 sm:w-fit sm:rounded-[1.5rem] sm:px-5">
+            <div className="mb-3 flex w-full max-w-xl items-center rounded-[1.15rem] border-2 border-[#F7AFC0] bg-white px-3 py-2.5 sm:mb-4 sm:w-fit sm:rounded-[1.5rem] sm:border-4 sm:px-5 sm:py-3">
               <StudioCatMark />
             </div>
             <p className="max-w-2xl text-sm font-semibold leading-6 text-[#8C655E] sm:text-base">
@@ -315,11 +315,11 @@ export function ModuleHome() {
           {flow.map((item) => {
             const Icon = item.icon;
             const tile = (
-              <div className="min-h-28 rounded-[1.25rem] border border-[#F4C7C4] bg-[#FFF3EC] p-3 text-left transition active:scale-[0.98] hover:-translate-y-0.5 hover:bg-white hover:shadow-md sm:min-h-32 sm:rounded-[1.4rem] sm:p-4">
-                <div className="grid h-10 w-10 place-items-center rounded-2xl bg-white text-[#EA7188] sm:h-11 sm:w-11">
-                  <Icon size={20} />
+              <div className="min-h-20 rounded-2xl border border-[#F4C7C4] bg-[#FFF3EC] p-2.5 text-left transition active:scale-[0.98] hover:-translate-y-0.5 hover:bg-white hover:shadow-md sm:min-h-28 sm:rounded-[1.4rem] sm:p-4">
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-white text-[#EA7188] sm:h-11 sm:w-11 sm:rounded-2xl">
+                  <Icon size={18} />
                 </div>
-                <p className="mt-3 text-base font-black text-[#5B342C] sm:text-lg">{item.title}</p>
+                <p className="mt-2 text-sm font-black leading-5 text-[#5B342C] sm:mt-3 sm:text-lg">{item.title}</p>
               </div>
             );
             return item.href ? (
@@ -342,10 +342,10 @@ export function ModuleHome() {
             <button
               key={item.title}
               onClick={() => goToResource(item.id)}
-              className="min-h-28 rounded-[1.35rem] border border-[#F4C7C4] bg-white p-4 text-left shadow-sm transition active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-md sm:min-h-32 sm:rounded-[1.5rem] sm:p-5"
+              className="min-h-20 rounded-2xl border border-[#F4C7C4] bg-white p-2.5 text-left shadow-sm transition active:scale-[0.98] hover:-translate-y-0.5 hover:shadow-md sm:min-h-32 sm:rounded-[1.5rem] sm:p-5"
             >
-              <Icon className="text-[#EA7188]" size={24} />
-              <p className="mt-4 text-lg font-black text-[#5B342C]">{item.title}</p>
+              <Icon className="text-[#EA7188]" size={20} />
+              <p className="mt-2 text-sm font-black leading-5 text-[#5B342C] sm:mt-4 sm:text-lg">{item.title}</p>
             </button>
           );
         })}

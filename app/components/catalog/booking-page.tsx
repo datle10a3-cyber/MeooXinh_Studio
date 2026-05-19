@@ -872,14 +872,14 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         onTouchMove={(event) => { event.stopPropagation(); moveTouchLongPress(event); }}
         onTouchEnd={(event) => { event.stopPropagation(); endTouchLongPress(); }}
         onTouchCancel={(event) => { event.stopPropagation(); endTouchLongPress(); }}
-        className={`relative mt-6 w-full cursor-pointer rounded-[1.75rem] border p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99] ${theme.card}`}
+        className={`relative mt-4 w-full cursor-pointer rounded-[1.35rem] border p-3 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md active:scale-[0.99] sm:mt-6 sm:rounded-[1.75rem] sm:p-4 ${theme.card}`}
       >
         <span className={`absolute -top-3 left-5 rounded-full border px-3 py-1 text-[11px] font-black shadow-sm ${theme.badge}`}>
           {bookingDateBadge(row.startTime)}
         </span>
 
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
+        <div className="flex items-start justify-between gap-2 sm:gap-3">
+          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
             {selectedIds.length > 0 || selectedGroupKeys.length > 0 || selectedIds.includes(row.id) ? (
               <span
                 role="checkbox"
@@ -917,7 +917,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
             )}
             <CustomerAvatar booking={row} />
             <div className="min-w-0">
-              <h2 className="whitespace-normal break-words text-lg font-black leading-tight text-[#5B342C]">{row.customerName || "Khách chưa đặt tên"}</h2>
+              <h2 className="whitespace-normal break-words text-base font-black leading-tight text-[#5B342C] sm:text-lg">{row.customerName || "Khách chưa đặt tên"}</h2>
               <div className="mt-1 flex items-center gap-1.5">
                 <div className={`h-1.5 w-1.5 shrink-0 rounded-full ${theme.dot}`} />
                 <p className="truncate text-sm font-bold text-[#9B746B]">{row.packageName || "Chưa có gói"}</p>
@@ -925,12 +925,12 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
             </div>
           </div>
           <div className="shrink-0 text-right">
-            <p className={`text-base font-black ${theme.money}`}>{formatMoney(row.total ?? row.price)}</p>
+            <p className={`text-sm font-black sm:text-base ${theme.money}`}>{formatMoney(row.total ?? row.price)}</p>
             {isDiscounted ? <p className="text-[10px] font-bold text-emerald-600">Đã giảm giá</p> : null}
           </div>
         </div>
 
-        <div className="mt-3 flex items-center gap-3 rounded-[1.25rem] bg-[#FFFDFB] p-3">
+        <div className="mt-2 flex items-center gap-2 rounded-2xl bg-[#FFFDFB] p-2.5 sm:mt-3 sm:gap-3 sm:rounded-[1.25rem] sm:p-3">
           <PackageThumb booking={row} />
           <div className="min-w-0">
             <p className="flex items-center gap-1.5 text-[11px] font-black uppercase tracking-wide text-[#EA7188]">
@@ -941,7 +941,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         </div>
 
         {displayNote ? (
-          <div className="mt-3 rounded-[1.25rem] bg-[#FFF8F1] p-3">
+          <div className="mt-2 rounded-2xl bg-[#FFF8F1] p-2.5 sm:mt-3 sm:rounded-[1.25rem] sm:p-3">
             <p className="line-clamp-2 text-xs font-semibold leading-relaxed text-[#7B554D]">
               <span className="font-black text-[#EA7188]">Ghi chú:</span> {displayNote}
             </p>
@@ -949,7 +949,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         ) : null}
 
         {!completedOnly ? (
-          <div className="mt-4 grid grid-cols-4 gap-1.5">
+          <div className="mt-3 grid grid-cols-4 gap-1.5 sm:mt-4">
             <Button variant="secondary" size="sm" className="h-9 rounded-xl text-xs font-bold gap-1 px-1.5" onClick={(event) => { event.stopPropagation(); edit(row); }}>
               <Pencil size={13} className="shrink-0 text-[#EA7188]" />
               Sửa
@@ -1103,13 +1103,13 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
                 onTouchMove={moveTouchLongPress}
                 onTouchEnd={endTouchLongPress}
                 onTouchCancel={endTouchLongPress}
-                className={`overflow-hidden rounded-[1.75rem] border-2 shadow-[0_14px_40px_-10px_rgba(184,95,108,0.18)] transition ${selected ? "border-[#EA7188] shadow-[0_0_0_4px_rgba(234,113,136,0.13),0_14px_40px_-10px_rgba(184,95,108,0.22)]" : "border-[#F4C7C4]"}`}
+                className={`overflow-hidden rounded-[1.35rem] border-2 shadow-[0_14px_40px_-10px_rgba(184,95,108,0.18)] transition sm:rounded-[1.75rem] ${selected ? "border-[#EA7188] shadow-[0_0_0_4px_rgba(234,113,136,0.13),0_14px_40px_-10px_rgba(184,95,108,0.22)]" : "border-[#F4C7C4]"}`}
               >
                 {/* ── Group Header ── */}
                 <div
                   role="button"
                   tabIndex={0}
-                  className="cursor-pointer bg-gradient-to-br from-[#FFF8F1] via-[#FFF0F4] to-[#FFE4EA] px-4 pb-3 pt-4 transition active:scale-[0.995] sm:px-5"
+                  className="cursor-pointer bg-gradient-to-br from-[#FFF8F1] via-[#FFF0F4] to-[#FFE4EA] px-3 pb-2.5 pt-3 transition active:scale-[0.995] sm:px-5 sm:pb-3 sm:pt-4"
                   onClick={() => {
                     if (longPressActivated) {
                       setLongPressActivated(false);
@@ -1941,7 +1941,7 @@ function printGroupBookingInvoice(groupBooking: GroupBookingSnapshot, targetWind
       </div>
     </div>
     <div class="title">HÓA ĐƠN THANH TOÁN</div>
-    <div class="info row"><span class="label">Mã HĐ</span><span class="left">: ${receiptEscape(invoiceCode)}</span></div>
+    <div class="info row"><span class="label">Mã hóa đơn</span><span class="left">: ${receiptEscape(invoiceCode)}</span></div>
     <div class="info row"><span class="label">Khách</span><span class="left">: ${receiptEscape(groupBooking.groupName)}</span></div>
     <div class="info row"><span class="label">Giờ</span><span class="left">: ${receiptEscape(formatReceiptDateTime(paidAt))}</span></div>
     <div class="sep"></div>
@@ -2087,7 +2087,7 @@ function printBookingInvoice(booking: BookingItem, targetWindow?: Window | null)
       </div>
     </div>
     <div class="title">HÓA ĐƠN THANH TOÁN</div>
-    <div class="info row"><span class="label">🧾 Mã HĐ</span><span class="left">: ${receiptEscape(invoiceCode)}</span></div>
+    <div class="info row"><span class="label">Mã hóa đơn</span><span class="left">: ${receiptEscape(invoiceCode)}</span></div>
     <div class="info row"><span class="label">👤 Khách</span><span class="left">: ${receiptEscape(customerName)}</span></div>
     <div class="info row"><span class="label">⏰ Giờ</span><span class="left">: ${formatReceiptDateTime(invoiceTime)}</span></div>
     <div class="sep"></div>
