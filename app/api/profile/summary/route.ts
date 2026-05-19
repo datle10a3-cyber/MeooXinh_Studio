@@ -99,7 +99,7 @@ export async function GET() {
       })),
     });
   } catch (error) {
-    if ((error as Error).message === "UNAUTHORIZED") return fail("ChÆ°a Ä‘Äƒng nháº­p.", 401);
+    if ((error as Error).message === "UNAUTHORIZED") return fail("Chua dang nhap.", 401);
     return serverError(error);
   }
 }
@@ -129,12 +129,12 @@ export async function PATCH(req: Request) {
 
       const data: Prisma.UserUpdateInput = {};
       if (name !== undefined) {
-        if (!name) return fail("TĂªn khĂ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.", 422);
+        if (!name) return fail("Ten khong duoc de trong.", 422);
         if (isReservedSuperAdminName(name)) return fail("Ten Super Admin chi danh cho tai khoan quan tri chinh.", 422);
         data.name = name;
       }
       if (email !== undefined) {
-        if (!email) return fail("Email khĂ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.", 422);
+        if (!email) return fail("Email khong duoc de trong.", 422);
         data.email = email;
       }
       if (phone !== undefined) data.phone = phone;
@@ -151,12 +151,12 @@ export async function PATCH(req: Request) {
     }
 
     if (studioInput) {
-      if (session.role === "STAFF") return fail("NhĂ¢n viĂªn khĂ´ng cĂ³ quyá»n sá»­a thĂ´ng tin studio.", 403);
+      if (session.role === "STAFF") return fail("Nhan vien khong co quyen sua thong tin studio.", 403);
       const name = cleanText(studioInput.name, 120);
       const email = cleanText(studioInput.email, 120);
       const phone = cleanText(studioInput.phone, 32);
       const address = cleanText(studioInput.address, 240);
-      if (!name) return fail("TĂªn studio khĂ´ng Ä‘Æ°á»£c Ä‘á»ƒ trá»‘ng.", 422);
+      if (!name) return fail("Ten studio khong duoc de trong.", 422);
       if (isReservedSuperAdminName(name)) return fail("Ten Super Admin chi danh cho tai khoan quan tri chinh.", 422);
 
       updates.push(
@@ -194,7 +194,7 @@ export async function PATCH(req: Request) {
       studio,
     });
   } catch (error) {
-    if ((error as Error).message === "UNAUTHORIZED") return fail("ChÆ°a Ä‘Äƒng nháº­p.", 401);
+    if ((error as Error).message === "UNAUTHORIZED") return fail("Chua dang nhap.", 401);
     return serverError(error);
   }
 }

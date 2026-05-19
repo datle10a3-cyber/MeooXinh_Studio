@@ -23,15 +23,8 @@ import {
   WalletCards,
   type LucideIcon,
 } from "lucide-react";
-
 import { Button } from "@/app/components/ui/button";
-
-import {
-  STUDIO_AVATAR_URL,
-  STUDIO_DISPLAY_NAME,
-  StudioCatMark,
-} from "@/app/components/brand/studio-brand";
-
+import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/components/brand/studio-brand";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { cn } from "@/app/utils/cn";
@@ -48,118 +41,44 @@ type NavItem = {
 
 const navGroups: Array<{ title: string; items: NavItem[] }> = [
   {
-    title: "ChĂ­nh",
+    title: "Chinh",
     items: [
       { id: "home", label: "Home", icon: Home },
       { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
       { id: "ai", label: "AI", icon: Sparkles },
     ],
   },
-
   {
     title: "Booking",
     items: [
-      {
-        id: "categories",
-        label: "Danh má»¥c",
-        icon: FolderOpen,
-        href: "/categories",
-      },
-
-      {
-        id: "packages",
-        label: "GĂ³i",
-        icon: Package,
-        href: "/packages",
-      },
-
-      {
-        id: "booking",
-        label: "Booking",
-        icon: CalendarDays,
-      },
-      {
-        id: "projects",
-        label: "Dá»± Ă¡n",
-        icon: BriefcaseBusiness,
-      },
+      { id: "categories", label: "Danh muc", icon: FolderOpen, href: "/categories" },
+      { id: "packages", label: "Goi", icon: Package, href: "/packages" },
+      { id: "booking", label: "Booking", icon: CalendarDays },
+      { id: "projects", label: "Du an", icon: BriefcaseBusiness },
     ],
   },
-
   {
-    title: "TĂ i chĂ­nh",
+    title: "Tai chinh",
     items: [
-      {
-        id: "transactions",
-        label: "Thu chi",
-        icon: BadgeDollarSign,
-      },
-
-      {
-        id: "wallets",
-        label: "VĂ­",
-        icon: WalletCards,
-      },
-
-      {
-        id: "invoices",
-        label: "HĂ³a Ä‘Æ¡n",
-        icon: FileText,
-      },
-
-      {
-        id: "reports",
-        label: "BĂ¡o cĂ¡o",
-        icon: ChartNoAxesCombined,
-        adminOnly: true,
-      },
+      { id: "transactions", label: "Thu chi", icon: BadgeDollarSign },
+      { id: "wallets", label: "Vi", icon: WalletCards },
+      { id: "invoices", label: "Hoa don", icon: FileText },
+      { id: "reports", label: "Bao cao", icon: ChartNoAxesCombined, adminOnly: true },
     ],
   },
-
   {
-    title: "Quáº£n lĂ½",
+    title: "Quan ly",
     items: [
-      {
-        id: "customers",
-        label: "KhĂ¡ch",
-        icon: Users,
-      },
-
-      {
-        id: "completed-bookings",
-        label: "Booking hoĂ n táº¥t",
-        icon: CheckCircle2,
-        href: "/completed-bookings",
-      },
-
-      {
-        id: "users",
-        label: "NhĂ¢n sá»±",
-        icon: Users,
-        adminOnly: true,
-      },
-
-      {
-        id: "equipment",
-        label: "Thiáº¿t bá»‹",
-        icon: Camera,
-      },
-
-      {
-        id: "notifications",
-        label: "ThĂ´ng bĂ¡o",
-        icon: Bell,
-      },
-
-      {
-        id: "trash",
-        label: "ThĂ¹ng rĂ¡c",
-        icon: Trash2,
-        adminOnly: true,
-      },
+      { id: "customers", label: "Khach", icon: Users },
+      { id: "completed-bookings", label: "Booking hoan tat", icon: CheckCircle2, href: "/completed-bookings" },
+      { id: "users", label: "Nhan su", icon: Users, adminOnly: true },
+      { id: "equipment", label: "Thiet bi", icon: Camera },
+      { id: "notifications", label: "Thong bao", icon: Bell },
+      { id: "trash", label: "Thung rac", icon: Trash2, adminOnly: true },
     ],
   },
 ];
+
 const rootAdminNavItem: NavItem = {
   id: "root-admins",
   label: "Admin",
@@ -170,31 +89,25 @@ const rootAdminNavItem: NavItem = {
 export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }: { session: CurrentSession | null; rootAdminTheme?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
-
   const setActiveResource = useUiStore((state) => state.setActiveResource);
-
   const role = session?.user.role;
   const rootAdminCentralOnly = isRootAdminSession(session) && !isViewingAsAdmin(session);
   const visibleNavGroups = isRootAdminSession(session)
     ? rootAdminCentralOnly
-      ? [{ title: "Quáº£n lĂ½", items: [rootAdminNavItem] }]
-      : navGroups.map((group) => group.title === "Quáº£n lĂ½" || group.title === "QuĂ¡ÂºÂ£n lÄ‚Â½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
+      ? [{ title: "Quan ly", items: [rootAdminNavItem] }]
+      : navGroups.map((group) => group.title === "Quan ly" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
     : navGroups;
 
   function classes(active: boolean) {
     if (rootAdminTheme) {
       return cn(
         "flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition-all duration-200",
-        active
-          ? "bg-emerald-400/12 text-emerald-100 shadow-[0_0_24px_rgba(52,211,153,0.10)] ring-1 ring-emerald-300/25"
-          : "text-slate-400 hover:bg-emerald-400/8 hover:text-emerald-100",
+        active ? "bg-emerald-400/12 text-emerald-100 shadow-[0_0_24px_rgba(52,211,153,0.10)] ring-1 ring-emerald-300/25" : "text-slate-400 hover:bg-emerald-400/8 hover:text-emerald-100",
       );
     }
     return cn(
       "flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition-all duration-200",
-      active
-        ? "bg-white text-[#5B342C] shadow-[0_4px_12px_rgba(184,95,108,0.08)] ring-1 ring-[#F4C7C4]/50"
-        : "text-[#9B746B] hover:bg-white/40 hover:text-[#5B342C]",
+      active ? "bg-white text-[#5B342C] shadow-[0_4px_12px_rgba(184,95,108,0.08)] ring-1 ring-[#F4C7C4]/50" : "text-[#9B746B] hover:bg-white/40 hover:text-[#5B342C]",
     );
   }
 
@@ -216,7 +129,7 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
         )}
 
         <p className={cn("mt-3 rounded-full px-3 py-2 text-center text-xs font-black", rootAdminTheme ? "bg-emerald-400/10 text-emerald-100 ring-1 ring-emerald-300/15" : "bg-white text-[#74443A]")}>
-          {rootAdminTheme ? "quản lý chính" : "make & photo"}
+          {rootAdminTheme ? "quan ly chinh" : "make & photo"}
         </p>
       </div>
 
@@ -226,11 +139,7 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
             {rootAdminTheme ? (
               <ShieldCheck size={18} />
             ) : session.user.avatarUrl || STUDIO_AVATAR_URL ? (
-              <img
-                src={session.user.avatarUrl || STUDIO_AVATAR_URL}
-                alt={session.user.name || STUDIO_DISPLAY_NAME}
-                className="h-full w-full object-cover"
-              />
+              <img src={session.user.avatarUrl || STUDIO_AVATAR_URL} alt={session.user.name || STUDIO_DISPLAY_NAME} className="h-full w-full object-cover" />
             ) : (
               (session.user.name?.[0]?.toUpperCase() ?? "B")
             )}
@@ -240,7 +149,6 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
             <p className={cn("whitespace-normal break-words text-sm font-black leading-5", rootAdminTheme ? "text-white" : "text-[#5B342C]")}>
               {rootAdminTheme ? "Super Admin" : session.user.name}
             </p>
-
             <p className={cn("whitespace-normal break-words text-xs font-semibold leading-4", rootAdminTheme ? "text-slate-400" : "text-[#9B746B]")}>
               {session.user.email}
             </p>
@@ -251,21 +159,14 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
       <nav className="space-y-4">
         {visibleNavGroups.map((group) => (
           <div key={group.title}>
-            <p className={cn("mb-2 px-2 text-xs font-black uppercase tracking-wide", rootAdminTheme ? "text-slate-500" : "text-[#C17D8A]")}>
-              {group.title}
-            </p>
-
+            <p className={cn("mb-2 px-2 text-xs font-black uppercase tracking-wide", rootAdminTheme ? "text-slate-500" : "text-[#C17D8A]")}>{group.title}</p>
             <div className="space-y-1">
               {group.items
-                .filter(
-                  (item) =>
-                    !item.adminOnly || role === "ADMIN" || role === "MANAGER",
-                )
+                .filter((item) => !item.adminOnly || role === "ADMIN" || role === "MANAGER")
                 .map((item) => {
                   const Icon = item.icon;
                   const targetHref = item.href || studioViewPath(item.id);
                   const active = pathname === targetHref;
-
                   return (
                     <button
                       key={item.id}
@@ -289,7 +190,7 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
       <div className={cn("mt-5 border-t pt-4", rootAdminTheme ? "border-emerald-300/15" : "border-[#F4C7C4]")}>
         <Button variant="ghost" className={cn("w-full justify-start", rootAdminTheme ? "text-slate-400 hover:bg-emerald-400/8 hover:text-emerald-100" : "")}>
           <Settings size={18} />
-          CĂ i Ä‘áº·t
+          Cai dat
         </Button>
       </div>
     </aside>
