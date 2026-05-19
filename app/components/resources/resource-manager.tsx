@@ -245,11 +245,11 @@ function statusTone(value: unknown) {
   return "bg-[#FFF3EC] text-[#5B342C] ring-[#F4C7C4]";
 }
 
-const RowImage = memo(function RowImage({ row, field, index }: { row: Row; field?: string; index: number }) {
+const RowImage = memo(function RowImage({ row, field, index, dense = false }: { row: Row; field?: string; index: number; dense?: boolean }) {
   const src = field ? String(row[field] ?? "") : "";
   const image = src || fallbackImages[index % fallbackImages.length];
   return (
-    <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[1rem] border border-[#F4C7C4] bg-white sm:h-20 sm:w-20 sm:rounded-[1.35rem] lg:h-24 lg:w-24 lg:rounded-[1.5rem]">
+    <div className={cn("flex shrink-0 items-center justify-center overflow-hidden border border-[#F4C7C4] bg-white", dense ? "h-14 w-14 rounded-[1rem] sm:h-16 sm:w-16 sm:rounded-[1.15rem] lg:h-[4.5rem] lg:w-[4.5rem] lg:rounded-[1.25rem]" : "h-14 w-14 rounded-[1rem] sm:h-20 sm:w-20 sm:rounded-[1.35rem] lg:h-24 lg:w-24 lg:rounded-[1.5rem]")}>
       {image ? (
         <img src={image} alt="" className="max-h-full max-w-full object-contain p-1" />
       ) : (
@@ -843,6 +843,13 @@ function detailFields(config: ReturnType<typeof getConfig>, resource: ResourceKe
     return ["code", "status", "issueDate", "dueDate", "total", "paid", "due"];
   }
   return config.fields.filter((field) => !["image", "gallery", "textarea"].includes(field.type)).map((field) => field.key);
+}
+
+function cardInfoFields(config: ReturnType<typeof getConfig>, resource: ResourceKey, richInfoCard: boolean) {
+  if (resource === "customers") return ["phone", "email", "source", "totalSpent", "note"];
+  return detailFields(config, resource)
+    .filter((field) => !richInfoCard || field !== config.primaryField)
+    .slice(0, richInfoCard ? 8 : 4);
 }
 
 function nestedImage(value: unknown, key: string) {
@@ -2552,7 +2559,7 @@ function ResourceListWithProgressive({
                   focusedItemId === String(row.id ?? "") ? "ring-2 ring-[#EA7188]" : "",
                 )}
               >
-                <div className={cn("grid grid-cols-[auto_1fr_auto] items-start gap-2 sm:flex sm:flex-row md:flex-nowrap", richInfoCard ? "sm:gap-3" : "sm:gap-4")}>
+                <div className={cn("grid grid-cols-[auto_1fr_auto] items-start gap-2 sm:flex sm:flex-row md:flex-nowrap", resource === "customers" ? "sm:gap-2.5" : richInfoCard ? "sm:gap-3" : "sm:gap-4")}>
                   <OrderBadge value={visibleRows.length - index} />
                   {canDelete(session) && (selectedIds.length > 0 || selectedIds.includes(String(row.id ?? ""))) ? (
                     <button
@@ -2585,8 +2592,8 @@ function ResourceListWithProgressive({
                       </button>
                     ) : null
                   ) : (
-                    <button type="button" onClick={(event) => { event.stopPropagation(); openRowGallery(row, 0); }}>
-                      <RowImage row={row} field={config.imageField} index={index} />
+                    <button type="button" className={resource === "customers" ? "self-start" : ""} onClick={(event) => { event.stopPropagation(); openRowGallery(row, 0); }}>
+                      <RowImage row={row} field={config.imageField} index={index} dense={resource === "customers"} />
                     </button>
                   )}
                   <div className="col-span-2 min-w-0 flex-1 sm:col-span-1">
@@ -2603,16 +2610,15 @@ function ResourceListWithProgressive({
                       ) : null}
                     </div>
                     {!compact ? (
-                      <div className={cn("mt-2 grid grid-cols-2 gap-1.5 sm:gap-2.5", richInfoCard ? "xl:grid-cols-4" : "sm:mt-4 sm:gap-3 xl:grid-cols-3")}>
-                        {detailFields(config, resource)
-                          .filter((field) => !richInfoCard || field !== config.primaryField)
-                          .slice(0, richInfoCard ? 8 : 4)
+                      <div className={cn("mt-2 grid grid-cols-2 gap-1.5 sm:gap-2.5", resource === "customers" ? "md:grid-cols-4 xl:grid-cols-5" : richInfoCard ? "xl:grid-cols-4" : "sm:mt-4 sm:gap-3 xl:grid-cols-3")}>
+                        {cardInfoFields(config, resource, richInfoCard)
                           .map((field) => {
                             const noteLike = ["note", "message"].includes(field);
+                            const value = noteLike ? cleanSystemNote(row) || "Chưa có ghi chú" : renderValue(config, field, row[field]);
                             return (
-                              <div key={field} className={cn("min-w-0 rounded-xl border border-[#F8D8D4] bg-white/78 px-2 py-1.5 shadow-sm sm:rounded-2xl sm:px-3 sm:py-2", richInfoCard && noteLike ? "col-span-2 xl:col-span-2" : "")}>
+                              <div key={field} className={cn("min-w-0 rounded-xl border border-[#F8D8D4] bg-white/78 px-2 py-1.5 shadow-sm sm:rounded-2xl sm:px-3 sm:py-2", resource === "customers" && noteLike ? "col-span-2 md:col-span-4 xl:col-span-1" : richInfoCard && noteLike ? "col-span-2 xl:col-span-2" : "")}>
                                 <p className="text-[11px] font-black uppercase tracking-wide text-[#C87888]">{fieldLabel(config, field)}</p>
-                                <p className={cn("mt-0.5 whitespace-normal break-words text-xs font-bold leading-5 text-[#5B342C] sm:mt-1 sm:text-sm", richInfoCard && noteLike ? "max-h-16 overflow-hidden" : "")}>{noteLike ? cleanSystemNote(row) : renderValue(config, field, row[field])}</p>
+                                <p className={cn("mt-0.5 whitespace-normal break-words text-xs font-bold leading-5 text-[#5B342C] sm:mt-1 sm:text-sm", richInfoCard && noteLike ? "max-h-16 overflow-hidden" : "")}>{value}</p>
                               </div>
                             );
                           })}
