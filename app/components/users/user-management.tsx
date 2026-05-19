@@ -258,7 +258,7 @@ export function UserManagement() {
 
       <div className={showForm ? "grid items-start gap-5 xl:grid-cols-[1fr_460px]" : "grid items-start gap-5"}>
         <div className="grid items-start gap-4 lg:grid-cols-2">
-          {rows.length ? (
+          {selectedIds.length > 0 && rows.length > 0 ? (
             <div className="rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm lg:col-span-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <label className="flex items-center gap-2 text-sm font-black text-[#5B342C]">

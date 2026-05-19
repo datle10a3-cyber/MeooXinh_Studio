@@ -390,14 +390,12 @@ function MediaLibraryModal({ open, onClose, onPick }: { open: boolean; onClose: 
                     Xóa ({selectedIds.length})
                   </Button>
                 </>
-              ) : (
-                <Button variant="secondary" size="sm" className="min-h-12 rounded-2xl text-sm" onClick={() => setSelectionMode(true)}>
-                  Chọn
+              ) : null}
+              {selectionMode ? (
+                <Button variant="danger" size="sm" className="min-h-12 rounded-2xl text-sm" disabled={!items.length} onClick={() => void deleteSelected(true)}>
+                  Xóa tất cả
                 </Button>
-              )}
-              <Button variant="danger" size="sm" className="min-h-12 rounded-2xl text-sm" disabled={!items.length} onClick={() => void deleteSelected(true)}>
-                Xóa tất cả
-              </Button>
+              ) : null}
               <Button variant="secondary" size="icon" className="hidden sm:grid" aria-label="Đóng thư viện ảnh" onClick={onClose}>
                 <X size={18} />
               </Button>

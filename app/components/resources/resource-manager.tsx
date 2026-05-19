@@ -2020,7 +2020,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
 
       <div className={canMutate(session) && showForm ? "grid items-start gap-4 xl:grid-cols-[1fr_420px]" : "grid gap-4"}>
         <div className="order-2 space-y-4 xl:order-1">
-          {visibleRows.length && canDelete(session) && resource !== "wallets" ? (
+          {selectedIds.length > 0 && visibleRows.length > 0 && canDelete(session) && resource !== "wallets" ? (
             <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <label className="flex items-center gap-2 text-sm font-black text-[#5B342C]">
                 <input

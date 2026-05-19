@@ -1090,7 +1090,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
 
       <div className={completedOnly || !showForm ? "grid gap-5" : "grid gap-5 xl:grid-cols-[1fr_420px]"}>
         <div className="space-y-3">
-          {filteredRows.length && (role === "ADMIN" || role === "MANAGER") ? (
+          {selectedDeleteCount > 0 && filteredRows.length > 0 && (role === "ADMIN" || role === "MANAGER") ? (
             <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <label className="flex items-center gap-2 text-sm font-black text-[#5B342C]">
                 <input
