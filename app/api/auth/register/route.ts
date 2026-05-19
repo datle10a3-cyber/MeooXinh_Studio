@@ -24,6 +24,10 @@ function slugify(value: string) {
     .slice(0, 48);
 }
 
+function isReservedSuperAdminName(value: string) {
+  return value.trim().replace(/\s+/g, " ").toLowerCase() === "super admin";
+}
+
 export async function POST(req: Request) {
   try {
     assertProductionSafe();
@@ -37,6 +41,9 @@ export async function POST(req: Request) {
     const { studioName, name, email, password, otp, inviteCode } = parsed.data;
     const passwordError = strongPasswordMessage(password);
     if (passwordError) return fail(passwordError, 422);
+    if (isReservedSuperAdminName(name) || isReservedSuperAdminName(studioName)) {
+      return fail("Ten Super Admin chi danh cho tai khoan quan tri chinh.", 422);
+    }
 
     const existed = await prisma.user.findUnique({ where: { email }, select: { id: true } });
     if (existed) return fail("Email nay da duoc su dung. Moi email chi duoc tao 1 tai khoan.", 409);

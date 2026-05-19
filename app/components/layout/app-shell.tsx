@@ -99,8 +99,8 @@ const devSession: CurrentSession = {
 const mobilePrimary: NavItem[] = [
   { id: "booking", label: "Booking", href: "/booking", icon: CalendarDays },
   { id: "ai", label: "AI", href: "/ai", icon: Bot },
-  { id: "home", label: "Trang chủ", href: "/", icon: Home },
-  { id: "wallets", label: "Ví tiền", href: "/wallets", icon: WalletCards },
+  { id: "home", label: "Trang chá»§", href: "/", icon: Home },
+  { id: "wallets", label: "VĂ­ tiá»n", href: "/wallets", icon: WalletCards },
 ];
 
 const mobilePrimaryOrder = ["home", "booking", "wallets", "ai"];
@@ -109,7 +109,7 @@ const rootAdminNavItem: NavItem = { id: "root-admins", label: "Admin", href: "/r
 
 const mobileGroups: { title: string; items: NavItem[] }[] = [
   {
-    title: "Chính",
+    title: "ChĂ­nh",
     items: [
       { id: "home", label: "Home", href: "/", icon: Home },
       { id: "dashboard", label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
@@ -119,30 +119,30 @@ const mobileGroups: { title: string; items: NavItem[] }[] = [
   {
     title: "Booking",
     items: [
-      { id: "categories", label: "Danh mục", href: "/categories", icon: FolderOpen },
-      { id: "packages", label: "Gói", href: "/packages", icon: Package },
+      { id: "categories", label: "Danh má»¥c", href: "/categories", icon: FolderOpen },
+      { id: "packages", label: "GĂ³i", href: "/packages", icon: Package },
       { id: "booking", label: "Booking", href: "/booking", icon: CalendarDays },
-      { id: "projects", label: "Dự án", href: "/projects", icon: BriefcaseBusiness },
+      { id: "projects", label: "Dá»± Ă¡n", href: "/projects", icon: BriefcaseBusiness },
     ],
   },
   {
-    title: "Tài chính",
+    title: "TĂ i chĂ­nh",
     items: [
       { id: "transactions", label: "Thu chi", href: "/transactions", icon: BadgeDollarSign },
-      { id: "wallets", label: "Ví", href: "/wallets", icon: WalletCards },
-      { id: "invoices", label: "Hóa đơn", href: "/invoices", icon: FileText },
-      { id: "reports", label: "Báo cáo", href: "/reports", icon: Download },
+      { id: "wallets", label: "VĂ­", href: "/wallets", icon: WalletCards },
+      { id: "invoices", label: "HĂ³a Ä‘Æ¡n", href: "/invoices", icon: FileText },
+      { id: "reports", label: "BĂ¡o cĂ¡o", href: "/reports", icon: Download },
     ],
   },
   {
-    title: "Quản lý",
+    title: "Quáº£n lĂ½",
     items: [
-      { id: "customers", label: "Khách", href: "/customers", icon: Users },
-      { id: "users", label: "Nhân sự", href: "/users", icon: Users },
-      { id: "completed-bookings", label: "Booking hoàn tất", href: "/completed-bookings", icon: CalendarCheck2 },
-      { id: "equipment", label: "Thiết bị", href: "/equipment", icon: Wrench },
-      { id: "notifications", label: "Thông báo", href: "/notifications", icon: Settings },
-      { id: "trash", label: "Thùng rác", href: "/trash", icon: Trash2 },
+      { id: "customers", label: "KhĂ¡ch", href: "/customers", icon: Users },
+      { id: "users", label: "NhĂ¢n sá»±", href: "/users", icon: Users },
+      { id: "completed-bookings", label: "Booking hoĂ n táº¥t", href: "/completed-bookings", icon: CalendarCheck2 },
+      { id: "equipment", label: "Thiáº¿t bá»‹", href: "/equipment", icon: Wrench },
+      { id: "notifications", label: "ThĂ´ng bĂ¡o", href: "/notifications", icon: Settings },
+      { id: "trash", label: "ThĂ¹ng rĂ¡c", href: "/trash", icon: Trash2 },
     ],
   },
 ];
@@ -194,8 +194,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const rootAdminCentralOnly = canManageRootAdmins && !viewingAsAdmin;
   const visibleMobileGroups = canManageRootAdmins
     ? rootAdminCentralOnly
-      ? [{ title: "Quản lý", items: [rootAdminNavItem] }]
-      : mobileGroups.map((group) => group.title === "Quản lý" || group.title === "Quáº£n lĂ½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
+      ? [{ title: "Quáº£n lĂ½", items: [rootAdminNavItem] }]
+      : mobileGroups.map((group) => group.title === "Quáº£n lĂ½" || group.title === "QuĂ¡ÂºÂ£n lÄ‚Â½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
     : mobileGroups;
 
   // Sync session from localStorage instantly on client render
@@ -279,10 +279,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
-    if (meta) meta.content = rootAdminCentralOnly ? "#050A12" : "#EA7188";
+    if (meta) meta.content = rootAdminCentralOnly ? "#04110A" : "#EA7188";
   }, [rootAdminCentralOnly]);
 
-  // Sync activeResource với pathname thực tế
+  // Sync activeResource vá»›i pathname thá»±c táº¿
   useEffect(() => {
     if (!pathname) return;
     const segments = pathname.split("/").filter(Boolean);
@@ -390,8 +390,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-3">
               <StudioCatMark compact />
               <div>
-                <p className="text-sm font-black uppercase tracking-[0.22em] text-[#EA7188]">Mèoo Xinhh Studio</p>
-                <p className="mt-1 text-sm font-semibold text-[#9B746B]">Đang kiểm tra bảo mật...</p>
+                <p className="text-sm font-black uppercase tracking-[0.22em] text-[#EA7188]">MĂ¨oo Xinhh Studio</p>
+                <p className="mt-1 text-sm font-semibold text-[#9B746B]">Äang kiá»ƒm tra báº£o máº­t...</p>
               </div>
             </div>
             <div className="mt-5 space-y-3">
@@ -410,24 +410,24 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className={rootAdminCentralOnly ? "studio-mobile-page min-h-dvh bg-[#050A12] text-slate-100" : darkMode ? "studio-mobile-page min-h-dvh bg-[#2B1C1A] text-white" : "studio-mobile-page min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
+    <div className={rootAdminCentralOnly ? "studio-mobile-page min-h-dvh bg-[#04110A] text-slate-100" : darkMode ? "studio-mobile-page min-h-dvh bg-[#2B1C1A] text-white" : "studio-mobile-page min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
       <div className="flex min-h-dvh">
         <Sidebar session={session} rootAdminTheme={rootAdminCentralOnly} />
         <main className="min-w-0 flex-1 touch-pan-y">
-          <header className={cn("sticky top-0 z-30 px-2.5 py-2 backdrop-blur sm:px-4 lg:py-3 xl:px-8", rootAdminCentralOnly ? "border-b border-cyan-300/15 bg-[#050A12]/95 supports-[backdrop-filter]:bg-[#050A12]/90" : "border-b border-[#F4C7C4] bg-[#FFF3EC]/95 supports-[backdrop-filter]:bg-[#FFF3EC]/86")} style={{ transform: "translateZ(0)" }}>
+          <header className={cn("sticky top-0 z-30 px-2.5 py-2 backdrop-blur sm:px-4 lg:py-3 xl:px-8", rootAdminCentralOnly ? "border-b border-emerald-300/15 bg-[#04110A]/95 supports-[backdrop-filter]:bg-[#04110A]/90" : "border-b border-[#F4C7C4] bg-[#FFF3EC]/95 supports-[backdrop-filter]:bg-[#FFF3EC]/86")} style={{ transform: "translateZ(0)" }}>
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <Button
                    variant="secondary"
                   size="icon"
-                  className={cn("h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-cyan-300/25 bg-cyan-400/10 text-cyan-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
-                  aria-label="Mở menu"
+                  className={cn("h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
+                  aria-label="Má»Ÿ menu"
                   onClick={() => setMobileMenuOpen(true)}
                 >
                   <Menu size={24} strokeWidth={2.8} />
                 </Button>
                 <div className="min-w-0">
-                  <p className={cn("line-clamp-1 text-xs font-black leading-4 sm:text-sm", rootAdminCentralOnly ? "text-cyan-200" : "text-[#E88498]")}>
+                  <p className={cn("line-clamp-1 text-xs font-black leading-4 sm:text-sm", rootAdminCentralOnly ? "text-emerald-200" : "text-[#E88498]")}>
                     Studio: {displayStudioName(session)}
                   </p>
                   <h2 className={cn("hidden whitespace-nowrap text-base font-black leading-5 sm:block sm:text-lg", rootAdminCentralOnly ? "text-white" : "text-[#5B342C]")}>Booking, finance, CRM</h2>
@@ -437,10 +437,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <div className="flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-2">
                 {!rootAdminCentralOnly ? <div className="hidden items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-2 py-1 shadow-sm xl:flex">
                   <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/categories">
-                    Danh mục
+                    Danh má»¥c
                   </Link>
                   <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/packages">
-                    Gói
+                    GĂ³i
                   </Link>
                   <Link scroll={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/booking">
                     Booking
@@ -461,17 +461,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 </button> : null}
                 <button
                   type="button"
-                  className={cn("hidden h-11 items-center gap-2 rounded-2xl border px-4 shadow-sm transition xl:flex", rootAdminCentralOnly ? "border-cyan-300/20 bg-cyan-400/10 text-slate-200 hover:bg-cyan-400/20" : "border-[#F4C7C4] bg-white text-[#9B746B] hover:bg-[#FFF0F4]")}
+                  className={cn("hidden h-11 items-center gap-2 rounded-2xl border px-4 shadow-sm transition xl:flex", rootAdminCentralOnly ? "border-emerald-300/20 bg-emerald-400/10 text-slate-200 hover:bg-emerald-400/20" : "border-[#F4C7C4] bg-white text-[#9B746B] hover:bg-[#FFF0F4]")}
                   onClick={() => setSearchOpen(true)}
                 >
                   <Search size={17} />
-                  <span className="text-sm font-semibold">Tìm kiếm...</span>
+                  <span className="text-sm font-semibold">TĂ¬m kiáº¿m...</span>
                 </button>
                 <Button
                   variant="secondary"
                   size="icon"
-                  className={cn("grid h-10 w-10 rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-cyan-300/20 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/20" : "")}
-                  aria-label="Tìm kiếm"
+                  className={cn("grid h-10 w-10 rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-emerald-300/20 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" : "")}
+                  aria-label="TĂ¬m kiáº¿m"
                   onClick={() => setSearchOpen(true)}
                 >
                   <Search size={17} />
@@ -479,8 +479,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Button
                   variant="secondary"
                   size="icon"
-                  className={cn("grid h-10 w-10 rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl", rootAdminCentralOnly ? "border-cyan-300/20 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/20" : "")}
-                  aria-label={darkMode ? "Chuyển sang giao diện sáng" : "Chuyển sang giao diện tối"}
+                  className={cn("grid h-10 w-10 rounded-xl sm:h-11 sm:w-11 sm:rounded-2xl", rootAdminCentralOnly ? "border-emerald-300/20 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" : "")}
+                  aria-label={darkMode ? "Chuyá»ƒn sang giao diá»‡n sĂ¡ng" : "Chuyá»ƒn sang giao diá»‡n tá»‘i"}
                   onClick={() => setDarkMode(!darkMode)}
                 >
                   {darkMode ? <Sun size={17} /> : <Moon size={17} />}
@@ -491,27 +491,27 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
-          <div className={cn("studio-ios-scroll studio-mobile-bottom-safe studio-xs-tight px-2.5 py-3 sm:px-4 sm:py-5 lg:pb-6 xl:px-8", rootAdminCentralOnly ? "bg-[#050A12]" : "")}>{children}</div>
+          <div className={cn("studio-ios-scroll studio-mobile-bottom-safe studio-xs-tight px-2.5 py-3 sm:px-4 sm:py-5 lg:pb-6 xl:px-8", rootAdminCentralOnly ? "bg-[#04110A]" : "")}>{children}</div>
         </main>
       </div>
 
       {viewingAsAdmin ? (
         <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.3rem)] left-2 right-2 z-[70] rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-2xl sm:left-auto sm:right-4 sm:bottom-4 sm:w-[360px]">
-          <p className="text-xs font-black uppercase tracking-wide text-[#EA7188]">Admin chính đang xem hộ</p>
+          <p className="text-xs font-black uppercase tracking-wide text-emerald-700">Super Admin đang xem hộ</p>
           <p className="mt-1 truncate text-sm font-bold text-[#5B342C]">{session?.user.impersonatingAdminEmail}</p>
           <Button className="mt-2 h-10 w-full rounded-xl" onClick={() => void stopViewingAsAdmin()}>
-            Quay lại admin chính
+            Quay lại Super Admin
           </Button>
         </div>
       ) : null}
 
       {mobileMenuOpen ? (
         <div className="fixed inset-0 z-50 xl:hidden" style={{ transform: "translateZ(0)" }}>
-          <button className="absolute inset-0 bg-[#2B1C1A]/35" style={{ backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }} aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)} />
+          <button className="absolute inset-0 bg-[#2B1C1A]/35" style={{ backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }} aria-label="ÄĂ³ng menu" onClick={() => setMobileMenuOpen(false)} />
           <aside className="absolute left-0 top-0 flex h-dvh w-[88vw] max-w-[360px] flex-col overflow-hidden border-r border-[#F4C7C4] bg-[#FFF7F0] pt-[env(safe-area-inset-top)] shadow-2xl sm:w-[380px] sm:max-w-md" style={{ transform: "translate3d(0,0,0)", willChange: "transform" }}>
             <div className="flex items-center justify-between border-b border-[#F4C7C4] p-3 sm:p-4">
               <StudioCatMark compact />
-              <Button variant="secondary" size="icon" aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)}>
+              <Button variant="secondary" size="icon" aria-label="ÄĂ³ng menu" onClick={() => setMobileMenuOpen(false)}>
                 <X size={18} />
               </Button>
             </div>
@@ -554,33 +554,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 autoFocus
                 value={searchQuery}
                 onChange={(event) => setSearchQuery(event.target.value)}
-                placeholder="Tìm khách, booking, hóa đơn, thu chi..."
+                placeholder="TĂ¬m khĂ¡ch, booking, hĂ³a Ä‘Æ¡n, thu chi..."
                 className="h-10 min-w-0 flex-1 bg-transparent text-sm font-bold text-[#5B342C] outline-none placeholder:text-[#B98278]"
               />
-              <Button variant="secondary" size="icon" aria-label="Đóng tìm kiếm" onClick={() => setSearchOpen(false)}>
+              <Button variant="secondary" size="icon" aria-label="ÄĂ³ng tĂ¬m kiáº¿m" onClick={() => setSearchOpen(false)}>
                 <X size={16} />
               </Button>
             </div>
             <div className="grid gap-2 border-b border-[#F4C7C4] px-4 py-3 sm:grid-cols-[1fr_1fr_auto]">
               <label className="text-xs font-black uppercase text-[#B98278]">
-                Từ ngày
+                Tá»« ngĂ y
                 <input type="date" value={searchFrom} onChange={(event) => setSearchFrom(event.target.value)} className="mt-1 h-10 w-full rounded-xl border border-[#F4C7C4] bg-[#FFF9F4] px-3 text-sm normal-case text-[#5B342C]" />
               </label>
               <label className="text-xs font-black uppercase text-[#B98278]">
-                Đến ngày
+                Äáº¿n ngĂ y
                 <input type="date" value={searchTo} onChange={(event) => setSearchTo(event.target.value)} className="mt-1 h-10 w-full rounded-xl border border-[#F4C7C4] bg-[#FFF9F4] px-3 text-sm normal-case text-[#5B342C]" />
               </label>
               {(searchFrom || searchTo) ? (
                 <Button variant="ghost" className="self-end" onClick={() => { setSearchFrom(""); setSearchTo(""); }}>
-                  Xóa lọc
+                  XĂ³a lá»c
                 </Button>
               ) : null}
             </div>
             <div className="studio-ios-scroll min-h-0 flex-1 overflow-y-auto p-2 sm:p-3">
               {searchQuery.trim().length < 2 ? (
-                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Nhập ít nhất 2 ký tự để tìm toàn bộ studio.</p>
+                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Nháº­p Ă­t nháº¥t 2 kĂ½ tá»± Ä‘á»ƒ tĂ¬m toĂ n bá»™ studio.</p>
               ) : searching ? (
-                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Đang tìm...</p>
+                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Äang tĂ¬m...</p>
               ) : searchResults.length ? (
                 <div className="grid gap-2">
                   {searchResults.map((item) => (
@@ -595,12 +595,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                         <span className="block whitespace-normal break-words text-sm font-black text-[#5B342C]">{item.title}</span>
                         <span className="block whitespace-normal break-words text-xs font-semibold text-[#9B746B]">{item.subtitle}</span>
                       </span>
-                      <span className="shrink-0 text-xs font-black text-[#EA7188]">Mở</span>
+                      <span className="shrink-0 text-xs font-black text-[#EA7188]">Má»Ÿ</span>
                     </button>
                   ))}
                 </div>
               ) : (
-                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">Không có kết quả phù hợp.</p>
+                <p className="px-3 py-8 text-center text-sm font-bold text-[#9B746B]">KhĂ´ng cĂ³ káº¿t quáº£ phĂ¹ há»£p.</p>
               )}
             </div>
           </div>

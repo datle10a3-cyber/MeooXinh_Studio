@@ -82,7 +82,7 @@ export function RootAdminList() {
     if (result.error) return setMessage(result.error.message);
     setRows((current) => current.filter((row) => row.id !== deleteTarget.id));
     setDeleteTarget(null);
-    setMessage("Đã xóa quyền đăng nhập của admin này.");
+    setMessage("ÄĂ£ xĂ³a quyá»n Ä‘Äƒng nháº­p cá»§a admin nĂ y.");
   }
 
   async function viewAsAdmin(row: AdminRow) {
@@ -117,16 +117,15 @@ export function RootAdminList() {
       setInviteCode(result.data.inviteCode);
       setShiftPassword("");
     }
-    setMessage("Đã lưu cấu hình admin chính.");
+    setMessage("Đã lưu cấu hình Super Admin.");
   }
 
   async function copyInviteCode() {
     await navigator.clipboard.writeText(inviteCode);
-    setMessage("Đã sao chép mã mời.");
+    setMessage("ÄĂ£ sao chĂ©p mĂ£ má»i.");
   }
 
-  if (loading) return <PageSpinner label="Đang tải danh sách admin..." />;
-  const protectedStatus = settings?.settingsStorageReady === false ? "SYNC REQUIRED" : "ONLINE";
+  if (loading) return <PageSpinner label="Äang táº£i danh sĂ¡ch admin..." />;
   const totals = rows.reduce(
     (acc, row) => ({
       customers: acc.customers + (row.counts?.customers ?? 0),
@@ -137,38 +136,37 @@ export function RootAdminList() {
     { customers: 0, bookings: 0, transactions: 0, invoices: 0 },
   );
   const overviewCards = [
-    { label: "Admin mã mời", value: rows.length, icon: UserCheck },
-    { label: "Khách toàn hệ thống", value: totals.customers, icon: Building2 },
+    { label: "Admin mĂ£ má»i", value: rows.length, icon: UserCheck },
+    { label: "KhĂ¡ch toĂ n há»‡ thá»‘ng", value: totals.customers, icon: Building2 },
     { label: "Booking", value: totals.bookings, icon: Activity },
-    { label: "Hóa đơn", value: totals.invoices, icon: ShieldCheck },
+    { label: "HĂ³a Ä‘Æ¡n", value: totals.invoices, icon: ShieldCheck },
   ];
 
   return (
-    <div className="space-y-4 rounded-[1.75rem] bg-[#050A12] p-3 text-slate-100 shadow-[0_24px_80px_rgba(2,6,23,0.32)] sm:p-4">
-      <section className="relative overflow-hidden rounded-[1.5rem] border border-cyan-400/20 bg-[#08111F] shadow-[0_0_42px_rgba(14,165,233,0.16)]">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_10%,rgba(34,211,238,0.22),transparent_30%),linear-gradient(135deg,rgba(14,165,233,0.14),transparent_42%)]" />
+    <div className="space-y-4 rounded-[1.75rem] bg-[#04110A] p-3 text-slate-100 shadow-[0_24px_80px_rgba(2,6,23,0.32)] sm:p-4">
+      <section className="relative overflow-hidden rounded-[1.5rem] border border-emerald-400/20 bg-[#06140D] shadow-[0_0_42px_rgba(16,185,129,0.16)]">
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_10%,rgba(52,211,153,0.22),transparent_30%),linear-gradient(135deg,rgba(16,185,129,0.14),transparent_42%)]" />
         <div className="relative grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-5">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl border border-cyan-300/35 bg-cyan-400/10 text-cyan-200 shadow-[0_0_24px_rgba(34,211,238,0.22)]">
+              <span className="grid h-10 w-10 place-items-center rounded-2xl border border-emerald-300/35 bg-emerald-400/10 text-emerald-200 shadow-[0_0_24px_rgba(52,211,153,0.22)]">
                 <ShieldCheck size={18} />
               </span>
-              <span className="rounded-full border border-cyan-300/25 bg-cyan-400/10 px-3 py-1 text-xs font-black uppercase tracking-wide text-cyan-100">Root control</span>
-              <span className="rounded-full border border-cyan-300/30 bg-cyan-400/10 px-3 py-1 text-xs font-black text-cyan-200">{protectedStatus}</span>
+              <span className="text-sm font-black uppercase tracking-[0.2em] text-emerald-200">Super Admin</span>
             </div>
-            <h1 className="mt-3 text-2xl font-black leading-tight text-white sm:text-3xl">Bảng điều khiển admin chính</h1>
+            <h1 className="mt-3 text-2xl font-black leading-tight text-white sm:text-3xl">Bảng điều khiển Super Admin</h1>
             <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-300">
-              Quản lý tài khoản admin mã mời, chính sách đăng ký, bảo mật ca và quyền vào xem từng studio. Admin mã mời vẫn giữ nguyên giao diện và quyền hiện tại.
+              Quản lý admin, mã mời đăng ký, mật khẩu xóa ca và quyền xem từng studio.
             </p>
           </div>
-          <div className="grid min-w-[220px] gap-2 rounded-[1.25rem] border border-cyan-300/20 bg-black/25 p-3 backdrop-blur">
+          <div className="grid min-w-[220px] gap-2 rounded-[1.25rem] border border-emerald-300/20 bg-black/25 p-3 backdrop-blur">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-xs font-black uppercase tracking-wide text-slate-400">Admin mã mời</span>
-              <span className="text-2xl font-black text-cyan-200">{rows.length}</span>
+              <span className="text-xs font-black uppercase tracking-wide text-slate-400">Admin mĂ£ má»i</span>
+              <span className="text-2xl font-black text-emerald-200">{rows.length}</span>
             </div>
-            <Button variant="secondary" className="h-10 rounded-xl border-cyan-300/20 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/20" onClick={() => void loadRows()}>
+            <Button variant="secondary" className="h-10 rounded-xl border-emerald-300/20 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" onClick={() => void loadRows()}>
               <RefreshCw size={15} />
-              Làm mới
+              LĂ m má»›i
             </Button>
           </div>
         </div>
@@ -180,9 +178,9 @@ export function RootAdminList() {
         {overviewCards.map((item) => {
           const Icon = item.icon;
           return (
-            <Card key={item.label} className="rounded-[1.25rem] border-cyan-300/15 bg-[#08111F] p-4 text-slate-100 shadow-[0_10px_34px_rgba(2,6,23,0.22)]">
+            <Card key={item.label} className="rounded-[1.25rem] border-emerald-300/15 bg-[#06140D] p-4 text-slate-100 shadow-[0_10px_34px_rgba(2,6,23,0.22)]">
               <div className="flex items-center justify-between gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-2xl border border-cyan-300/20 bg-cyan-400/10 text-cyan-200">
+                <span className="grid h-10 w-10 place-items-center rounded-2xl border border-emerald-300/20 bg-emerald-400/10 text-emerald-200">
                   <Icon size={17} />
                 </span>
                 <span className="text-2xl font-black tabular-nums text-white">{item.value}</span>
@@ -194,73 +192,73 @@ export function RootAdminList() {
       </section>
 
       <section className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card className="rounded-[1.5rem] border-cyan-300/20 bg-[#08111F] p-4 text-slate-100 shadow-[0_0_34px_rgba(14,165,233,0.10)]">
+        <Card className="rounded-[1.5rem] border-emerald-300/20 bg-[#06140D] p-4 text-slate-100 shadow-[0_0_34px_rgba(16,185,129,0.10)]">
           <div className="flex items-center gap-2">
-            <KeyRound size={18} className="text-cyan-300" />
-            <h2 className="text-lg font-black text-white">Chính sách truy cập</h2>
+            <KeyRound size={18} className="text-emerald-300" />
+            <h2 className="text-lg font-black text-white">ChĂ­nh sĂ¡ch truy cáº­p</h2>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <label className="min-w-0 text-xs font-black uppercase tracking-wide text-slate-400">
-              Mã mời đăng ký admin
+              MĂ£ má»i Ä‘Äƒng kĂ½ admin
               <Input
-                className="mt-2 border-cyan-300/25 bg-[#020617] text-cyan-100 placeholder:text-slate-500 focus:border-cyan-300 focus:ring-cyan-500/25"
+                className="mt-2 border-emerald-300/25 bg-[#020617] text-emerald-100 placeholder:text-slate-500 focus:border-emerald-300 focus:ring-emerald-500/25"
                 value={inviteCode}
                 onChange={(event) => setInviteCode(event.target.value)}
               />
             </label>
             <div className="grid gap-2 sm:w-36 sm:self-end">
-              <Button variant="secondary" className="h-11 rounded-xl border-cyan-300/25 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/20" onClick={() => void copyInviteCode()}>
+              <Button variant="secondary" className="h-11 rounded-xl border-emerald-300/25 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" onClick={() => void copyInviteCode()}>
                 <Copy size={15} />
-                Sao chép
+                Sao chĂ©p
               </Button>
             </div>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <label className="min-w-0 text-xs font-black uppercase tracking-wide text-slate-400">
-              Mật khẩu xóa ca mặc định
+              Máº­t kháº©u xĂ³a ca máº·c Ä‘á»‹nh
               <Input
-                className="mt-2 border-cyan-300/25 bg-[#020617] text-cyan-100 placeholder:text-slate-500 focus:border-cyan-300 focus:ring-cyan-500/25"
+                className="mt-2 border-emerald-300/25 bg-[#020617] text-emerald-100 placeholder:text-slate-500 focus:border-emerald-300 focus:ring-emerald-500/25"
                 type="password"
                 inputMode="numeric"
-                placeholder={settings?.hasCustomShiftPassword ? "Đã có mật khẩu" : "000000"}
+                placeholder={settings?.hasCustomShiftPassword ? "ÄĂ£ cĂ³ máº­t kháº©u" : "000000"}
                 value={shiftPassword}
                 onChange={(event) => setShiftPassword(event.target.value.replace(/\D/g, "").slice(0, 6))}
               />
             </label>
-            <Button className="h-11 rounded-xl bg-cyan-400 text-[#03111F] shadow-[0_0_22px_rgba(34,211,238,0.28)] hover:bg-cyan-300 sm:w-36 sm:self-end" onClick={() => void saveSettings()} disabled={savingSettings}>
+            <Button className="h-11 rounded-xl bg-emerald-400 text-[#03140C] shadow-[0_0_22px_rgba(52,211,153,0.28)] hover:bg-emerald-300 sm:w-36 sm:self-end" onClick={() => void saveSettings()} disabled={savingSettings}>
               {savingSettings ? <Loader2 size={16} className="animate-spin" /> : <LockKeyhole size={16} />}
-              Lưu
+              LÆ°u
             </Button>
           </div>
         </Card>
 
-        <Card className="rounded-[1.5rem] border-cyan-300/20 bg-[#0D101A] p-4 text-slate-100 shadow-[0_0_34px_rgba(14,165,233,0.10)]">
+        <Card className="rounded-[1.5rem] border-emerald-300/20 bg-[#0A120D] p-4 text-slate-100 shadow-[0_0_34px_rgba(16,185,129,0.10)]">
           <div className="flex items-center gap-2">
-            <Activity size={18} className="text-cyan-300" />
-            <h2 className="text-lg font-black text-white">Trạng thái quản trị</h2>
+            <Activity size={18} className="text-emerald-300" />
+            <h2 className="text-lg font-black text-white">Tráº¡ng thĂ¡i quáº£n trá»‹</h2>
           </div>
           <div className="mt-4 grid gap-2">
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-cyan-300/15">
-              <span className="text-sm font-bold text-slate-300">Lưu cấu hình</span>
-              <span className="text-sm font-black text-cyan-200">{settings?.settingsStorageReady === false ? "Tự khởi tạo" : "Sẵn sàng"}</span>
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-emerald-300/15">
+              <span className="text-sm font-bold text-slate-300">LÆ°u cáº¥u hĂ¬nh</span>
+              <span className="text-sm font-black text-emerald-200">{settings?.settingsStorageReady === false ? "Tá»± khá»Ÿi táº¡o" : "Sáºµn sĂ ng"}</span>
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-cyan-300/15">
-              <span className="text-sm font-bold text-slate-300">Mã mời</span>
-              <span className="text-sm font-black text-cyan-200">Có thể đổi trong app</span>
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-emerald-300/15">
+              <span className="text-sm font-bold text-slate-300">MĂ£ má»i</span>
+              <span className="text-sm font-black text-emerald-200">CĂ³ thá»ƒ Ä‘á»•i trong app</span>
             </div>
-            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-cyan-300/15">
-              <span className="text-sm font-bold text-slate-300">Mật khẩu xóa ca</span>
-              <span className="text-sm font-black text-cyan-200">{settings?.hasCustomShiftPassword ? "Đã cấu hình" : "Mặc định"}</span>
+            <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-emerald-300/15">
+              <span className="text-sm font-bold text-slate-300">Máº­t kháº©u xĂ³a ca</span>
+              <span className="text-sm font-black text-emerald-200">{settings?.hasCustomShiftPassword ? "ÄĂ£ cáº¥u hĂ¬nh" : "Máº·c Ä‘á»‹nh"}</span>
             </div>
           </div>
         </Card>
       </section>
 
-      <section className="rounded-[1.5rem] border border-cyan-300/20 bg-[#08111F] p-3 shadow-[0_0_34px_rgba(14,165,233,0.10)] sm:p-4">
+      <section className="rounded-[1.5rem] border border-emerald-300/20 bg-[#06140D] p-3 shadow-[0_0_34px_rgba(16,185,129,0.10)] sm:p-4">
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Building2 size={18} className="text-cyan-300" />
-            <h2 className="text-lg font-black text-white">Admin mã mời và studio được quản lý</h2>
+            <Building2 size={18} className="text-emerald-300" />
+            <h2 className="text-lg font-black text-white">Admin mĂ£ má»i vĂ  studio Ä‘Æ°á»£c quáº£n lĂ½</h2>
           </div>
         </div>
         <div className="grid gap-3">
@@ -269,35 +267,35 @@ export function RootAdminList() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="grid h-9 w-9 place-items-center rounded-2xl bg-cyan-400/10 text-cyan-200 ring-1 ring-cyan-300/25"><UserCheck size={16} /></span>
+                  <span className="grid h-9 w-9 place-items-center rounded-2xl bg-emerald-400/10 text-emerald-200 ring-1 ring-emerald-300/25"><UserCheck size={16} /></span>
                   <div className="min-w-0">
                     <h2 className="truncate text-base font-black text-white">{row.name || "Admin"}</h2>
                     <p className="truncate text-sm font-bold text-slate-400">{row.email}</p>
                   </div>
                 </div>
-                <p className="mt-2 truncate text-xs font-bold uppercase tracking-wide text-cyan-200">{row.studio?.name ?? "Không rõ studio"}</p>
+                <p className="mt-2 truncate text-xs font-bold uppercase tracking-wide text-emerald-200">{row.studio?.name ?? "KhĂ´ng rĂµ studio"}</p>
                 <div className="mt-2 grid grid-cols-2 gap-1 text-center text-[11px] font-black text-slate-300 sm:grid-cols-4">
-                  <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.customers ?? 0} khách</span>
+                  <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.customers ?? 0} khĂ¡ch</span>
                   <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.bookings ?? 0} booking</span>
                   <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.transactions ?? 0} thu chi</span>
-                  <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.invoices ?? 0} hóa đơn</span>
+                  <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.invoices ?? 0} hĂ³a Ä‘Æ¡n</span>
                 </div>
               </div>
               <div className="grid gap-2 sm:w-40">
-                <Button className="min-h-11 rounded-2xl bg-cyan-400 text-[#03111F] hover:bg-cyan-300" onClick={() => void viewAsAdmin(row)}>
+                <Button className="min-h-11 rounded-2xl bg-emerald-400 text-[#03140C] hover:bg-emerald-300" onClick={() => void viewAsAdmin(row)}>
                   <Eye size={16} />
-                  Vào xem
+                  VĂ o xem
                 </Button>
                 <Button variant="secondary" className="min-h-11 rounded-2xl border-slate-500/30 bg-slate-900 text-slate-100 hover:bg-slate-800" onClick={() => setDeleteTarget(row)}>
                   <Trash2 size={16} />
-                  Xóa admin
+                  XĂ³a admin
                 </Button>
               </div>
             </div>
           </Card>
         )) : (
           <Card className="rounded-[1.5rem] border-white/10 bg-white/[0.04] p-6 text-center">
-            <p className="text-sm font-bold text-slate-300">Chưa có admin mã mời nào khác.</p>
+            <p className="text-sm font-bold text-slate-300">ChÆ°a cĂ³ admin mĂ£ má»i nĂ o khĂ¡c.</p>
           </Card>
         )}
         </div>
@@ -306,25 +304,25 @@ export function RootAdminList() {
       {deleteTarget ? (
         <Portal>
           <div className="fixed inset-0 z-[230] grid place-items-center bg-slate-950/75 p-4 backdrop-blur-sm" onClick={() => (deleting ? undefined : setDeleteTarget(null))}>
-            <Card className="w-full max-w-md rounded-[1.5rem] border-cyan-300/20 bg-[#08111F] p-5 text-slate-100 shadow-[0_24px_80px_rgba(2,6,23,0.65)]" onClick={(event) => event.stopPropagation()}>
+            <Card className="w-full max-w-md rounded-[1.5rem] border-emerald-300/20 bg-[#06140D] p-5 text-slate-100 shadow-[0_24px_80px_rgba(2,6,23,0.65)]" onClick={(event) => event.stopPropagation()}>
               <div className="flex items-start gap-3">
-                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-cyan-300/25 bg-cyan-400/10 text-cyan-200">
+                <span className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl border border-emerald-300/25 bg-emerald-400/10 text-emerald-200">
                   <Trash2 size={18} />
                 </span>
                 <div className="min-w-0">
-                  <h3 className="text-lg font-black text-white">Xóa admin</h3>
+                  <h3 className="text-lg font-black text-white">XĂ³a admin</h3>
                   <p className="mt-1 text-sm font-semibold leading-6 text-slate-300">
-                    Xóa quyền đăng nhập admin <span className="font-black text-cyan-100">{deleteTarget.email}</span>? Dữ liệu studio của admin đó không bị xóa.
+                    XĂ³a quyá»n Ä‘Äƒng nháº­p admin <span className="font-black text-emerald-100">{deleteTarget.email}</span>? Dá»¯ liá»‡u studio cá»§a admin Ä‘Ă³ khĂ´ng bá»‹ xĂ³a.
                   </p>
                 </div>
               </div>
               <div className="mt-5 grid gap-2 sm:grid-cols-2">
                 <Button variant="secondary" className="h-11 rounded-xl border-slate-500/30 bg-slate-900 text-slate-100 hover:bg-slate-800" onClick={() => setDeleteTarget(null)} disabled={deleting}>
-                  Hủy
+                  Há»§y
                 </Button>
-                <Button className="h-11 rounded-xl bg-cyan-400 text-[#03111F] hover:bg-cyan-300" onClick={() => void deleteAdmin()} disabled={deleting}>
+                <Button className="h-11 rounded-xl bg-emerald-400 text-[#03140C] hover:bg-emerald-300" onClick={() => void deleteAdmin()} disabled={deleting}>
                   {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
-                  Xóa admin
+                  XĂ³a admin
                 </Button>
               </div>
             </Card>
@@ -334,7 +332,7 @@ export function RootAdminList() {
 
       {deleting ? (
         <div className="fixed inset-0 z-[240] grid place-items-center bg-black/10">
-          <Loader2 className="animate-spin text-cyan-300" size={28} />
+          <Loader2 className="animate-spin text-emerald-300" size={28} />
         </div>
       ) : null}
     </div>

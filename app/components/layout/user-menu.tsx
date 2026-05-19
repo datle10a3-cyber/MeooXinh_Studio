@@ -32,10 +32,10 @@ export function UserMenu({ session, onLogout, rootAdminTheme = false }: { sessio
   return (
     <div className="flex items-center gap-2 sm:gap-3">
       <div className="hidden text-right sm:block">
-        <p className={rootTheme ? "text-sm font-semibold text-slate-100" : "text-sm font-semibold text-[#5B342C]"}>{session.user.name}</p>
+        <p className={rootTheme ? "text-sm font-semibold text-slate-100" : "text-sm font-semibold text-[#5B342C]"}>{rootTheme ? "Super Admin" : session.user.name}</p>
         <p className={rootTheme ? "flex items-center justify-end gap-1 text-xs text-slate-400" : "flex items-center justify-end gap-1 text-xs text-[#9B746B]"}>
           <ShieldCheck size={13} />
-          {roleLabel(session.user.role)}
+          {rootTheme ? "Super Admin" : roleLabel(session.user.role)}
         </p>
       </div>
       <AvatarDropdown session={session} onLogout={onLogout} rootAdminTheme={rootTheme} />

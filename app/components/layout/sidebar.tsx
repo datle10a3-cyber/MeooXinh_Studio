@@ -48,7 +48,7 @@ type NavItem = {
 
 const navGroups: Array<{ title: string; items: NavItem[] }> = [
   {
-    title: "Chính",
+    title: "ChĂ­nh",
     items: [
       { id: "home", label: "Home", icon: Home },
       { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -61,14 +61,14 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
     items: [
       {
         id: "categories",
-        label: "Danh mục",
+        label: "Danh má»¥c",
         icon: FolderOpen,
         href: "/categories",
       },
 
       {
         id: "packages",
-        label: "Gói",
+        label: "GĂ³i",
         icon: Package,
         href: "/packages",
       },
@@ -80,14 +80,14 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
       },
       {
         id: "projects",
-        label: "Dự án",
+        label: "Dá»± Ă¡n",
         icon: BriefcaseBusiness,
       },
     ],
   },
 
   {
-    title: "Tài chính",
+    title: "TĂ i chĂ­nh",
     items: [
       {
         id: "transactions",
@@ -97,19 +97,19 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
 
       {
         id: "wallets",
-        label: "Ví",
+        label: "VĂ­",
         icon: WalletCards,
       },
 
       {
         id: "invoices",
-        label: "Hóa đơn",
+        label: "HĂ³a Ä‘Æ¡n",
         icon: FileText,
       },
 
       {
         id: "reports",
-        label: "Báo cáo",
+        label: "BĂ¡o cĂ¡o",
         icon: ChartNoAxesCombined,
         adminOnly: true,
       },
@@ -117,43 +117,43 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
   },
 
   {
-    title: "Quản lý",
+    title: "Quáº£n lĂ½",
     items: [
       {
         id: "customers",
-        label: "Khách",
+        label: "KhĂ¡ch",
         icon: Users,
       },
 
       {
         id: "completed-bookings",
-        label: "Booking hoàn tất",
+        label: "Booking hoĂ n táº¥t",
         icon: CheckCircle2,
         href: "/completed-bookings",
       },
 
       {
         id: "users",
-        label: "Nhân sự",
+        label: "NhĂ¢n sá»±",
         icon: Users,
         adminOnly: true,
       },
 
       {
         id: "equipment",
-        label: "Thiết bị",
+        label: "Thiáº¿t bá»‹",
         icon: Camera,
       },
 
       {
         id: "notifications",
-        label: "Thông báo",
+        label: "ThĂ´ng bĂ¡o",
         icon: Bell,
       },
 
       {
         id: "trash",
-        label: "Thùng rác",
+        label: "ThĂ¹ng rĂ¡c",
         icon: Trash2,
         adminOnly: true,
       },
@@ -177,8 +177,8 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
   const rootAdminCentralOnly = isRootAdminSession(session) && !isViewingAsAdmin(session);
   const visibleNavGroups = isRootAdminSession(session)
     ? rootAdminCentralOnly
-      ? [{ title: "Quản lý", items: [rootAdminNavItem] }]
-      : navGroups.map((group) => group.title === "Quản lý" || group.title === "Quáº£n lĂ½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
+      ? [{ title: "Quáº£n lĂ½", items: [rootAdminNavItem] }]
+      : navGroups.map((group) => group.title === "Quáº£n lĂ½" || group.title === "QuĂ¡ÂºÂ£n lÄ‚Â½" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
     : navGroups;
 
   function classes(active: boolean) {
@@ -186,8 +186,8 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
       return cn(
         "flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition-all duration-200",
         active
-          ? "bg-cyan-400/12 text-cyan-100 shadow-[0_0_24px_rgba(34,211,238,0.10)] ring-1 ring-cyan-300/25"
-          : "text-slate-400 hover:bg-cyan-400/8 hover:text-cyan-100",
+          ? "bg-emerald-400/12 text-emerald-100 shadow-[0_0_24px_rgba(52,211,153,0.10)] ring-1 ring-emerald-300/25"
+          : "text-slate-400 hover:bg-emerald-400/8 hover:text-emerald-100",
       );
     }
     return cn(
@@ -199,30 +199,30 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
   }
 
   return (
-    <aside className={cn("hidden w-64 shrink-0 px-4 py-6 xl:block", rootAdminTheme ? "border-r border-cyan-300/15 bg-[#050A12]" : "border-r border-[#F4C7C4]/50 bg-white/50")}>
-      <div className={cn("mb-6 rounded-[2rem] p-5 shadow-[0_8px_20px_rgba(184,95,108,0.06)]", rootAdminTheme ? "border border-cyan-300/20 bg-[#08111F] text-slate-100 shadow-[0_18px_50px_rgba(2,6,23,0.28)]" : "border-2 border-[#F7AFC0] bg-white text-[#5B342C]")}>
+    <aside className={cn("hidden w-64 shrink-0 px-4 py-6 xl:block", rootAdminTheme ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4]/50 bg-white/50")}>
+      <div className={cn("mb-6 rounded-[2rem] p-5 shadow-[0_8px_20px_rgba(184,95,108,0.06)]", rootAdminTheme ? "border border-emerald-300/20 bg-[#06140D] text-slate-100 shadow-[0_18px_50px_rgba(2,6,23,0.28)]" : "border-2 border-[#F7AFC0] bg-white text-[#5B342C]")}>
         {rootAdminTheme ? (
           <div className="flex items-center gap-3">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl border border-cyan-300/25 bg-cyan-400/10 text-cyan-200">
+            <span className="grid h-12 w-12 place-items-center rounded-2xl border border-emerald-300/25 bg-emerald-400/10 text-emerald-200">
               <ShieldCheck size={22} />
             </span>
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-200">Root</p>
-              <p className="text-lg font-black leading-5 text-white">Admin Core</p>
+              <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">Root</p>
+              <p className="text-lg font-black leading-5 text-white">Super Admin</p>
             </div>
           </div>
         ) : (
           <StudioCatMark compact />
         )}
 
-        <p className={cn("mt-3 rounded-full px-3 py-2 text-center text-xs font-black", rootAdminTheme ? "bg-cyan-400/10 text-cyan-100 ring-1 ring-cyan-300/15" : "bg-white text-[#74443A]")}>
-          {rootAdminTheme ? "system control" : "make & photo"}
+        <p className={cn("mt-3 rounded-full px-3 py-2 text-center text-xs font-black", rootAdminTheme ? "bg-emerald-400/10 text-emerald-100 ring-1 ring-emerald-300/15" : "bg-white text-[#74443A]")}>
+          {rootAdminTheme ? "quản lý chính" : "make & photo"}
         </p>
       </div>
 
       {session ? (
-        <div className={cn("mb-5 flex items-center gap-3 rounded-[1.4rem] border p-3 shadow-sm", rootAdminTheme ? "border-cyan-300/15 bg-[#08111F] text-slate-100" : "border-[#F4C7C4] bg-white")}>
-          <div className={cn("grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-2xl font-black text-white", rootAdminTheme ? "border border-cyan-300/25 bg-cyan-400/10 text-cyan-100" : "bg-[#EA7188]")}>
+        <div className={cn("mb-5 flex items-center gap-3 rounded-[1.4rem] border p-3 shadow-sm", rootAdminTheme ? "border-emerald-300/15 bg-[#06140D] text-slate-100" : "border-[#F4C7C4] bg-white")}>
+          <div className={cn("grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-2xl font-black text-white", rootAdminTheme ? "border border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "bg-[#EA7188]")}>
             {rootAdminTheme ? (
               <ShieldCheck size={18} />
             ) : session.user.avatarUrl || STUDIO_AVATAR_URL ? (
@@ -238,7 +238,7 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
 
           <div className="min-w-0">
             <p className={cn("whitespace-normal break-words text-sm font-black leading-5", rootAdminTheme ? "text-white" : "text-[#5B342C]")}>
-              {session.user.name}
+              {rootAdminTheme ? "Super Admin" : session.user.name}
             </p>
 
             <p className={cn("whitespace-normal break-words text-xs font-semibold leading-4", rootAdminTheme ? "text-slate-400" : "text-[#9B746B]")}>
@@ -286,10 +286,10 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
         ))}
       </nav>
 
-      <div className={cn("mt-5 border-t pt-4", rootAdminTheme ? "border-cyan-300/15" : "border-[#F4C7C4]")}>
-        <Button variant="ghost" className={cn("w-full justify-start", rootAdminTheme ? "text-slate-400 hover:bg-cyan-400/8 hover:text-cyan-100" : "")}>
+      <div className={cn("mt-5 border-t pt-4", rootAdminTheme ? "border-emerald-300/15" : "border-[#F4C7C4]")}>
+        <Button variant="ghost" className={cn("w-full justify-start", rootAdminTheme ? "text-slate-400 hover:bg-emerald-400/8 hover:text-emerald-100" : "")}>
           <Settings size={18} />
-          Cài đặt
+          CĂ i Ä‘áº·t
         </Button>
       </div>
     </aside>
