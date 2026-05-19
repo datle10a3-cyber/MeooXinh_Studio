@@ -246,6 +246,69 @@ video {
   }
 }
 
+/* iPad/tablet PWA performance: avoid Safari repaint storms while scrolling */
+@media (min-width: 641px) and (max-width: 1279px) and (pointer: coarse) {
+  main {
+    animation: none !important;
+  }
+
+  * {
+    transition-duration: 0ms !important;
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+  }
+
+  .animate-spin {
+    animation-duration: 1s !important;
+    animation-iteration-count: infinite !important;
+  }
+
+  [class*="backdrop-blur"],
+  [class*="supports-[backdrop-filter]"],
+  .backdrop-blur,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .bg-glass {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  header.sticky,
+  nav.fixed,
+  .studio-gpu,
+  .studio-mobile-form-sheet {
+    transform: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+  }
+
+  .studio-ios-scroll {
+    contain: none !important;
+    overscroll-behavior: auto !important;
+  }
+
+  [class*="hover:-translate"],
+  [class*="hover:scale"],
+  [class*="active:scale"],
+  [class*="scale-105"] {
+    transform: none !important;
+  }
+
+  [class*="shadow-[0_12px"],
+  [class*="shadow-[0_14px"],
+  [class*="shadow-[0_18px"],
+  [class*="shadow-[0_20px"],
+  [class*="shadow-[0_22px"],
+  [class*="shadow-[0_24px"],
+  [class*="shadow-[0_30px"],
+  .shadow-2xl,
+  .shadow-xl {
+    box-shadow: 0 4px 14px rgba(91, 52, 44, 0.08) !important;
+  }
+}
+
 /* ─── Small screens ─── */
 @media (max-width: 640px) {
   html,
