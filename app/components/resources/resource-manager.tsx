@@ -478,6 +478,17 @@ function stripSystemNote(value: unknown) {
     .trim();
 }
 
+function isGeneratedSystemNoteLabel(value: unknown) {
+  const note = String(value ?? "").trim();
+  return note === "Tự động cộng doanh thu khi booking hoàn tất." || note === "Tự động cộng doanh thu khi booking nhóm hoàn tất.";
+}
+
+function editableNoteValue(row: Row) {
+  const userNote = stripSystemNote(row.note);
+  if (userNote) return userNote;
+  return extractSystemNote(row.note) ? cleanSystemNote(row) : "";
+}
+
 function extractSystemNote(value: unknown) {
   const note = String(value ?? "").trim();
   if (!note) return "";
@@ -494,6 +505,7 @@ function extractSystemNote(value: unknown) {
 function mergeSystemNote(userNote: unknown, systemNote: string) {
   const cleanUserNote = String(userNote ?? "").trim();
   if (!systemNote) return cleanUserNote || null;
+  if (isGeneratedSystemNoteLabel(cleanUserNote)) return systemNote;
   return [systemNote, cleanUserNote].filter(Boolean).join(" | ");
 }
 
@@ -1648,7 +1660,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       }
     }
     const next = emptyForm(config.fields);
-    for (const field of config.fields) next[field.key] = field.key === "note" ? stripSystemNote(row[field.key]) : row[field.key] ?? "";
+    for (const field of config.fields) next[field.key] = field.key === "note" ? editableNoteValue(row) : row[field.key] ?? "";
     setForm(next);
     setEditingId(String(row.id));
     setEditStudioPassword(studioPassword);
