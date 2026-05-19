@@ -170,24 +170,24 @@ export function RootAdminList() {
   ];
 
   return (
-    <div className="space-y-4 rounded-[1.75rem] bg-[#04110A] p-3 text-slate-100 shadow-[0_24px_80px_rgba(2,6,23,0.32)] sm:p-4">
-      <section className="relative overflow-hidden rounded-[1.5rem] border border-emerald-400/20 bg-[#06140D] shadow-[0_0_42px_rgba(16,185,129,0.16)]">
+    <div className="mx-auto w-full max-w-7xl space-y-3 rounded-[1.25rem] bg-[#04110A] p-2 text-slate-100 shadow-[0_24px_80px_rgba(2,6,23,0.32)] sm:space-y-4 sm:rounded-[1.75rem] sm:p-4">
+      <section className="relative overflow-hidden rounded-[1.1rem] border border-emerald-400/20 bg-[#06140D] shadow-[0_0_42px_rgba(16,185,129,0.16)] sm:rounded-[1.5rem]">
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_82%_10%,rgba(52,211,153,0.22),transparent_30%),linear-gradient(135deg,rgba(16,185,129,0.14),transparent_42%)]" />
-        <div className="relative grid gap-4 p-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:p-5">
+        <div className="relative grid gap-3 p-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-4 sm:p-5">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="grid h-10 w-10 place-items-center rounded-2xl border border-emerald-300/35 bg-emerald-400/10 text-emerald-200 shadow-[0_0_24px_rgba(52,211,153,0.22)]">
-                <ShieldCheck size={18} />
+              <span className="grid h-9 w-9 place-items-center rounded-xl border border-emerald-300/35 bg-emerald-400/10 text-emerald-200 shadow-[0_0_24px_rgba(52,211,153,0.22)] sm:h-10 sm:w-10 sm:rounded-2xl">
+                <ShieldCheck size={17} />
               </span>
-              <span className="text-sm font-black uppercase tracking-[0.2em] text-emerald-200">Super Admin</span>
+              <span className="text-xs font-black uppercase tracking-[0.18em] text-emerald-200 sm:text-sm sm:tracking-[0.2em]">Super Admin</span>
             </div>
-            <h1 className="mt-3 text-2xl font-black leading-tight text-white sm:text-3xl">Bảng điều khiển Super Admin</h1>
-            <p className="mt-2 max-w-3xl text-sm font-semibold leading-6 text-slate-300">Quản lý admin, mã mời đăng ký, mật khẩu xóa ca và quyền xem từng studio.</p>
+            <h1 className="mt-2 text-xl font-black leading-tight text-white sm:mt-3 sm:text-3xl">Bảng điều khiển Super Admin</h1>
+            <p className="mt-1 max-w-3xl text-xs font-semibold leading-5 text-slate-300 sm:mt-2 sm:text-sm sm:leading-6">Quản lý admin, mã mời đăng ký, mật khẩu xóa ca và quyền xem từng studio.</p>
           </div>
-          <div className="grid min-w-[220px] gap-2 rounded-[1.25rem] border border-emerald-300/20 bg-black/25 p-3 backdrop-blur">
+          <div className="grid gap-2 rounded-2xl border border-emerald-300/20 bg-black/25 p-2.5 backdrop-blur sm:min-w-[220px] sm:rounded-[1.25rem] sm:p-3">
             <div className="flex items-center justify-between gap-3">
               <span className="text-xs font-black uppercase tracking-wide text-slate-400">Admin mã mời</span>
-              <span className="text-2xl font-black text-emerald-200">{rows.length}</span>
+              <span className="text-xl font-black text-emerald-200 sm:text-2xl">{rows.length}</span>
             </div>
             <Button variant="secondary" className="h-10 rounded-xl border-emerald-300/20 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" onClick={() => void loadRows()}>
               <RefreshCw size={15} />
@@ -199,28 +199,28 @@ export function RootAdminList() {
 
       <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
-      <section className="grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-2 gap-2 xl:grid-cols-4">
         {overviewCards.map((item) => {
           const Icon = item.icon;
           return (
-            <Card key={item.label} className="rounded-[1.25rem] border-emerald-300/15 bg-[#06140D] p-4 text-slate-100 shadow-[0_10px_34px_rgba(2,6,23,0.22)]">
+            <Card key={item.label} className="rounded-2xl border-emerald-300/15 bg-[#06140D] p-3 text-slate-100 shadow-[0_10px_34px_rgba(2,6,23,0.22)] sm:rounded-[1.25rem] sm:p-4">
               <div className="flex items-center justify-between gap-3">
-                <span className="grid h-10 w-10 place-items-center rounded-2xl border border-emerald-300/20 bg-emerald-400/10 text-emerald-200">
-                  <Icon size={17} />
+                <span className="grid h-8 w-8 place-items-center rounded-xl border border-emerald-300/20 bg-emerald-400/10 text-emerald-200 sm:h-10 sm:w-10 sm:rounded-2xl">
+                  <Icon size={16} />
                 </span>
-                <span className="text-2xl font-black tabular-nums text-white">{item.value}</span>
+                <span className="text-xl font-black tabular-nums text-white sm:text-2xl">{item.value}</span>
               </div>
-              <p className="mt-3 text-xs font-black uppercase tracking-wide text-slate-400">{item.label}</p>
+              <p className="mt-2 text-[10px] font-black uppercase tracking-wide text-slate-400 sm:mt-3 sm:text-xs">{item.label}</p>
             </Card>
           );
         })}
       </section>
 
       <section className="grid gap-3 lg:grid-cols-[1.1fr_0.9fr]">
-        <Card className="rounded-[1.5rem] border-emerald-300/20 bg-[#06140D] p-4 text-slate-100 shadow-[0_0_34px_rgba(16,185,129,0.10)]">
+        <Card className="rounded-[1.1rem] border-emerald-300/20 bg-[#06140D] p-3 text-slate-100 shadow-[0_0_34px_rgba(16,185,129,0.10)] sm:rounded-[1.5rem] sm:p-4">
           <div className="flex items-center gap-2">
             <KeyRound size={18} className="text-emerald-300" />
-            <h2 className="text-lg font-black text-white">Chính sách truy cập</h2>
+            <h2 className="text-base font-black text-white sm:text-lg">Chính sách truy cập</h2>
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-[minmax(0,1fr)_auto]">
             <label className="min-w-0 text-xs font-black uppercase tracking-wide text-slate-400">
@@ -253,10 +253,10 @@ export function RootAdminList() {
           </div>
         </Card>
 
-        <Card className="rounded-[1.5rem] border-emerald-300/20 bg-[#0A120D] p-4 text-slate-100 shadow-[0_0_34px_rgba(16,185,129,0.10)]">
+        <Card className="rounded-[1.1rem] border-emerald-300/20 bg-[#0A120D] p-3 text-slate-100 shadow-[0_0_34px_rgba(16,185,129,0.10)] sm:rounded-[1.5rem] sm:p-4">
           <div className="flex items-center gap-2">
             <Activity size={18} className="text-emerald-300" />
-            <h2 className="text-lg font-black text-white">Trạng thái quản trị</h2>
+            <h2 className="text-base font-black text-white sm:text-lg">Trạng thái quản trị</h2>
           </div>
           <div className="mt-4 grid gap-2">
             <div className="flex items-center justify-between gap-3 rounded-2xl bg-white/5 px-3 py-2 ring-1 ring-emerald-300/15">
@@ -275,20 +275,20 @@ export function RootAdminList() {
         </Card>
       </section>
 
-      <section className="rounded-[1.5rem] border border-emerald-300/20 bg-[#06140D] p-3 shadow-[0_0_34px_rgba(16,185,129,0.10)] sm:p-4">
+      <section className="rounded-[1.1rem] border border-emerald-300/20 bg-[#06140D] p-2.5 shadow-[0_0_34px_rgba(16,185,129,0.10)] sm:rounded-[1.5rem] sm:p-4">
         <div className="mb-3 flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Building2 size={18} className="text-emerald-300" />
-            <h2 className="text-lg font-black text-white">Admin mã mời và studio được quản lý</h2>
+            <h2 className="text-base font-black text-white sm:text-lg">Admin mã mời và studio được quản lý</h2>
           </div>
         </div>
         <div className="grid gap-3">
           {rows.length ? rows.map((row) => (
-            <Card key={row.id} className="rounded-[1.25rem] border-white/10 bg-white/[0.04] p-3 text-slate-100 shadow-sm">
+            <Card key={row.id} className="rounded-2xl border-white/10 bg-white/[0.04] p-2.5 text-slate-100 shadow-sm sm:rounded-[1.25rem] sm:p-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="grid h-9 w-9 place-items-center rounded-2xl bg-emerald-400/10 text-emerald-200 ring-1 ring-emerald-300/25"><UserCheck size={16} /></span>
+                    <span className="grid h-8 w-8 place-items-center rounded-xl bg-emerald-400/10 text-emerald-200 ring-1 ring-emerald-300/25 sm:h-9 sm:w-9 sm:rounded-2xl"><UserCheck size={16} /></span>
                     <div className="min-w-0">
                       <h2 className="truncate text-base font-black text-white">{row.name || "Admin"}</h2>
                       <p className="truncate text-sm font-bold text-slate-400">{row.email}</p>
@@ -298,37 +298,37 @@ export function RootAdminList() {
                     </span>
                   </div>
                   <p className="mt-2 truncate text-xs font-bold uppercase tracking-wide text-emerald-200">{row.studio?.name ?? "Không rõ studio"}</p>
-                  <div className="mt-2 grid grid-cols-2 gap-1 text-center text-[11px] font-black text-slate-300 sm:grid-cols-4">
+                  <div className="mt-2 grid grid-cols-2 gap-1 text-center text-[10px] font-black text-slate-300 sm:grid-cols-4 sm:text-[11px]">
                     <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.customers ?? 0} khách</span>
                     <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.bookings ?? 0} booking</span>
                     <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.transactions ?? 0} thu chi</span>
                     <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.invoices ?? 0} hóa đơn</span>
                   </div>
                 </div>
-                <div className="grid gap-2 sm:w-44">
-                  <Button className="min-h-11 rounded-2xl bg-emerald-400 text-[#03140C] hover:bg-emerald-300" onClick={() => void viewAsAdmin(row)}>
+                <div className="grid grid-cols-2 gap-2 sm:w-44 sm:grid-cols-1">
+                  <Button className="min-h-10 rounded-xl bg-emerald-400 text-[#03140C] hover:bg-emerald-300 sm:min-h-11 sm:rounded-2xl" onClick={() => void viewAsAdmin(row)}>
                     <Eye size={16} />
                     Vào xem
                   </Button>
                   {row.status === "ACTIVE" ? (
-                    <Button variant="secondary" className="min-h-11 rounded-2xl border-amber-300/25 bg-amber-400/10 text-amber-100 hover:bg-amber-400/20" onClick={() => void updateAdminStatus(row, "disable")} disabled={actioningId === row.id}>
+                    <Button variant="secondary" className="min-h-10 rounded-xl border-amber-300/25 bg-amber-400/10 text-amber-100 hover:bg-amber-400/20 sm:min-h-11 sm:rounded-2xl" onClick={() => void updateAdminStatus(row, "disable")} disabled={actioningId === row.id}>
                       {actioningId === row.id ? <Loader2 size={16} className="animate-spin" /> : <Lock size={16} />}
                       Khóa tạm thời
                     </Button>
                   ) : null}
                   {row.status === "DISABLED" ? (
-                    <Button variant="secondary" className="min-h-11 rounded-2xl border-emerald-300/25 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" onClick={() => void updateAdminStatus(row, "enable")} disabled={actioningId === row.id}>
+                    <Button variant="secondary" className="min-h-10 rounded-xl border-emerald-300/25 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20 sm:min-h-11 sm:rounded-2xl" onClick={() => void updateAdminStatus(row, "enable")} disabled={actioningId === row.id}>
                       {actioningId === row.id ? <Loader2 size={16} className="animate-spin" /> : <UnlockKeyhole size={16} />}
                       Mở khóa
                     </Button>
                   ) : null}
                   {row.status === "DELETED" ? (
-                    <Button variant="secondary" className="min-h-11 rounded-2xl border-emerald-300/25 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20" onClick={() => void updateAdminStatus(row, "restore")} disabled={actioningId === row.id}>
+                    <Button variant="secondary" className="min-h-10 rounded-xl border-emerald-300/25 bg-emerald-400/10 text-emerald-100 hover:bg-emerald-400/20 sm:min-h-11 sm:rounded-2xl" onClick={() => void updateAdminStatus(row, "restore")} disabled={actioningId === row.id}>
                       {actioningId === row.id ? <Loader2 size={16} className="animate-spin" /> : <RotateCcw size={16} />}
                       Khôi phục
                     </Button>
                   ) : (
-                    <Button variant="secondary" className="min-h-11 rounded-2xl border-rose-300/25 bg-rose-400/10 text-rose-100 hover:bg-rose-400/20" onClick={() => setDeleteTarget(row)}>
+                    <Button variant="secondary" className="col-span-2 min-h-10 rounded-xl border-rose-300/25 bg-rose-400/10 text-rose-100 hover:bg-rose-400/20 sm:col-span-1 sm:min-h-11 sm:rounded-2xl" onClick={() => setDeleteTarget(row)}>
                       <Trash2 size={16} />
                       Xóa tài khoản
                     </Button>
