@@ -446,6 +446,22 @@ function bookingInvoiceCode(bookingId: string) {
   return `INV-${bookingId.slice(-6).toUpperCase()}`;
 }
 
+const RESERVED_INVOICE_MARKER = "INVOICE_RESERVED:";
+
+export function reservedInvoiceCodeFromNote(note?: string | null, mode: "personal" | "group" = "personal") {
+  const match = new RegExp(`${RESERVED_INVOICE_MARKER}(Group-meoxinh\\d+|meoxinh\\d+)`, "i").exec(String(note ?? ""));
+  const code = match?.[1] ?? "";
+  if (mode === "group") return /^Group-meoxinh\d+$/i.test(code) ? code : "";
+  return /^meoxinh\d+$/i.test(code) ? code : "";
+}
+
+export function noteWithReservedInvoiceCode(note: unknown, code: string) {
+  const cleaned = String(note ?? "")
+    .replace(new RegExp(`\\n?${RESERVED_INVOICE_MARKER}(?:Group-meoxinh\\d+|meoxinh\\d+)`, "gi"), "")
+    .trim();
+  return [cleaned, `${RESERVED_INVOICE_MARKER}${code}`].filter(Boolean).join("\n");
+}
+
 function packageGalleryUrls(value?: string | null) {
   if (!value) return [];
   try {
@@ -456,7 +472,7 @@ function packageGalleryUrls(value?: string | null) {
   }
 }
 
-async function nextStudioInvoiceCode(tx: Prisma.TransactionClient, studioId: string) {
+export async function nextStudioInvoiceCode(tx: Prisma.TransactionClient, studioId: string) {
   const invoices = await tx.invoice.findMany({
     where: { studioId, code: { startsWith: "meoxinh" } },
     select: { code: true },
@@ -468,7 +484,7 @@ async function nextStudioInvoiceCode(tx: Prisma.TransactionClient, studioId: str
   return `meoxinh${String(max + 1).padStart(2, "0")}`;
 }
 
-async function nextGroupInvoiceCode(tx: Prisma.TransactionClient, studioId: string) {
+export async function nextGroupInvoiceCode(tx: Prisma.TransactionClient, studioId: string) {
   const invoices = await tx.invoice.findMany({
     where: { studioId, deletedAt: null, code: { startsWith: "Group-meoxinh" } },
     select: { code: true },
@@ -544,8 +560,14 @@ export async function finalizeCompletedBookingGroup(bookings: BookingLike[], act
         note: { contains: marker },
       },
     });
+    const reservedInvoiceCode = sortedBookings.map((booking) => reservedInvoiceCodeFromNote(booking.note, "group")).find(Boolean);
+    const reservedInvoice = reservedInvoiceCode
+      ? await tx.invoice.findFirst({ where: { studioId: firstBooking.studioId, deletedAt: null, code: reservedInvoiceCode }, select: { id: true } })
+      : null;
     const invoiceCode = existingInvoice?.code && /^Group-meoxinh\d+$/i.test(existingInvoice.code)
       ? existingInvoice.code
+      : reservedInvoiceCode && (!reservedInvoice || reservedInvoice.id === existingInvoice?.id)
+        ? reservedInvoiceCode
       : await nextGroupInvoiceCode(tx, firstBooking.studioId);
     const openShift = resolvedOpenShift ?? await openShiftForWallet(tx, firstBooking.studioId, wallet?.id, occurredAt);
     const galleryImages = sortedBookings
@@ -863,8 +885,14 @@ export async function finalizeCompletedBooking(booking: BookingLike, actor?: Ses
         OR: [{ projectId: project.id }, { code: legacyCode }],
       },
     });
+    const reservedInvoiceCode = reservedInvoiceCodeFromNote(booking.note, "personal");
+    const reservedInvoice = reservedInvoiceCode
+      ? await tx.invoice.findFirst({ where: { studioId: booking.studioId, deletedAt: null, code: reservedInvoiceCode }, select: { id: true } })
+      : null;
     const invoiceCode = existingInvoice?.code && /^meoxinh\d+$/i.test(existingInvoice.code)
       ? existingInvoice.code
+      : reservedInvoiceCode && (!reservedInvoice || reservedInvoice.id === existingInvoice?.id)
+        ? reservedInvoiceCode
       : await nextStudioInvoiceCode(tx, booking.studioId);
     const snapshot = receiptSnapshot(booking, invoiceCode);
     const invoice = existingInvoice

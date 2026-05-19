@@ -1,8 +1,17 @@
 import { created, fail, ok, serverError } from "@/app/lib/api-response";
 import { writeAuditLog } from "@/app/lib/audit";
 import { canCreate, canUpdate, requireUser, verifyStudioEditPassword } from "@/app/lib/auth";
-import { bookingGroupNameFromNote, finalizeCompletedBooking, finalizeCompletedBookingGroup } from "@/app/lib/finance-workflow";
+import {
+  bookingGroupNameFromNote,
+  finalizeCompletedBooking,
+  finalizeCompletedBookingGroup,
+  nextGroupInvoiceCode,
+  nextStudioInvoiceCode,
+  noteWithReservedInvoiceCode,
+  reservedInvoiceCodeFromNote,
+} from "@/app/lib/finance-workflow";
 import { prisma } from "@/app/lib/prisma";
+import type { Prisma } from "@prisma/client";
 
 function parseDate(value: unknown) {
   const date = new Date(String(value ?? ""));
@@ -30,6 +39,26 @@ function appendBookingNote(note: unknown, discountLabel: string, bookingMode: st
   if (bookingMode === "GROUP") parts.push(`Loại booking: Booking nhóm${groupLabel ? ` - ${groupLabel}` : ""}.`);
   if (discountLabel) parts.push(discountLabel);
   return parts.length ? parts.join("\n") : null;
+}
+
+function invoiceCodeNumber(code: string, group: boolean) {
+  const match = (group ? /^Group-meoxinh(\d+)$/i : /^meoxinh(\d+)$/i).exec(code);
+  return match ? Number(match[1]) : 0;
+}
+
+async function nextReservedAwareInvoiceCode(tx: Prisma.TransactionClient, studioId: string, group: boolean) {
+  const baseCode = group ? await nextGroupInvoiceCode(tx, studioId) : await nextStudioInvoiceCode(tx, studioId);
+  const bookings = await tx.booking.findMany({
+    where: { studioId, deletedAt: null, status: { notIn: ["COMPLETED", "CANCELLED"] } },
+    select: { note: true },
+  });
+  const mode = group ? "group" : "personal";
+  const reservedMax = bookings.reduce((max, booking) => {
+    const code = reservedInvoiceCodeFromNote(booking.note, mode);
+    return Math.max(max, invoiceCodeNumber(code, group));
+  }, 0);
+  const nextNumber = Math.max(invoiceCodeNumber(baseCode, group), reservedMax + 1);
+  return `${group ? "Group-meoxinh" : "meoxinh"}${String(nextNumber).padStart(2, "0")}`;
 }
 
 function bookingSelect() {
@@ -208,6 +237,10 @@ export async function PUT(req: Request) {
     const discountInfo = resolveDiscount(body as Record<string, unknown>, selectedPackage.price);
     const bookingMode = String(body.bookingMode ?? "PERSONAL");
     const nextTotal = body.discountType === undefined ? current.total : discountInfo.total;
+    const reservedInvoiceCode = reservedInvoiceCodeFromNote(current.note, "group") || reservedInvoiceCodeFromNote(current.note, "personal");
+    const rawNextNote = body.discountType === undefined
+      ? (body.note ? String(body.note).trim() : null)
+      : appendBookingNote(body.note, discountInfo.label, bookingMode, body.groupLabel ? String(body.groupLabel) : undefined);
     const bookingData = {
       customerId: body.customerId ? String(body.customerId) : null,
       packageId: selectedPackage.id,
@@ -223,9 +256,7 @@ export async function PUT(req: Request) {
       endAt: finishTime,
       total: nextTotal,
       status,
-      note: body.discountType === undefined
-        ? (body.note ? String(body.note).trim() : null)
-        : appendBookingNote(body.note, discountInfo.label, bookingMode, body.groupLabel ? String(body.groupLabel) : undefined),
+      note: reservedInvoiceCode ? noteWithReservedInvoiceCode(rawNextNote, reservedInvoiceCode) : rawNextNote,
     };
 
     let row: NonNullable<Awaited<ReturnType<typeof prisma.booking.findFirst>>>;
@@ -274,6 +305,62 @@ export async function PUT(req: Request) {
 
     await writeAuditLog(user, "UPDATE", "Booking", row.id, { customerName: row.customerName, name: row.packageName });
     return ok({ ...row, ...(invoiceSnapshot ?? {}) });
+  } catch (error) {
+    if ((error as Error).message === "UNAUTHORIZED") return fail("Chưa đăng nhập.", 401);
+    return serverError(error);
+  }
+}
+
+export async function PATCH(req: Request) {
+  try {
+    const user = await requireUser();
+    if (!canUpdate(user.role)) return fail("Bạn không có quyền sửa booking.", 403);
+
+    const body = await req.json();
+    if (body.action !== "reserveInvoiceCode") return fail("Hành động không hợp lệ.", 422);
+    if (!body.id) return fail("Thiếu mã booking.", 422);
+
+    const booking = await prisma.booking.findFirst({
+      where: { id: String(body.id), studioId: user.studioId, deletedAt: null },
+      include: bookingSelect(),
+    });
+    if (!booking) return fail("Không tìm thấy booking.", 404);
+
+    const groupName = bookingGroupNameFromNote(booking.note);
+    const invoiceCode = await prisma.$transaction(async (tx) => {
+      if (groupName) {
+        const groupRows = await tx.booking.findMany({
+          where: {
+            studioId: user.studioId,
+            deletedAt: null,
+            status: { not: "CANCELLED" },
+          },
+          select: { id: true, note: true },
+        });
+        const sameGroupRows = groupRows.filter((row) => bookingGroupNameFromNote(row.note) === groupName);
+        const reservedCode = sameGroupRows.map((row) => reservedInvoiceCodeFromNote(row.note, "group")).find(Boolean);
+        const code = reservedCode || await nextReservedAwareInvoiceCode(tx, user.studioId, true);
+        await Promise.all(
+          sameGroupRows.map((row) =>
+            tx.booking.update({
+              where: { id: row.id },
+              data: { note: noteWithReservedInvoiceCode(row.note, code) },
+            }),
+          ),
+        );
+        return code;
+      }
+
+      const reservedCode = reservedInvoiceCodeFromNote(booking.note, "personal");
+      const code = reservedCode || await nextReservedAwareInvoiceCode(tx, user.studioId, false);
+      await tx.booking.update({
+        where: { id: booking.id },
+        data: { note: noteWithReservedInvoiceCode(booking.note, code) },
+      });
+      return code;
+    });
+
+    return ok({ invoiceCode, groupName });
   } catch (error) {
     if ((error as Error).message === "UNAUTHORIZED") return fail("Chưa đăng nhập.", 401);
     return serverError(error);

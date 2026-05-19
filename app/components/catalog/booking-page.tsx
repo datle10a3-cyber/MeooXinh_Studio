@@ -663,6 +663,35 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     }
   }
 
+  async function reserveEstimateInvoiceCode(row: BookingItem) {
+    const result = await fetch("/api/bookings", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id: row.id, action: "reserveInvoiceCode" }),
+    }).then((res) => res.json() as Promise<ApiResult<{ invoiceCode: string; groupName?: string | null }>>);
+
+    if (result.error) {
+      setMessage(result.error.message);
+      return "";
+    }
+    const invoiceCode = result.data?.invoiceCode ?? "";
+    if (!invoiceCode) return "";
+
+    const groupName = result.data?.groupName || bookingGroupName(row.note);
+    setRows((current) =>
+      current.map((item) => {
+        const sameGroup = groupName && bookingGroupName(item.note) === groupName;
+        return item.id === row.id || sameGroup ? { ...item, invoiceCode } : item;
+      }),
+    );
+    setPaymentTarget((current) => {
+      if (!current) return current;
+      const sameGroup = groupName && bookingGroupName(current.note) === groupName;
+      return current.id === row.id || sameGroup ? { ...current, invoiceCode } : current;
+    });
+    return invoiceCode;
+  }
+
   function edit(row: BookingItem) {
     let studioPassword = "";
     if (role === "STAFF") {
@@ -1413,13 +1442,20 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         groupName={paymentGroup?.title ?? bookingGroupName(paymentTarget?.note)}
         onCancel={() => setPaymentTarget(null)}
         onPay={() => paymentTarget ? void changeStatus(paymentTarget, "COMPLETED") : undefined}
-        onPrintEstimate={() => {
+        onPrintEstimate={async () => {
           if (!paymentTarget) return;
+          setProcessingStatus(true);
+          const invoiceCode = await reserveEstimateInvoiceCode(paymentTarget);
+          setProcessingStatus(false);
+          if (!invoiceCode) return;
           if (paymentGroupRows.length > 1) {
-            printGroupEstimateInvoice(paymentGroup?.title ?? bookingGroupName(paymentTarget.note) ?? "Booking nhóm", paymentGroupRows);
+            printGroupEstimateInvoice(
+              paymentGroup?.title ?? bookingGroupName(paymentTarget.note) ?? "Booking nhóm",
+              paymentGroupRows.map((row) => ({ ...row, invoiceCode })),
+            );
             return;
           }
-          printPersonalEstimateInvoice(paymentTarget);
+          printPersonalEstimateInvoice({ ...paymentTarget, invoiceCode });
         }}
         onPayAndPrint={() => {
           if (!paymentTarget) return;
@@ -1632,7 +1668,7 @@ function PaymentConfirmModal({
   groupName?: string | null;
   onCancel: () => void;
   onPay: () => void;
-  onPrintEstimate?: () => void;
+  onPrintEstimate?: () => void | Promise<void>;
   onPayAndPrint: () => void;
   loading?: boolean;
 }) {
