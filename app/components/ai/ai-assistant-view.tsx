@@ -58,7 +58,6 @@ export function AiAssistantView() {
     "Ca nào đang mở?",
     "Hóa đơn nào còn nợ?",
     "Thiết bị nào cần chú ý?",
-    "Nhớ là hãy trả lời dễ thương nhưng gọn gàng",
     "Khách nào sắp tới lịch chụp?",
     "Booking nào chưa có ảnh?",
     "Booking nào chưa hoàn tất?",
