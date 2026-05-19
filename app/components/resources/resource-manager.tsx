@@ -329,6 +329,19 @@ function evidenceImageLabel(row: Row, resource: ResourceKey, imageIndex: number,
   return imageBadgeLabel(resource, imageIndex);
 }
 
+function detailImageGroups(row: Row, resource: ResourceKey, imageField?: string) {
+  const images = rowImages(row, imageField);
+  const order = ["Khách hàng", "Gói chụp", "Chứng từ", "Ảnh chính", "Ảnh phụ"];
+  const groups = new Map<string, Array<{ src: string; index: number }>>();
+  images.forEach((src, index) => {
+    const label = evidenceImageLabel(row, resource, index, imageField);
+    groups.set(label, [...(groups.get(label) ?? []), { src, index }]);
+  });
+  return [...groups.entries()]
+    .sort(([a], [b]) => order.indexOf(a) - order.indexOf(b))
+    .map(([label, items]) => ({ label, items }));
+}
+
 function canPrintInvoice(row: Row) {
   const note = String(row.note ?? "");
   if (groupBookingSnapshotFromRow(row)) return true;
@@ -2342,6 +2355,7 @@ function ResourceDetailModal({
         ? renderValue(config, config.secondaryField, row[config.secondaryField])
         : config.label;
   const images = rowImages(row, config.imageField);
+  const imageGroups = detailImageGroups(row, resource, config.imageField);
   const fields = detailFields(config, resource);
   const displayDetailValue = (field: string) => {
     if (["note", "message"].includes(field)) return cleanSystemNote(row);
@@ -2387,19 +2401,26 @@ function ResourceDetailModal({
             <p className="text-xs font-black uppercase tracking-[0.14em] text-[#A84E61]">Bộ ảnh</p>
             <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#EA7188]">{images.length} ảnh</span>
           </div>
-          <div className="mt-3 grid grid-cols-3 gap-2 sm:grid-cols-5">
-            {images.map((src, index) => (
-              <button
-                key={`${String(row.id ?? "detail")}-${index}-${src}`}
-                type="button"
-                onClick={() => onOpenGallery(row, index)}
-                className="relative aspect-square overflow-hidden rounded-2xl border border-[#F4C7C4] bg-white p-1 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
-              >
-                <img src={src} alt="" className="h-full w-full object-contain" />
-                <span className="absolute bottom-1 left-1 right-1 rounded-full bg-white/95 px-1.5 py-0.5 text-[10px] font-black text-[#A84E61] shadow-sm">
-                  {evidenceImageLabel(row, resource, index, config.imageField)}
-                </span>
-              </button>
+          <div className="mt-3 grid gap-3">
+            {imageGroups.map((group) => (
+              <section key={group.label} className="rounded-[1.25rem] border border-[#F6D2CF] bg-white/70 p-2">
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <p className="text-[11px] font-black uppercase tracking-wide text-[#A84E61]">{group.label}</p>
+                  <span className="rounded-full bg-[#FFF3EC] px-2 py-0.5 text-[10px] font-black text-[#EA7188]">{group.items.length} ảnh</span>
+                </div>
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+                  {group.items.map((item) => (
+                    <button
+                      key={`${String(row.id ?? "detail")}-${item.index}-${item.src}`}
+                      type="button"
+                      onClick={() => onOpenGallery(row, item.index)}
+                      className="relative aspect-square overflow-hidden rounded-2xl border border-[#F4C7C4] bg-white p-1 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md"
+                    >
+                      <img src={item.src} alt="" className="h-full w-full object-contain" />
+                    </button>
+                  ))}
+                </div>
+              </section>
             ))}
           </div>
         </div>
