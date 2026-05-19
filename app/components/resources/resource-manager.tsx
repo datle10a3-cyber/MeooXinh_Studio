@@ -459,6 +459,44 @@ function cleanSystemNote(row: Row) {
   return withoutReceipt || (String(row.title ?? "").includes("Hoàn tất booking") ? "Tự động cộng doanh thu khi booking hoàn tất." : note);
 }
 
+function stripSystemNote(value: unknown) {
+  const note = String(value ?? "").trim();
+  if (!note) return "";
+  return note
+    .replace(/^GROUP_BOOKING:.+$/gm, "")
+    .replace(/GROUP_BOOKING_DONE:[^\n|]+/g, "")
+    .replace(/BOOKING_DONE:[^\s|]+/g, "")
+    .replace(/RECEIPT:\{.*?\}(?=\s*\||\n|$)/g, "")
+    .replace(/Hóa đơn:\s*[^\s|]+/gi, "")
+    .replace(/Tự động cộng doanh thu khi booking hoàn tất\.?/gi, "")
+    .replace(/Tự động cộng doanh thu khi booking nhóm hoàn tất\.?/gi, "")
+    .replace(/\s*\|\s*/g, "\n")
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .join("\n")
+    .trim();
+}
+
+function extractSystemNote(value: unknown) {
+  const note = String(value ?? "").trim();
+  if (!note) return "";
+  const parts = [
+    ...note.match(/^GROUP_BOOKING:.+$/gm) ?? [],
+    ...note.match(/GROUP_BOOKING_DONE:[^\n|]+/g) ?? [],
+    ...note.match(/BOOKING_DONE:[^\s|]+/g) ?? [],
+    ...note.match(/RECEIPT:\{.*?\}(?=\s*\||\n|$)/g) ?? [],
+    ...note.match(/Hóa đơn:\s*[^\s|]+/gi) ?? [],
+  ];
+  return [...new Set(parts.map((part) => part.trim()).filter(Boolean))].join(" | ");
+}
+
+function mergeSystemNote(userNote: unknown, systemNote: string) {
+  const cleanUserNote = String(userNote ?? "").trim();
+  if (!systemNote) return cleanUserNote || null;
+  return [systemNote, cleanUserNote].filter(Boolean).join(" | ");
+}
+
 function printResourceInvoice(row: Row) {
   const printable = printableInvoiceData(row);
   const code = printable.code;
@@ -1336,6 +1374,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const [longPressTimer, setLongPressTimer] = useState<number | null>(null);
   const [longPressActivated, setLongPressActivated] = useState(false);
   const [editStudioPassword, setEditStudioPassword] = useState("");
+  const [editingSystemNote, setEditingSystemNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -1464,6 +1503,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       setHasMoreRows(false);
       setForm(hasTransactionIntent ? { ...emptyForm(config.fields), type: nextType, walletId: "" } : emptyForm(config.fields));
       setEditingId(null);
+      setEditingSystemNote("");
       setShowForm(Boolean(hasTransactionIntent));
       setSelectedIds([]);
       setBulkDeleteMode(null);
@@ -1485,6 +1525,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       setTransactionView(transactionViewIntent);
       setShowForm(false);
       setEditingId(null);
+      setEditingSystemNote("");
       setSelectedIds([]);
       setBulkDeleteMode(null);
       setTransactionViewIntent(null);
@@ -1518,6 +1559,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     setSubmitting(true);
     try {
       const payload: Row = { ...form, ...(editingId ? { id: editingId } : {}) };
+      if (editingId && "note" in payload) payload.note = mergeSystemNote(payload.note, editingSystemNote);
       if (editingId && session?.user.role === "STAFF") payload.studioPassword = editStudioPassword;
       if (resource === "transactions" && !payload.walletId) {
         setMessage("Vui lòng chọn ví để biết tiền đi vào hoặc đi ra từ đâu.");
@@ -1539,6 +1581,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       setForm(emptyForm(config.fields));
       setEditingId(null);
       setEditStudioPassword("");
+      setEditingSystemNote("");
       setShowForm(false);
       void loadRows();
     } finally {
@@ -1605,10 +1648,11 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       }
     }
     const next = emptyForm(config.fields);
-    for (const field of config.fields) next[field.key] = row[field.key] ?? "";
+    for (const field of config.fields) next[field.key] = field.key === "note" ? stripSystemNote(row[field.key]) : row[field.key] ?? "";
     setForm(next);
     setEditingId(String(row.id));
     setEditStudioPassword(studioPassword);
+    setEditingSystemNote(extractSystemNote(row.note));
     setShowForm(true);
   }
 
@@ -1621,6 +1665,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     setBulkDeleteMode(null);
     setEditingId(null);
     setShowForm(false);
+    setEditingSystemNote("");
     setForm({ ...emptyForm(config.fields), type, walletId: firstWalletId });
     navigateStudioView(router, pathname, "transactions", { tab: view });
   }
@@ -1633,6 +1678,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     }
     setEditingId(null);
     setEditStudioPassword("");
+    setEditingSystemNote("");
     setForm(next);
     setShowForm(true);
   }
@@ -1792,6 +1838,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
             setTransactionView(null);
             setShowForm(false);
             setEditingId(null);
+            setEditingSystemNote("");
             setSelectedIds([]);
             navigateStudioView(router, pathname, "transactions");
           }}
@@ -2019,7 +2066,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
         if (!canMutate(session) || !showForm) return null;
         const formElement = (
           <div ref={formRef} className="order-1 scroll-mt-20 xl:order-2">
-            <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm(config.fields)); setShowForm(false); }} />
+            <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setEditingSystemNote(""); setForm(emptyForm(config.fields)); setShowForm(false); }} />
             <Card className="studio-mobile-form-sheet rounded-[1.5rem] border-[#F4C7C4] bg-white shadow-[0_18px_50px_rgba(184,95,108,0.1)] sm:sticky sm:top-[5.5rem] sm:rounded-[2rem]">
               <div className="mb-4 flex items-center justify-between gap-3">
                 <CardTitle>{title}</CardTitle>
@@ -2030,13 +2077,14 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
                       size="sm"
                       onClick={() => {
                         setEditingId(null);
+                        setEditingSystemNote("");
                         setForm(emptyForm(config.fields));
                       }}
                     >
                       Hủy sửa
                     </Button>
                   ) : null}
-                  <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm(config.fields)); setShowForm(false); }}>
+                  <Button variant="secondary" size="icon" aria-label="Đóng form" onClick={() => { setEditingId(null); setEditingSystemNote(""); setForm(emptyForm(config.fields)); setShowForm(false); }}>
                     <X size={16} />
                   </Button>
                 </div>
