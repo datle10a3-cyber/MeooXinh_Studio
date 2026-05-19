@@ -212,12 +212,17 @@ export function PackagePage() {
   }
 
   async function remove(row: PackageItem, mode: "trash" | "hard") {
+    const studioPassword = role === "MANAGER" ? window.prompt("Nhập mật khẩu xóa ca 6 số để xóa gói.")?.trim() ?? "" : "";
+    if (role === "MANAGER" && !/^\d{6}$/.test(studioPassword)) {
+      setMessage("Mật khẩu xóa ca phải gồm 6 số.");
+      return;
+    }
     setDeleting(true);
     try {
       const result = await fetch("/api/packages", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: row.id, mode }),
+        body: JSON.stringify({ id: row.id, mode, ...(studioPassword ? { studioPassword } : {}) }),
       }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
 
       if (result.error) return setMessage(result.error.message);
@@ -233,6 +238,11 @@ export function PackagePage() {
   }
 
   async function removeMany(mode: "trash" | "hard") {
+    const studioPassword = role === "MANAGER" ? window.prompt("Nhập mật khẩu xóa ca 6 số để xóa gói.")?.trim() ?? "" : "";
+    if (role === "MANAGER" && !/^\d{6}$/.test(studioPassword)) {
+      setMessage("Mật khẩu xóa ca phải gồm 6 số.");
+      return;
+    }
     setDeleting(true);
     try {
       const source = bulkDeleteMode === "all" ? filteredRows : filteredRows.filter((row) => selectedIds.includes(row.id));
@@ -240,7 +250,7 @@ export function PackagePage() {
         const result = await fetch("/api/packages", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: row.id, mode }),
+          body: JSON.stringify({ id: row.id, mode, ...(studioPassword ? { studioPassword } : {}) }),
         }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
         if (result.error) {
           setMessage(result.error.message);
@@ -364,7 +374,7 @@ export function PackagePage() {
 
       <div className={showForm ? "grid items-start gap-4 xl:grid-cols-[1fr_420px]" : "grid gap-4"}>
         <div className="space-y-3">
-          {filteredRows.length && role === "ADMIN" ? (
+          {filteredRows.length && (role === "ADMIN" || role === "MANAGER") ? (
             <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <label className="flex items-center gap-2 text-sm font-black text-[#5B342C]">
                 <input
@@ -451,7 +461,7 @@ export function PackagePage() {
           row={detail}
           onClose={() => setDetail(null)}
           onEdit={() => edit(detail)}
-          onRemove={role === "ADMIN" ? () => setDeleteTarget(detail) : undefined}
+          onRemove={role === "ADMIN" || role === "MANAGER" ? () => setDeleteTarget(detail) : undefined}
           onOpenGallery={openGallery}
         />
       ) : null}

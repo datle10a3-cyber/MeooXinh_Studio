@@ -562,12 +562,17 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }
 
   async function remove(row: BookingItem, mode: "trash" | "hard") {
+    const studioPassword = role === "MANAGER" ? window.prompt("Nhập mật khẩu xóa ca 6 số để xóa booking.")?.trim() ?? "" : "";
+    if (role === "MANAGER" && !/^\d{6}$/.test(studioPassword)) {
+      setMessage("Mật khẩu xóa ca phải gồm 6 số.");
+      return;
+    }
     setDeleting(true);
     try {
       const result = await fetch("/api/bookings", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: row.id, mode }),
+        body: JSON.stringify({ id: row.id, mode, ...(studioPassword ? { studioPassword } : {}) }),
       }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
 
       if (result.error) return setMessage(result.error.message);
@@ -583,6 +588,11 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }
 
   async function removeMany(mode: "trash" | "hard") {
+    const studioPassword = role === "MANAGER" ? window.prompt("Nhập mật khẩu xóa ca 6 số để xóa booking.")?.trim() ?? "" : "";
+    if (role === "MANAGER" && !/^\d{6}$/.test(studioPassword)) {
+      setMessage("Mật khẩu xóa ca phải gồm 6 số.");
+      return;
+    }
     setDeleting(true);
     try {
       const selectedGroupRows = displayGroups.filter((group) => selectedGroupKeys.includes(group.key)).flatMap((group) => group.rows);
@@ -592,7 +602,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         const result = await fetch("/api/bookings", {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: row.id, mode }),
+          body: JSON.stringify({ id: row.id, mode, ...(studioPassword ? { studioPassword } : {}) }),
         }).then((res) => res.json() as Promise<ApiResult<{ id: string }>>);
         if (result.error) {
           setMessage(result.error.message);
@@ -1080,7 +1090,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
 
       <div className={completedOnly || !showForm ? "grid gap-5" : "grid gap-5 xl:grid-cols-[1fr_420px]"}>
         <div className="space-y-3">
-          {filteredRows.length && role === "ADMIN" ? (
+          {filteredRows.length && (role === "ADMIN" || role === "MANAGER") ? (
             <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <label className="flex items-center gap-2 text-sm font-black text-[#5B342C]">
                 <input
@@ -1419,7 +1429,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         <BookingDetailModal
           booking={detail}
           completedOnly={completedOnly}
-          canDelete={role === "ADMIN"}
+          canDelete={role === "ADMIN" || role === "MANAGER"}
           onClose={() => setDetail(null)}
           onEdit={edit}
           onRemove={(booking) => setDeleteTarget(booking)}

@@ -307,6 +307,19 @@ export async function verifyStudioEditPassword(user: SessionUser, password: unkn
   return verifyDefaultShiftPassword(value);
 }
 
+export async function verifyStudioDeletePassword(user: SessionUser, password: unknown) {
+  if (user.role === "ADMIN") return true;
+  if (user.role !== "MANAGER") return false;
+  const value = String(password ?? "").trim();
+  if (!/^\d{6}$/.test(value)) return false;
+  const studio = await prisma.studio.findUnique({
+    where: { id: user.studioId },
+    select: { shiftPasswordHash: true },
+  });
+  if (studio?.shiftPasswordHash) return verifyPassword(value, studio.shiftPasswordHash);
+  return verifyDefaultShiftPassword(value);
+}
+
 export async function persistRefreshToken(userId: string, refreshToken: string, device?: ReturnType<typeof sessionDeviceFromRequest>) {
   const deviceKey = await currentDeviceKey();
   await prisma.refreshToken.updateMany({

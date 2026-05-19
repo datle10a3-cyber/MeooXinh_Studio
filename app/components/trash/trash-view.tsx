@@ -10,6 +10,7 @@ import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 import { RESOURCE_CONFIG, type ResourceKey } from "@/app/lib/studio-config";
 import { formatDate, formatMoney } from "@/app/utils/format";
+import { useUiStore } from "@/app/store/ui-store";
 
 const resources = Object.keys(RESOURCE_CONFIG) as ResourceKey[];
 const specialResources = [
@@ -68,6 +69,7 @@ function detailRows(item: TrashItem) {
 }
 
 export function TrashView() {
+  const session = useUiStore((state) => state.session);
   const [items, setItems] = useState<TrashItem[]>([]);
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
   const [deleteMode, setDeleteMode] = useState<"one" | "selected" | "all" | null>(null);
@@ -121,16 +123,18 @@ export function TrashView() {
     void loadTrash();
   }
 
-  async function hardDelete(item: TrashItem) {
+  async function hardDelete(item: TrashItem, studioPassword?: string) {
     const endpoint = item.resource === "categories" ? "/api/categories" : item.resource === "packages" ? "/api/packages" : `/api/resources/${item.resource}`;
     await fetch(endpoint, {
       method: "DELETE",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ id: item.id, mode: "hard" }),
+      body: JSON.stringify({ id: item.id, mode: "hard", ...(studioPassword ? { studioPassword } : {}) }),
     });
   }
 
   async function confirmDelete() {
+    const studioPassword = session?.user.role === "MANAGER" ? window.prompt("Nhập mật khẩu xóa ca 6 số để xóa vĩnh viễn.")?.trim() ?? "" : "";
+    if (session?.user.role === "MANAGER" && !/^\d{6}$/.test(studioPassword)) return;
     const expandedSelected = displayGroups.flatMap((group) => {
       if (selectedKeys.includes(group.key)) return group.items;
       return group.items.filter((item) => selectedKeys.includes(itemKey(item)));
@@ -142,7 +146,7 @@ export function TrashView() {
           ? items
           : expandedSelected;
 
-    for (const item of source) await hardDelete(item);
+    for (const item of source) await hardDelete(item, studioPassword);
     setDeleteMode(null);
     setDeleteTarget(null);
     setDetailItem(null);

@@ -33,5 +33,5 @@ export function canCreate(session: CurrentSession | null) {
 }
 
 export function canDelete(session: CurrentSession | null) {
-  return session?.user.role === "ADMIN";
+  return session?.user.role === "ADMIN" || session?.user.role === "MANAGER";
 }

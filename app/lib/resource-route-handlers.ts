@@ -1,5 +1,5 @@
 import { fail, ok, created, serverError } from "@/app/lib/api-response";
-import { canCreate, canUpdate, requireUser, verifyStudioEditPassword } from "@/app/lib/auth";
+import { canCreate, canUpdate, requireUser, verifyStudioDeletePassword, verifyStudioEditPassword } from "@/app/lib/auth";
 import { writeAuditLog } from "@/app/lib/audit";
 import { applyTransactionWalletDelta, recalculateInvoiceDebt, replaceTransactionWalletDelta, syncLinkedFinanceFromTransaction } from "@/app/lib/finance-workflow";
 import { cacheInvalidate } from "@/app/lib/api-cache";
@@ -306,13 +306,14 @@ export async function updateResource(req: Request, resourceName: string) {
 export async function deleteResource(req: Request, resourceName: string) {
   try {
     const user = await requireUser();
-    if (user.role !== "ADMIN") return fail("Chỉ quản trị viên được xóa dữ liệu.", 403);
+    if (user.role !== "ADMIN" && user.role !== "MANAGER") return fail("Chỉ quản trị viên hoặc quản lý được xóa dữ liệu.", 403);
 
     const resource = resolveResource(resourceName);
     if (!resource) return fail("Không tìm thấy tài nguyên.", 404);
 
-    const { id, mode } = await req.json();
+    const { id, mode, studioPassword } = await req.json();
     if (!id) return fail("Thiếu mã bản ghi.", 422);
+    if (!await verifyStudioDeletePassword(user, studioPassword)) return fail("Mật khẩu xóa ca không đúng.", 403);
 
     const current = await resource.delegate.findFirst({
       where: { id, studioId: user.studioId },

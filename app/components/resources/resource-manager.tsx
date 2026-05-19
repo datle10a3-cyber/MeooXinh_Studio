@@ -1619,12 +1619,17 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   }
 
   async function remove(row: Row, mode: "trash" | "hard") {
+    const studioPassword = session?.user.role === "MANAGER" ? window.prompt("Nhập mật khẩu xóa ca 6 số để xóa dữ liệu.")?.trim() ?? "" : "";
+    if (session?.user.role === "MANAGER" && !/^\d{6}$/.test(studioPassword)) {
+      setMessage("Mật khẩu xóa ca phải gồm 6 số.");
+      return;
+    }
     setSubmitting(true);
     try {
       const res = await fetch(endpoint, {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: row.id, mode }),
+        body: JSON.stringify({ id: row.id, mode, ...(studioPassword ? { studioPassword } : {}) }),
       });
       const result = await res.json();
       if (result.error) {
@@ -1642,13 +1647,18 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   }
 
   async function removeMany(rowsToDelete: Row[], mode: "trash" | "hard") {
+    const studioPassword = session?.user.role === "MANAGER" ? window.prompt("Nhập mật khẩu xóa ca 6 số để xóa dữ liệu.")?.trim() ?? "" : "";
+    if (session?.user.role === "MANAGER" && !/^\d{6}$/.test(studioPassword)) {
+      setMessage("Mật khẩu xóa ca phải gồm 6 số.");
+      return;
+    }
     setSubmitting(true);
     try {
       for (const row of rowsToDelete) {
         const res = await fetch(endpoint, {
           method: "DELETE",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ id: row.id, mode }),
+          body: JSON.stringify({ id: row.id, mode, ...(studioPassword ? { studioPassword } : {}) }),
         });
         const result = await res.json();
         if (result.error) {

@@ -1,6 +1,6 @@
 import { created, fail, ok, serverError } from "@/app/lib/api-response";
 import { writeAuditLog } from "@/app/lib/audit";
-import { canCreate, canUpdate, requireUser, verifyStudioEditPassword } from "@/app/lib/auth";
+import { canCreate, canUpdate, requireUser, verifyStudioDeletePassword, verifyStudioEditPassword } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
 
 function normalizePrice(value: unknown) {
@@ -131,10 +131,11 @@ export async function PUT(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const user = await requireUser();
-    if (user.role !== "ADMIN") return fail("Chỉ quản trị viên được xóa gói.", 403);
+    if (user.role !== "ADMIN" && user.role !== "MANAGER") return fail("Chỉ quản trị viên hoặc quản lý được xóa gói.", 403);
 
-    const { id, mode } = await req.json();
+    const { id, mode, studioPassword } = await req.json();
     if (!id) return fail("Thiếu mã gói.", 422);
+    if (!await verifyStudioDeletePassword(user, studioPassword)) return fail("Mật khẩu xóa ca không đúng.", 403);
 
     if (mode === "hard") {
       const used = await prisma.booking.count({ where: { packageId: id, studioId: user.studioId } });

@@ -1,6 +1,6 @@
 import { created, fail, ok, serverError } from "@/app/lib/api-response";
 import { writeAuditLog } from "@/app/lib/audit";
-import { canCreate, canUpdate, requireUser, verifyStudioEditPassword } from "@/app/lib/auth";
+import { canCreate, canUpdate, requireUser, verifyStudioDeletePassword, verifyStudioEditPassword } from "@/app/lib/auth";
 import { prisma } from "@/app/lib/prisma";
 
 export async function GET(req: Request) {
@@ -81,9 +81,10 @@ export async function PUT(req: Request) {
 export async function DELETE(req: Request) {
   try {
     const user = await requireUser();
-    if (user.role !== "ADMIN") return fail("Chỉ quản trị viên được xóa danh mục.", 403);
-    const { id, mode } = await req.json();
+    if (user.role !== "ADMIN" && user.role !== "MANAGER") return fail("Chỉ quản trị viên hoặc quản lý được xóa danh mục.", 403);
+    const { id, mode, studioPassword } = await req.json();
     if (!id) return fail("Thiếu mã danh mục.", 422);
+    if (!await verifyStudioDeletePassword(user, studioPassword)) return fail("Mật khẩu xóa ca không đúng.", 403);
 
     if (mode === "hard") {
       const used = await prisma.package.count({ where: { categoryId: id, studioId: user.studioId } });
