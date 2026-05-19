@@ -446,6 +446,7 @@ function cleanSystemNote(row: Row) {
   }
   const invoiceCode = printableInvoiceData(row).code;
   const withoutReceipt = note
+    .replace(/INVOICE_RESERVED:(?:Group-meoxinh\d+|meoxinh\d+)/gi, "")
     .replace(/^GROUP_BOOKING:.+$/gm, "")
     .replace(/GROUP_BOOKING_DONE:[^\n|]+/g, "")
     .replace(/BOOKING_DONE:[^\s|]+/g, "")
@@ -463,6 +464,7 @@ function stripSystemNote(value: unknown) {
   const note = String(value ?? "").trim();
   if (!note) return "";
   return note
+    .replace(/INVOICE_RESERVED:(?:Group-meoxinh\d+|meoxinh\d+)/gi, "")
     .replace(/^GROUP_BOOKING:.+$/gm, "")
     .replace(/GROUP_BOOKING_DONE:[^\n|]+/g, "")
     .replace(/BOOKING_DONE:[^\s|]+/g, "")
@@ -494,6 +496,7 @@ function extractSystemNote(value: unknown) {
   if (!note) return "";
   const parts = [
     ...note.match(/^GROUP_BOOKING:.+$/gm) ?? [],
+    ...note.match(/INVOICE_RESERVED:(?:Group-meoxinh\d+|meoxinh\d+)/gi) ?? [],
     ...note.match(/GROUP_BOOKING_DONE:[^\n|]+/g) ?? [],
     ...note.match(/BOOKING_DONE:[^\s|]+/g) ?? [],
     ...note.match(/RECEIPT:\{.*?\}(?=\s*\||\n|$)/g) ?? [],
@@ -2310,6 +2313,7 @@ function ResourceDetailModal({
   const images = rowImages(row, config.imageField);
   const fields = detailFields(config, resource);
   const displayDetailValue = (field: string) => {
+    if (["note", "message"].includes(field)) return cleanSystemNote(row);
     if (resource === "transactions" && field === "walletId") {
       const wallet = walletById?.get(String(row.walletId ?? ""));
       const walletName = String(wallet?.name ?? "").trim();
@@ -2584,7 +2588,7 @@ function ResourceListWithProgressive({
                             return (
                               <div key={field} className={cn("min-w-0 rounded-xl border border-[#F8D8D4] bg-white/78 px-2 py-1.5 shadow-sm sm:rounded-2xl sm:px-3 sm:py-2", richInfoCard && noteLike ? "col-span-2 xl:col-span-2" : "")}>
                                 <p className="text-[11px] font-black uppercase tracking-wide text-[#C87888]">{fieldLabel(config, field)}</p>
-                                <p className={cn("mt-0.5 whitespace-normal break-words text-xs font-bold leading-5 text-[#5B342C] sm:mt-1 sm:text-sm", richInfoCard && noteLike ? "max-h-16 overflow-hidden" : "")}>{renderValue(config, field, row[field])}</p>
+                                <p className={cn("mt-0.5 whitespace-normal break-words text-xs font-bold leading-5 text-[#5B342C] sm:mt-1 sm:text-sm", richInfoCard && noteLike ? "max-h-16 overflow-hidden" : "")}>{noteLike ? cleanSystemNote(row) : renderValue(config, field, row[field])}</p>
                               </div>
                             );
                           })}

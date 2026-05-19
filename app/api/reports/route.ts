@@ -141,8 +141,14 @@ function maybeRepairMojibake(text: string) {
 
 function cleanReportNote(value: unknown) {
   return maybeRepairMojibake(String(value ?? ""))
+    .replace(/INVOICE_RESERVED:(?:Group-meoxinh\d+|meoxinh\d+)/gi, "")
+    .replace(/^GROUP_BOOKING:.+$/gm, "")
+    .replace(/GROUP_BOOKING_DONE:[^\n|]+/g, "")
     .replace(/BOOKING_DONE:[^\s|]+/g, "")
     .replace(/RECEIPT:\{.*?\}(?=\s*\||\n|$)/g, "")
+    .replace(/Loại booking:\s*Booking nhóm(?:\s*-\s*[^\n.]+)?\.?/gi, "")
+    .replace(/Tự động cộng doanh thu khi booking nhóm hoàn tất\.?/gi, "")
+    .replace(/Tự động cộng doanh thu khi booking hoàn tất\.?/gi, "")
     .replace(/\|\s*Hóa đơn:\s*([^\s|]+)/gi, "Hóa đơn: $1")
     .replace(/\|\s*Tự động cộng doanh thu khi booking hoàn tất\.?/gi, "Tự động cộng doanh thu khi booking hoàn tất.")
     .replace(/\s*\|\s*/g, " - ")

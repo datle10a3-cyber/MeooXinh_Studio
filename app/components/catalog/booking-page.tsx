@@ -138,6 +138,7 @@ function renameBookingGroupNote(note: string | null | undefined, nextName: strin
 
 function cleanBookingNote(note?: string | null) {
   return String(note ?? "")
+    .replace(/INVOICE_RESERVED:(?:Group-meoxinh\d+|meoxinh\d+)/gi, "")
     .replace(/^GROUP_BOOKING:.+$/gm, "")
     .replace(/GROUP_BOOKING_DONE:[^\n|]+/g, "")
     .replace(/BOOKING_DONE:[^\n|]+/g, "")
@@ -1559,7 +1560,7 @@ function BookingDetailModal({
 
       <div className="mt-3 rounded-[1.25rem] bg-[#FFF3EC] p-4">
         <p className="text-xs font-black uppercase tracking-[0.12em] text-[#9B746B]">Ghi chú</p>
-        <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-[#5B342C]">{booking.note || "Không có ghi chú."}</p>
+        <p className="mt-2 whitespace-pre-wrap text-sm font-semibold leading-6 text-[#5B342C]">{cleanBookingNote(booking.note) || "Không có ghi chú."}</p>
       </div>
     </DetailModal>
   );
