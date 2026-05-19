@@ -138,7 +138,7 @@ export function buildStudioReceiptHtml(data: StudioReceiptData) {
       </div>
     </div>
     <div class="title">${receiptEscape(data.title)}</div>
-    ${data.code ? `<div class="info row"><span class="label">Mã HĐ</span><span class="left">: ${receiptEscape(data.code)}</span></div>` : ""}
+    ${data.code ? `<div class="info row"><span class="label">Mã hóa đơn</span><span class="left">: ${receiptEscape(data.code)}</span></div>` : ""}
     <div class="info row"><span class="label">Khách</span><span class="left">: ${receiptEscape(data.customer)}</span></div>
     <div class="info row"><span class="label">Giờ</span><span class="left">: ${receiptEscape(data.time)}</span></div>
     <div class="sep"></div>
