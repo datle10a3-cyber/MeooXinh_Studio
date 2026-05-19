@@ -1769,9 +1769,9 @@ function personalReceiptLines(booking: BookingItem): StudioReceiptLine[] {
 
 function printPersonalEstimateInvoice(booking: BookingItem) {
   const total = moneyNumber(booking.total ?? booking.price);
-  const code = `TT-${booking.id.slice(-6).toUpperCase()}`;
+  const code = booking.invoiceCode || "meoxinh--";
   openReceiptPrintWindow(buildStudioReceiptHtml({
-    title: "BILL TẠM TÍNH",
+    title: "HÓA ĐƠN THANH TOÁN",
     code,
     customer: booking.customerName || "Khách hàng",
     time: formatReceiptDateTime(new Date()),
@@ -1779,20 +1779,20 @@ function printPersonalEstimateInvoice(booking: BookingItem) {
     packageSubtitle: booking.categoryName || booking.package?.category?.name || "STUDIO",
     lines: personalReceiptLines(booking),
     total,
-    totalLabel: "TỔNG TẠM TÍNH",
-    statusText: "TẠM TÍNH",
+    statusText: "ĐÃ THANH TOÁN ✓",
     qrUrl: buildPaymentQrUrl(total, code),
     qrAmountLabel: `Số tiền: ${formatMoney(total)}`,
-    printButtonLabel: "In tạm tính",
+    printButtonLabel: "In hóa đơn",
   }));
 }
 
 function printGroupEstimateInvoice(groupName: string, rows: BookingItem[]) {
   {
   const total = rows.reduce((sum, row) => sum + moneyNumber(row.total ?? row.price), 0);
-  const code = `TT-${groupName.replace(/\s+/g, "").slice(0, 10) || "GROUP"}`;
+  const subtotal = rows.reduce((sum, row) => sum + moneyNumber(row.price), 0);
+  const code = rows.find((row) => row.invoiceCode)?.invoiceCode || "Group-meoxinh--";
   openReceiptPrintWindow(buildStudioReceiptHtml({
-    title: "BILL TẠM TÍNH",
+    title: "HÓA ĐƠN THANH TOÁN",
     code,
     customer: groupName,
     time: formatReceiptDateTime(new Date()),
@@ -1809,12 +1809,13 @@ function printGroupEstimateInvoice(groupName: string, rows: BookingItem[]) {
         discountText: bookingDiscountText(original, finalAmount),
       };
     }),
+    subtotal,
+    discount: Math.max(0, subtotal - total),
     total,
-    totalLabel: "TỔNG TẠM TÍNH",
-    statusText: "TẠM TÍNH",
+    statusText: "ĐÃ THANH TOÁN ✓",
     qrUrl: buildPaymentQrUrl(total, code),
     qrAmountLabel: `Số tiền: ${formatMoney(total)}`,
-    printButtonLabel: "In tạm tính",
+    printButtonLabel: "In hóa đơn",
   }));
     return;
   }
