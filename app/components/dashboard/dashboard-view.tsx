@@ -238,7 +238,7 @@ export function DashboardView() {
         <PageSpinner label="Đang tải số liệu…" />
       ) : !isStaff ? (
         <>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-3 min-[380px]:grid-cols-2 sm:gap-4 xl:grid-cols-4">
             <StatCard label="Tổng thu" value={dashboard.summary.totalIncome} tone="income" />
             <StatCard label="Tổng chi" value={dashboard.summary.totalExpense} tone="expense" />
             <StatCard label="Lợi nhuận" value={dashboard.summary.profit} tone="profit" />

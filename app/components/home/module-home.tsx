@@ -253,7 +253,7 @@ export function ModuleHome() {
         </div>
       </section>
 
-      <div className="grid min-w-0 grid-cols-2 gap-2 sm:gap-3">
+      <div className="grid min-w-0 grid-cols-1 gap-2 md:grid-cols-2 sm:gap-3">
         <Card className="min-w-0 overflow-hidden border-[#F7AFC0] p-3 shadow-[0_14px_38px_rgba(184,95,108,0.1)] sm:p-5">
           <div className="flex items-center justify-between gap-2">
             <CardTitle className="text-base sm:text-xl">Lịch sắp tới</CardTitle>

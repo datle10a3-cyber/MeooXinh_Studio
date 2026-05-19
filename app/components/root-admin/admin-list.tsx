@@ -199,7 +199,7 @@ export function RootAdminList() {
 
       <AlertModal isOpen={!!message} message={message} onClose={() => setMessage("")} />
 
-      <section className="grid grid-cols-2 gap-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-2 min-[380px]:grid-cols-2 xl:grid-cols-4">
         {overviewCards.map((item) => {
           const Icon = item.icon;
           return (
@@ -298,14 +298,14 @@ export function RootAdminList() {
                     </span>
                   </div>
                   <p className="mt-2 truncate text-xs font-bold uppercase tracking-wide text-emerald-200">{row.studio?.name ?? "Không rõ studio"}</p>
-                  <div className="mt-2 grid grid-cols-2 gap-1 text-center text-[10px] font-black text-slate-300 sm:grid-cols-4 sm:text-[11px]">
+                  <div className="mt-2 grid grid-cols-1 gap-1 text-center text-[10px] font-black text-slate-300 min-[360px]:grid-cols-2 sm:grid-cols-4 sm:text-[11px]">
                     <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.customers ?? 0} khách</span>
                     <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.bookings ?? 0} booking</span>
                     <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.transactions ?? 0} thu chi</span>
                     <span className="rounded-xl bg-white/5 px-2 py-1 ring-1 ring-white/10">{row.counts?.invoices ?? 0} hóa đơn</span>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:w-44 sm:grid-cols-1">
+                <div className="grid grid-cols-1 gap-2 min-[360px]:grid-cols-2 sm:w-44 sm:grid-cols-1">
                   <Button className="min-h-10 rounded-xl bg-emerald-400 text-[#03140C] hover:bg-emerald-300 sm:min-h-11 sm:rounded-2xl" onClick={() => void viewAsAdmin(row)}>
                     <Eye size={16} />
                     Vào xem
