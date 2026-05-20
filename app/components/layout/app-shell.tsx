@@ -33,6 +33,7 @@ import { Button } from "@/app/components/ui/button";
 import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/components/brand/studio-brand";
 import { Sidebar } from "@/app/components/layout/sidebar";
 import { TabletMenu, type NavItem as TabletNavItem } from "@/app/components/layout/tablet-menu";
+import { DebugPanel, useRenderCount, useDebugTest } from "@/app/components/debug/debug-panel";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { studioViewPath } from "@/app/utils/studio-navigation";
@@ -182,14 +183,23 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
  * When tabletMenuOpen changes, ONLY this component re-renders, NOT AppShell children.
  */
 function TabletHamburger({ rootAdminTheme }: { rootAdminTheme: boolean }) {
+  useRenderCount("TabletHamburger");
   const setTabletMenuOpen = useUiStore((state) => state.setTabletMenuOpen);
+  const testA = useDebugTest("testA");
   return (
     <Button
       variant="secondary"
       size="icon"
       className={cn("studio-menu-trigger hidden h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition-colors md:flex xl:hidden sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl", rootAdminTheme ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
       aria-label="Mở menu tablet"
-      onClick={() => setTabletMenuOpen(true)}
+      onClick={() => {
+        if (testA) {
+          // eslint-disable-next-line no-console
+          console.log("[TEST A] tablet menu click — menu disabled");
+          return;
+        }
+        setTabletMenuOpen(true);
+      }}
     >
       <Menu size={24} strokeWidth={2.8} />
     </Button>
@@ -201,11 +211,13 @@ function TabletHamburger({ rootAdminTheme }: { rootAdminTheme: boolean }) {
  * AppShell does NOT re-render when tablet menu opens/closes.
  */
 function TabletMenuWrapper({ rootAdminTheme }: { rootAdminTheme: boolean }) {
+  useRenderCount("TabletMenuWrapper");
   const tabletMenuOpen = useUiStore((state) => state.tabletMenuOpen);
   const setTabletMenuOpen = useUiStore((state) => state.setTabletMenuOpen);
   const setActiveResource = useUiStore((state) => state.setActiveResource);
   const session = useUiStore((state) => state.session);
   const router = useRouter();
+  const testB = useDebugTest("testB");
 
   function handleNavigate(item: TabletNavItem) {
     const target = item.href || studioViewPath(item.id);
@@ -221,6 +233,29 @@ function TabletMenuWrapper({ rootAdminTheme }: { rootAdminTheme: boolean }) {
     });
   }
 
+  // Test B: empty div instead of full menu
+  if (testB && tabletMenuOpen) {
+    return (
+      <div
+        style={{
+          position: "fixed",
+          left: 8,
+          top: 60,
+          zIndex: 50,
+          background: "#fff",
+          border: "2px solid red",
+          padding: 16,
+          borderRadius: 12,
+          fontSize: 14,
+          fontWeight: "bold",
+        }}
+        onClick={() => setTabletMenuOpen(false)}
+      >
+        [TEST B] Empty menu — tap to close
+      </div>
+    );
+  }
+
   return (
     <TabletMenu
       open={tabletMenuOpen}
@@ -233,6 +268,7 @@ function TabletMenuWrapper({ rootAdminTheme }: { rootAdminTheme: boolean }) {
 }
 
 export function AppShell({ children }: { children: React.ReactNode }) {
+  useRenderCount("AppShell");
   const setActiveResource = useUiStore((state) => state.setActiveResource);
   const darkMode = useUiStore((state) => state.darkMode);
   const setDarkMode = useUiStore((state) => state.setDarkMode);
@@ -579,6 +615,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {/* TabletMenu — isolated wrapper, does NOT re-render AppShell */}
       <TabletMenuWrapper rootAdminTheme={rootAdminCentralOnly} />
+
+      {/* Debug panel — only visible when URL has ?debug=1 */}
+      <DebugPanel />
 
       {viewingAsAdmin ? (
         <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.3rem)] left-2 right-2 z-[70] rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-2xl sm:left-auto sm:right-4 sm:bottom-4 sm:w-[360px]">

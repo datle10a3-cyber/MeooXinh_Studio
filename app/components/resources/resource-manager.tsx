@@ -1388,6 +1388,13 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
 });
 
 export function ResourceManager({ resource }: { resource: ResourceKey }) {
+  // Debug render counter + Test C
+  if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("debug")) {
+    console.count(`[RENDER] ResourceManager(${resource})`);
+  }
+  if (typeof window !== "undefined" && sessionStorage.getItem("debug-testC") === "1") {
+    return (<div style={{ padding: 24, fontSize: 18, fontWeight: "bold", color: "#5B342C" }}>[TEST C] Title only - {resource} - no content</div>);
+  }
   const config = getConfig(resource);
   const router = useRouter();
   const pathname = usePathname();
