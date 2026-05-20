@@ -170,12 +170,11 @@ function isTabletTouchViewport() {
 }
 
 function shouldUseRouterScroll() {
-  return !isTabletTouchViewport();
+  return true;
 }
 
 function resetViewportScroll() {
   if (typeof window === "undefined") return;
-  if (isTabletTouchViewport()) return;
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 }
 
@@ -299,7 +298,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [pathname, rootAdminCentralOnly, router]);
 
   useEffect(() => {
-    if (isTabletTouchViewport()) return;
     const frame = window.requestAnimationFrame(resetViewportScroll);
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
@@ -322,10 +320,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     const navigate = () => {
       setMobileMenuOpen(false);
       resetViewportScroll();
-      router.push(target, { scroll: shouldUseRouterScroll() });
+      router.push(target, { scroll: true });
     };
 
-    if (isTabletTouchViewport() && mobileMenuOpen) {
+    if (mobileMenuOpen) {
       setMobileMenuOpen(false);
       window.setTimeout(() => startTransition(navigate), 0);
       return;
@@ -662,7 +660,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <nav className={`studio-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC] pb-[env(safe-area-inset-bottom)] transition-all duration-200 ease-in-out xl:hidden ${shouldHideMobileNav ? 'hidden' : ''}`}>
+      <nav className={`studio-bottom-nav studio-tablet-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC] pb-[env(safe-area-inset-bottom)] transition-all duration-200 ease-in-out xl:hidden ${shouldHideMobileNav ? 'hidden' : ''}`}>
         <div className="mx-auto flex h-14 w-full max-w-md items-center justify-around px-3">
           {bottomMobileItems.map((item) => {
             const Icon = item.icon;

@@ -246,7 +246,7 @@ video {
   }
 }
 
-/* Tablet touch performance: Xiaomi/iPad class tablets, including landscape. */
+/* ─── iPad / Tablet touch — premium tablet experience ─── */
 @media (min-width: 768px) and (max-width: 1366px) and (pointer: coarse) {
   html,
   body {
@@ -286,132 +286,148 @@ video {
     touch-action: manipulation;
   }
 
-  /* Allow short transitions for visual feedback, but no more */
+  /* Snappy but not dead — enough for visual feedback */
   * {
-    transition-duration: 40ms !important;
+    transition-duration: 80ms !important;
   }
 
-  /* Sticky repaint on Android tablets is expensive during route changes. */
+  /* ─── Header: keep sticky, lightweight ─── */
   header.sticky {
-    position: static !important;
-    top: auto !important;
+    contain: layout style;
   }
 
-  /* Kill repaint-heavy animations during tablet navigation. */
-  main,
-  .animate-pulse,
-  .animate-bounce,
-  [class*="animate-"] {
-    animation: none !important;
+  /* ─── Animations: allow loading indicators, disable heavy page transitions ─── */
+  .animate-pulse {
+    animation-duration: 1.2s !important;
   }
 
   .animate-spin {
+    animation-duration: 0.8s !important;
+  }
+
+  .animate-bounce {
     animation: none !important;
   }
 
-  /* Backdrop-blur is very expensive on iPad Safari compositing */
-  [class*="backdrop-blur"],
-  [class*="supports-[backdrop-filter]"],
+  /* ─── Backdrop blur: light frosted glass — iPad Pro handles 6px fine ─── */
+  [class*="backdrop-blur-xl"] {
+    -webkit-backdrop-filter: blur(6px) !important;
+    backdrop-filter: blur(6px) !important;
+  }
+
+  [class*="backdrop-blur-sm"],
+  [class*="backdrop-blur-md"],
+  [class*="backdrop-blur-lg"],
   .backdrop-blur,
   .backdrop-blur-sm,
   .backdrop-blur-md,
-  .backdrop-blur-lg,
-  .backdrop-blur-xl,
+  .backdrop-blur-lg {
+    -webkit-backdrop-filter: blur(4px) !important;
+    backdrop-filter: blur(4px) !important;
+  }
+
   .bg-glass {
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
+    background: rgba(255, 255, 255, 0.82) !important;
+    -webkit-backdrop-filter: blur(6px) !important;
+    backdrop-filter: blur(6px) !important;
   }
 
-  /* Avoid promoting fixed/sticky elements to GPU layers unnecessarily */
-  header.sticky,
-  nav.fixed,
-  .fixed.inset-0,
-  .studio-gpu,
-  .studio-mobile-form-sheet {
-    transform: none !important;
-    will-change: auto !important;
-    backface-visibility: visible !important;
-  }
-
-  [style*="translate3d"],
-  [style*="translateZ"] {
-    transform: none !important;
-    will-change: auto !important;
-    backface-visibility: visible !important;
-  }
-
-  [style*="backdrop-filter"],
-  [style*="backdropFilter"] {
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-  }
-
-  /* Disable hover transforms — they fire on tap and cause layout thrash */
-  [class*="hover:-translate"],
-  [class*="hover:scale"],
-  [class*="active:scale"] {
-    transform: none !important;
-  }
-
-  /* Simplify expensive box-shadows */
-  [class*="shadow-[0_12px"],
-  [class*="shadow-[0_14px"],
-  [class*="shadow-[0_18px"],
-  [class*="shadow-[0_20px"],
+  /* ─── Shadows: moderate, premium feel ─── */
   [class*="shadow-[0_22px"],
   [class*="shadow-[0_24px"],
-  [class*="shadow-[0_30px"],
-  .shadow-2xl,
-  .shadow-xl {
-    box-shadow: 0 4px 14px rgba(91, 52, 44, 0.08) !important;
+  [class*="shadow-[0_30px"] {
+    box-shadow: 0 8px 24px rgba(91, 52, 44, 0.10) !important;
   }
 
-  /* Card-level containment: tells the browser each card is independent
-     so layout changes inside one card don't trigger re-layout of siblings */
+  .shadow-2xl {
+    box-shadow: 0 10px 30px rgba(91, 52, 44, 0.12) !important;
+  }
+
+  .shadow-xl {
+    box-shadow: 0 6px 20px rgba(91, 52, 44, 0.08) !important;
+  }
+
+  /* ─── Transforms: allow press feedback, disable hover ─── */
+  [class*="hover:-translate"],
+  [class*="hover:scale"] {
+    transform: none !important;
+  }
+
+  /* Card-level containment for layout perf */
   [data-row-id] {
     contain: layout style;
   }
 
+  /* ─── Bottom nav: iPad floating pill style ─── */
   .studio-bottom-nav {
-    display: none !important;
+    display: block !important;
+    position: fixed !important;
+    bottom: env(safe-area-inset-bottom, 0px) !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%) !important;
+    width: auto !important;
+    min-width: 340px !important;
+    max-width: 520px !important;
+    margin-bottom: 0.65rem !important;
+    border: 1px solid rgba(244, 199, 196, 0.5) !important;
+    border-radius: 2rem !important;
+    background: rgba(255, 243, 236, 0.88) !important;
+    -webkit-backdrop-filter: blur(8px) saturate(1.4) !important;
+    backdrop-filter: blur(8px) saturate(1.4) !important;
+    box-shadow: 0 8px 32px rgba(184, 95, 108, 0.14), 0 0 0 0.5px rgba(244, 199, 196, 0.3) !important;
+    padding-bottom: 0 !important;
+    z-index: 40 !important;
+  }
+
+  .studio-bottom-nav > div {
+    height: 3.5rem !important;
+    padding-left: 1.25rem !important;
+    padding-right: 1.25rem !important;
+    gap: 0.25rem !important;
   }
 
   .studio-menu-trigger {
     display: inline-flex !important;
   }
 
+  /* ─── Drawer: wider panel for iPad real-estate ─── */
   .studio-mobile-drawer {
     display: block !important;
     isolation: isolate;
     overscroll-behavior: contain;
-    contain: layout paint style;
   }
 
   .studio-mobile-drawer-backdrop {
-    background: rgba(43, 28, 26, 0.28) !important;
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
-    transition: none !important;
+    background: rgba(43, 28, 26, 0.25) !important;
+    -webkit-backdrop-filter: blur(3px) !important;
+    backdrop-filter: blur(3px) !important;
   }
 
   .studio-mobile-drawer-panel {
-    width: min(390px, 44vw) !important;
-    max-width: 390px !important;
+    width: min(420px, 50vw) !important;
+    max-width: 420px !important;
     height: 100vh !important;
     height: 100svh !important;
-    transform: none !important;
-    will-change: auto !important;
-    contain: layout paint style;
-    box-shadow: 0 8px 24px rgba(91, 52, 44, 0.14) !important;
+    contain: layout style;
+    box-shadow: 0 12px 40px rgba(91, 52, 44, 0.16) !important;
   }
 
   .studio-mobile-drawer-panel .studio-ios-scroll {
     overscroll-behavior: contain;
-    -webkit-overflow-scrolling: auto;
+    -webkit-overflow-scrolling: touch;
   }
 
+  /* ─── Content area: account for floating bottom nav ─── */
   .studio-mobile-bottom-safe {
-    padding-bottom: 1rem !important;
+    padding-bottom: calc(5rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Ẩn bottom nav khi modal đang mở */
+  body.studio-modal-open .studio-bottom-nav {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateX(-50%) translateY(100%) !important;
   }
 }
 
