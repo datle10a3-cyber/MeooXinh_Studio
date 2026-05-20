@@ -1,4 +1,3 @@
-import { AppShell } from "@/app/components/layout/app-shell";
 import dynamic from "next/dynamic";
 import { ViewSkeleton } from "@/app/components/ui/skeleton";
 
@@ -7,9 +6,5 @@ const ReportsView = dynamic(() => import("@/app/components/dashboard/system-over
 });
 
 export default function Page() {
-  return (
-    <AppShell>
-      <ReportsView />
-    </AppShell>
-  );
+  return <ReportsView />;
 }

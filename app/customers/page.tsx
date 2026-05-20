@@ -1,4 +1,3 @@
-import { AppShell } from "@/app/components/layout/app-shell";
 import dynamic from "next/dynamic";
 import { ViewSkeleton } from "@/app/components/ui/skeleton";
 
@@ -7,9 +6,5 @@ const ResourceManager = dynamic(() => import("@/app/components/resources/resourc
 });
 
 export default function Page() {
-  return (
-    <AppShell>
-      <ResourceManager resource="customers" />
-    </AppShell>
-  );
+  return <ResourceManager resource="customers" />;
 }

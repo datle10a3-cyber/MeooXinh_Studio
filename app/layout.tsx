@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { IosLaunchSplash } from "@/app/components/pwa/ios-launch-splash";
 import { NetworkStatus } from "@/app/components/pwa/network-status";
 import { AppLoader } from "@/app/components/ui/app-loader";
+import { ShellLayout } from "@/app/components/layout/shell-layout";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
@@ -88,7 +89,7 @@ export default function RootLayout({
         <AppLoader />
         <IosLaunchSplash />
         <NetworkStatus />
-        {children}
+        <ShellLayout>{children}</ShellLayout>
       </body>
     </html>
   );

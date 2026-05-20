@@ -1,6 +1,5 @@
 "use client";
 
-import { AppShell } from "@/app/components/layout/app-shell";
 import dynamic from "next/dynamic";
 
 const AiAssistantView = dynamic(
@@ -12,9 +11,5 @@ const AiAssistantView = dynamic(
 );
 
 export default function Page() {
-  return (
-    <AppShell>
-      <AiAssistantView />
-    </AppShell>
-  );
+  return <AiAssistantView />;
 }

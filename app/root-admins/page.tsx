@@ -1,4 +1,3 @@
-import { AppShell } from "@/app/components/layout/app-shell";
 import dynamic from "next/dynamic";
 import { ViewSkeleton } from "@/app/components/ui/skeleton";
 
@@ -7,9 +6,5 @@ const RootAdminList = dynamic(() => import("@/app/components/root-admin/admin-li
 });
 
 export default function RootAdminsPage() {
-  return (
-    <AppShell>
-      <RootAdminList />
-    </AppShell>
-  );
+  return <RootAdminList />;
 }

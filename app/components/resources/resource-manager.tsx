@@ -41,7 +41,7 @@ import { viOption } from "@/app/lib/vietnamese-labels";
 import { formatDate, formatMoney } from "@/app/utils/format";
 import { cn } from "@/app/utils/cn";
 import { useUiStore } from "@/app/store/ui-store";
-import { navigateStudioView } from "@/app/utils/studio-navigation";
+import { navigateStudioView, studioViewPath } from "@/app/utils/studio-navigation";
 import { useProgressiveList, ProgressiveListSentinel } from "@/app/components/ui/progressive-list";
 import { buildStudioReceiptHtml, openReceiptPrintWindow } from "@/app/utils/receipt-template";
 
@@ -1449,6 +1449,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const groupedFields = useMemo(() => splitFields(config.fields), [config.fields]);
   const transactionTabParam = searchParams.get("tab");
   const urlTransactionView: TransactionView = resource === "transactions" && (transactionTabParam === "income" || transactionTabParam === "expense") ? transactionTabParam : null;
+  const initialTransactionViewRef = useRef<TransactionView>(urlTransactionView);
 
   function clearLongPress() {
     if (longPressTimer) {
@@ -1556,7 +1557,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       setShowForm(Boolean(hasTransactionIntent));
       setSelectedIds([]);
       setBulkDeleteMode(null);
-      setTransactionView(hasTransactionIntent ? pendingTransactionIntent : hasTransactionViewIntent ? pendingTransactionViewIntent : urlTransactionView);
+      setTransactionView(hasTransactionIntent ? pendingTransactionIntent : hasTransactionViewIntent ? pendingTransactionViewIntent : initialTransactionViewRef.current);
       setMessage("");
       setWalletTransactions([]);
       void loadRows();
@@ -1566,7 +1567,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       if (hasTransactionViewIntent) setTransactionViewIntent(null);
     }, 0);
     return () => window.clearTimeout(timer);
-  }, [resource, config.fields, loadRows, loadWalletRows, loadWalletTransactions, setTransactionIntent, setTransactionViewIntent, urlTransactionView]);
+  }, [resource, config.fields, loadRows, loadWalletRows, loadWalletTransactions, setTransactionIntent, setTransactionViewIntent]);
 
   useEffect(() => {
     if (resource !== "transactions" || !transactionViewIntent) return;
@@ -1592,7 +1593,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       }
       window.setTimeout(() => {
       const element = document.querySelector(`[data-row-id="${CSS.escape(focusedItemId)}"]`);
-      element?.scrollIntoView({ behavior: "smooth", block: "center" });
+      element?.scrollIntoView({ behavior: "auto", block: "center" });
       element?.classList.add("studio-focus-highlight");
       window.setTimeout(() => {
         element?.classList.remove("studio-focus-highlight");
@@ -1726,7 +1727,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     setShowForm(false);
     setEditingSystemNote("");
     setForm({ ...emptyForm(config.fields), type, walletId: firstWalletId });
-    navigateStudioView(router, pathname, "transactions", { tab: view });
+    window.history.replaceState(window.history.state, "", studioViewPath("transactions", { tab: view }));
   }
 
   function openCreateForm() {
@@ -1899,7 +1900,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
             setEditingId(null);
             setEditingSystemNote("");
             setSelectedIds([]);
-            navigateStudioView(router, pathname, "transactions");
+            window.history.replaceState(window.history.state, "", studioViewPath("transactions"));
           }}
           className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-4 text-sm font-black text-[#5B342C] shadow-sm transition hover:bg-[#FFF3EC]"
         >

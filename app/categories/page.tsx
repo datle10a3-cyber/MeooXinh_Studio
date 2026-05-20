@@ -1,4 +1,3 @@
-import { AppShell } from "@/app/components/layout/app-shell";
 import dynamic from "next/dynamic";
 import { ViewSkeleton } from "@/app/components/ui/skeleton";
 
@@ -7,9 +6,5 @@ const CategoryPage = dynamic(() => import("@/app/components/catalog/category-pag
 });
 
 export default function CategoriesRoute() {
-  return (
-    <AppShell>
-      <CategoryPage />
-    </AppShell>
-  );
+  return <CategoryPage />;
 }
