@@ -280,21 +280,6 @@ video {
     min-height: 100svh !important;
   }
 
-  .studio-tablet-sidebar {
-    display: block !important;
-    width: 16rem !important;
-  }
-
-  .studio-menu-trigger,
-  .studio-mobile-drawer,
-  .studio-bottom-nav {
-    display: none !important;
-  }
-
-  .studio-mobile-bottom-safe {
-    padding-bottom: 1.5rem !important;
-  }
-
   /* Allow short transitions for visual feedback, but no more */
   * {
     transition-duration: 80ms !important;
