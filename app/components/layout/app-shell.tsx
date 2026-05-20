@@ -106,6 +106,7 @@ const mobilePrimary: NavItem[] = [
 const mobilePrimaryOrder = ["home", "booking", "wallets", "ai"];
 const bottomMobileItems = [...mobilePrimary].sort((a, b) => mobilePrimaryOrder.indexOf(a.id) - mobilePrimaryOrder.indexOf(b.id));
 const rootAdminNavItem: NavItem = { id: "root-admins", label: "Admin", href: "/root-admins", icon: ShieldCheck };
+const tabletWarmupRoutes = ["/categories", "/packages", "/booking", "/projects", "/invoices", "/transactions", "/customers", "/completed-bookings"];
 
 const mobileGroups: { title: string; items: NavItem[] }[] = [
   {
@@ -173,6 +174,10 @@ function shouldUseRouterScroll() {
   return !isTabletTouchViewport();
 }
 
+function routePathOnly(href: string) {
+  return href.split("?")[0] || "/";
+}
+
 function resetViewportScroll() {
   if (typeof window === "undefined") return;
   if (isTabletTouchViewport()) return;
@@ -201,6 +206,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [menuCloseTarget, setMenuCloseTarget] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFrom, setSearchFrom] = useState("");
@@ -309,6 +315,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (meta) meta.content = rootAdminCentralOnly ? "#04110A" : "#EA7188";
   }, [rootAdminCentralOnly]);
 
+  useEffect(() => {
+    if (!session || !isTabletTouchViewport()) return;
+    const timer = window.setTimeout(() => {
+      tabletWarmupRoutes.forEach((href) => router.prefetch(href));
+    }, 250);
+    return () => window.clearTimeout(timer);
+  }, [router, session]);
+
   // Sync activeResource with the current pathname.
   useEffect(() => {
     if (!pathname) return;
@@ -317,10 +331,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setActiveResource(view);
   }, [pathname, setActiveResource]);
 
+  useEffect(() => {
+    if (!menuCloseTarget || routePathOnly(menuCloseTarget) !== (pathname || "/")) return;
+    const frame = window.requestAnimationFrame(() => {
+      setMobileMenuOpen(false);
+      setMenuCloseTarget(null);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [menuCloseTarget, pathname]);
+
   function goTo(item: NavItem) {
     startTransition(() => {
-      setMobileMenuOpen(false);
       const target = item.href || studioViewPath(item.id);
+      if (isTabletTouchViewport() && mobileMenuOpen) {
+        setMenuCloseTarget(target);
+      } else {
+        setMobileMenuOpen(false);
+      }
       resetViewportScroll();
       router.push(target, { scroll: shouldUseRouterScroll() });
     });

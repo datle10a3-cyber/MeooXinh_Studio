@@ -1,9 +1,4 @@
-import dynamic from "next/dynamic";
-import { ViewSkeleton } from "@/app/components/ui/skeleton";
-
-const ResourceManager = dynamic(() => import("@/app/components/resources/resource-manager").then((mod) => mod.ResourceManager), {
-  loading: () => <ViewSkeleton />,
-});
+import { ResourceManager } from "@/app/components/resources/resource-manager";
 
 export default function Page() {
   return <ResourceManager resource="invoices" />;

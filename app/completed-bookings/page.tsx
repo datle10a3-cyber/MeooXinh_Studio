@@ -1,9 +1,4 @@
-import dynamic from "next/dynamic";
-import { ViewSkeleton } from "@/app/components/ui/skeleton";
-
-const BookingPage = dynamic(() => import("@/app/components/catalog/booking-page").then((mod) => mod.BookingPage), {
-  loading: () => <ViewSkeleton />,
-});
+import { BookingPage } from "@/app/components/catalog/booking-page";
 
 export default function CompletedBookingsRoute() {
   return <BookingPage completedOnly />;
