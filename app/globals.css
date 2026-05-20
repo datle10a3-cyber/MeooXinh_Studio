@@ -23,11 +23,14 @@ body {
   text-rendering: optimizeLegibility;
   touch-action: manipulation;
   overflow-x: hidden;
+  width: 100%;
+  min-height: 100dvh;
 }
 
 html,
 body {
-  max-width: 100vw;
+  width: 100%;
+  max-width: 100%;
   min-height: 100%;
   -webkit-text-size-adjust: 100%;
   overscroll-behavior-y: none;
@@ -35,6 +38,7 @@ body {
 
 html {
   scroll-behavior: auto;
+  overflow-x: hidden;
 }
 
 * {
@@ -204,6 +208,42 @@ video {
   overflow-x: clip;
 }
 
+.studio-shell {
+  min-height: 100dvh;
+  width: 100%;
+  overflow-x: hidden;
+}
+
+.studio-shell-frame,
+.studio-main,
+.studio-content-scroll,
+.studio-page-container {
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.studio-main {
+  flex: 1 1 0%;
+}
+
+.studio-content-scroll {
+  overflow-x: hidden;
+}
+
+.studio-page-container {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.studio-stable-decor,
+.studio-sidebar,
+.studio-header,
+.studio-brand-mark {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
 /* ─── Mobile-specific performance ─── */
 @media (hover: none), (pointer: coarse) {
   /* Faster transitions on touch devices for snappy feel */
@@ -251,6 +291,65 @@ video {
   /* Remove the bottom spacing reserved for mobile bottom nav */
   .studio-mobile-bottom-safe {
     padding-bottom: 0 !important;
+  }
+
+  .studio-content-scroll {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+
+  .studio-page-container {
+    max-width: none !important;
+  }
+
+  .studio-mobile-form-sheet {
+    position: static !important;
+    inset: auto !important;
+    max-height: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    overflow: visible !important;
+    transform: none !important;
+    will-change: auto !important;
+  }
+
+  .studio-mobile-form-backdrop {
+    display: none !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .studio-content-scroll {
+    padding-left: 1.75rem;
+    padding-right: 1.75rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .studio-content-scroll {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .studio-sidebar,
+  .studio-brand-mark,
+  .studio-stable-decor,
+  [class*="animate-bounce"],
+  [class*="animate-pulse"] {
+    animation: none !important;
+  }
+
+  [class*="hover:-translate"],
+  [class*="hover:scale"],
+  [class*="active:scale"] {
+    transform: none !important;
+  }
+
+  [class*="transition-all"] {
+    transition-property: color, background-color, border-color, box-shadow, opacity !important;
   }
 }
 

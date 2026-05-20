@@ -108,8 +108,7 @@ export function ModuleHome() {
   const [dashboard, setDashboard] = useState<DashboardData>(fallbackDashboard);
   const [showAllBookings, setShowAllBookings] = useState(false);
   const [showAllTransactions, setShowAllTransactions] = useState(false);
-  const [compactPreview, setCompactPreview] = useState(false);
-  const previewLimit = compactPreview ? 3 : 5;
+  const previewLimit = 5;
 
   function goToResource(id: string) {
     setActiveResource(id);
@@ -155,18 +154,6 @@ export function ModuleHome() {
       })
       .catch(() => undefined);
     return () => { cancelled = true; };
-  }, []);
-
-  useEffect(() => {
-    const media = window.matchMedia("(max-width: 1023px)");
-    const update = () => setCompactPreview(media.matches);
-    update();
-    if (typeof media.addEventListener === "function") {
-      media.addEventListener("change", update);
-      return () => media.removeEventListener("change", update);
-    }
-    media.addListener(update);
-    return () => media.removeListener(update);
   }, []);
 
   const [mounted, setMounted] = useState(false);
@@ -231,7 +218,7 @@ export function ModuleHome() {
   if (!mounted) return null;
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] space-y-4 overflow-hidden sm:space-y-5">
+    <div className="studio-page-container mx-auto w-full max-w-[1500px] space-y-4 overflow-hidden sm:space-y-5">
       <section className="overflow-hidden rounded-[1.25rem] border border-[#F7C4CA] bg-[#FFF8F1] p-3 shadow-[0_18px_50px_rgba(184,95,108,0.12)] sm:rounded-[2rem] sm:p-6">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="min-w-0">

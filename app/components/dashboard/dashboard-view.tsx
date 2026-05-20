@@ -161,7 +161,7 @@ export function DashboardView() {
   }, [chartMode, loadData, selectedMonth, selectedYear, fromYear, toYear]);
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-4 sm:space-y-5">
+    <div className="studio-page-container mx-auto w-full max-w-[1500px] space-y-4 sm:space-y-5">
       <section className="rounded-[1.5rem] border border-[#F7C4CA] bg-[#FFF8F1] p-4 shadow-[0_18px_50px_rgba(184,95,108,0.12)] sm:rounded-[2rem] sm:p-6">
         <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>

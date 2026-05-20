@@ -14,7 +14,6 @@ import { formatDate } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 import { AlertModal } from "@/app/components/ui/alert-modal";
-import { Portal } from "@/app/components/ui/portal";
 
 const emptyForm = { name: "", description: "" };
 
@@ -39,13 +38,6 @@ export function CategoryPage() {
   const role = useUiStore((state) => state.session?.user.role ?? null);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
   const [initialLoading, setInitialLoading] = useState(true);
-  const [isMobile, setIsMobile] = useState(false);
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 640);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
 
   async function loadRows() {
     const result = await fetch("/api/categories").then((res) => res.json() as Promise<ApiResult<CategoryItem[]>>);
@@ -242,7 +234,7 @@ export function CategoryPage() {
   }
 
   return (
-    <div className="mx-auto max-w-[1500px] space-y-5">
+    <div className="studio-page-container mx-auto w-full max-w-[1500px] space-y-5">
       <StudioBrandPanel
         eyebrow="Booking"
         title="Danh mục"
@@ -321,7 +313,7 @@ export function CategoryPage() {
             </Card>
           </div>
         );
-        return isMobile ? <Portal>{formElement}</Portal> : formElement;
+        return formElement;
       })()}
 
       <div className="grid gap-3">

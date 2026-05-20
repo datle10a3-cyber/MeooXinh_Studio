@@ -8,7 +8,7 @@ export const STUDIO_AVATAR_URL = "/be-meo-studio-avatar.svg";
 
 export function StudioCatMark({ compact = false }: { compact?: boolean }) {
   return (
-    <div className={compact ? "flex items-center gap-2" : "flex items-center gap-3"}>
+    <div className={compact ? "studio-brand-mark flex items-center gap-2" : "studio-brand-mark flex items-center gap-3"}>
       <div
         className={
           compact
@@ -41,7 +41,7 @@ export function StudioBrandPanel({
   actions?: ReactNode;
 }) {
   return (
-    <section className="rounded-[1.65rem] border border-[#F7AFC0] bg-[#FFF8F1] p-4 shadow-[0_18px_50px_rgba(184,95,108,0.12)] sm:rounded-[2rem] sm:p-6">
+    <section className="studio-stable-decor rounded-[1.65rem] border border-[#F7AFC0] bg-[#FFF8F1] p-4 shadow-[0_18px_50px_rgba(184,95,108,0.12)] sm:rounded-[2rem] sm:p-6">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <div className="min-w-0 space-y-3">
           <div className="inline-flex max-w-full rounded-[1.7rem] border-4 border-[#F7AFC0] bg-white px-4 py-3 shadow-sm sm:px-6">
