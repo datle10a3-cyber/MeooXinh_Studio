@@ -112,7 +112,7 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
   }
 
   return (
-    <aside className={cn("hidden w-64 shrink-0 px-4 py-6 xl:block", rootAdminTheme ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4]/50 bg-white/50")}>
+    <aside className={cn("studio-sidebar hidden w-64 shrink-0 px-4 py-6 xl:block", rootAdminTheme ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4]/50 bg-white/50")}>
       <div className={cn("mb-6 rounded-[2rem] p-5 shadow-[0_8px_20px_rgba(184,95,108,0.06)]", rootAdminTheme ? "border border-emerald-300/20 bg-[#06140D] text-slate-100 shadow-[0_18px_50px_rgba(2,6,23,0.28)]" : "border-2 border-[#F7AFC0] bg-white text-[#5B342C]")}>
         {rootAdminTheme ? (
           <div className="flex items-center gap-3">
