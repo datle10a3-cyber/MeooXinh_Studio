@@ -452,20 +452,7 @@ video {
   backface-visibility: hidden;
 }
 
-/* ─── Page fade-in (subtle, GPU-only) ─── */
-@layer base {
-  main {
-    animation: fadeIn 0.3s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-      transform: translateY(4px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
-  }
-}
+/* ─── Page transition ─── */
+/* NOTE: page fade-in animation was removed to eliminate jank on iPad.
+   The opacity+transform animation triggered a full-page repaint on every
+   navigation, causing visible stuttering on touch devices. */

@@ -1,6 +1,6 @@
 "use client";
 
-import { type Dispatch, type SetStateAction, useRef, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useRef, useEffect, useDeferredValue, useMemo, useState } from "react";
 import {
   CheckCircle2,
   Clock,
@@ -304,13 +304,16 @@ export function PackagePage() {
     setPreview({ images, index, alt: row.name });
   }
 
-  const filteredRows = rows.filter((row) => {
-    const keyword = query.trim().toLowerCase();
-    if (!keyword) return true;
-    return [row.name, row.category?.name, row.description, row.duration, row.location, row.suitableFor].some((value) =>
-      String(value ?? "").toLowerCase().includes(keyword),
+  const deferredQuery = useDeferredValue(query);
+  const filteredRows = useMemo(() => {
+    const keyword = deferredQuery.trim().toLowerCase();
+    if (!keyword) return rows;
+    return rows.filter((row) =>
+      [row.name, row.category?.name, row.description, row.duration, row.location, row.suitableFor].some((value) =>
+        String(value ?? "").toLowerCase().includes(keyword),
+      ),
     );
-  });
+  }, [rows, deferredQuery]);
   const progressiveRows = useProgressiveList(filteredRows, 25);
   const allVisibleSelected = filteredRows.length > 0 && filteredRows.every((row) => selectedIds.includes(row.id));
 

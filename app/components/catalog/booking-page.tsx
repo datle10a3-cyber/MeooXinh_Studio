@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarClock, CheckCircle2, ChevronDown, ChevronUp, CreditCard, Images, Loader2, Pencil, Plus, Printer, ReceiptText, Search, Trash2, Users, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { DetailModal } from "@/app/components/ui/detail-modal";
@@ -783,16 +783,19 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     setShowForm(true);
   }
 
-  const filteredRows = rows.filter((row) => {
-    const keyword = query.trim().toLowerCase();
-    if (!keyword) return true;
-    return [row.customerName, row.packageName, row.categoryName, row.status, row.note].some((value) =>
-      String(value ?? "").toLowerCase().includes(keyword),
+  const deferredQuery = useDeferredValue(query);
+  const filteredRows = useMemo(() => {
+    const keyword = deferredQuery.trim().toLowerCase();
+    if (!keyword) return rows;
+    return rows.filter((row) =>
+      [row.customerName, row.packageName, row.categoryName, row.status, row.note].some((value) =>
+        String(value ?? "").toLowerCase().includes(keyword),
+      ),
     );
-  });
+  }, [rows, deferredQuery]);
   const allVisibleSelected = filteredRows.length > 0 && filteredRows.every((row) => selectedIds.includes(row.id));
   const groupNames = parseGroupCustomers(form.groupCustomers);
-  const displayGroups = (() => {
+  const displayGroups = useMemo(() => {
     const groups: Array<{ key: string; title?: string; rows: BookingItem[] }> = [];
     const grouped = new Map<string, { title: string; rows: BookingItem[] }>();
     for (const row of filteredRows) {
@@ -810,7 +813,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
       ...groups,
       ...Array.from(grouped.entries()).map(([key, value]) => ({ key, title: value.title, rows: value.rows })),
     ].sort((a, b) => new Date(String(b.rows[0]?.createdAt ?? b.rows[0]?.startTime ?? "")).getTime() - new Date(String(a.rows[0]?.createdAt ?? a.rows[0]?.startTime ?? "")).getTime());
-  })();
+  }, [filteredRows]);
   const visibleGroupKeys = displayGroups.filter((group) => group.title).map((group) => group.key);
   const selectedGroupRows = displayGroups.filter((group) => selectedGroupKeys.includes(group.key)).flatMap((group) => group.rows);
   const selectedDeleteCount = new Set([...selectedIds, ...selectedGroupRows.map((row) => row.id)]).size;

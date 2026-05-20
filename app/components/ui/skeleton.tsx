@@ -19,16 +19,11 @@ export function Skeleton({
 export function PageSpinner({ label }: { label?: string }) {
   return (
     <div className="flex min-h-[40vh] flex-col items-center justify-center gap-4">
-      <div className="relative flex items-center justify-center">
-        {/* outer glow ring */}
-        <div className="absolute h-16 w-16 animate-ping rounded-full bg-[#EA7188]/20" />
-        {/* spinning icon */}
-        <Loader2 className="h-10 w-10 animate-spin text-[#EA7188]" strokeWidth={2.5} />
-      </div>
+      <Loader2 className="h-10 w-10 animate-spin text-[#EA7188]" strokeWidth={2.5} />
       {label ? (
-        <p className="animate-pulse text-sm font-bold text-[#9B746B]">{label}</p>
+        <p className="text-sm font-bold text-[#9B746B]">{label}</p>
       ) : (
-        <p className="animate-pulse text-sm font-bold text-[#9B746B]">Đang tải dữ liệu…</p>
+        <p className="text-sm font-bold text-[#9B746B]">Đang tải dữ liệu…</p>
       )}
     </div>
   );

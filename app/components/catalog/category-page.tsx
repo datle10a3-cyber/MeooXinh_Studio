@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { FolderOpen, Pencil, Plus, Search, Trash2, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { DetailModal } from "@/app/components/ui/detail-modal";
@@ -176,11 +176,12 @@ export function CategoryPage() {
     setShowForm(true);
   }
 
-  const filteredRows = rows.filter((row) => {
-    const keyword = query.trim().toLowerCase();
-    if (!keyword) return true;
-    return [row.name, row.description].some((value) => String(value ?? "").toLowerCase().includes(keyword));
-  });
+  const deferredQuery = useDeferredValue(query);
+  const filteredRows = useMemo(() => {
+    const keyword = deferredQuery.trim().toLowerCase();
+    if (!keyword) return rows;
+    return rows.filter((row) => [row.name, row.description].some((value) => String(value ?? "").toLowerCase().includes(keyword)));
+  }, [rows, deferredQuery]);
   const progressiveRows = useProgressiveList(filteredRows, 30);
   const allVisibleSelected = filteredRows.length > 0 && filteredRows.every((row) => selectedIds.includes(row.id));
 

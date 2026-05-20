@@ -85,7 +85,7 @@ export default function RootLayout({
         />
       </head>
       <body suppressHydrationWarning className="antialiased">
-        <NextTopLoader color="#EA7188" height={3} showSpinner={false} shadow="0 0 10px #EA7188,0 0 5px #EA7188" zIndex={1600} />
+        <NextTopLoader color="#EA7188" height={2} showSpinner={false} shadow={false} zIndex={1600} />
         <AppLoader />
         <IosLaunchSplash />
         <NetworkStatus />

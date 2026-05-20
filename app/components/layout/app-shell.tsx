@@ -433,7 +433,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-dvh">
         <Sidebar session={session} rootAdminTheme={rootAdminCentralOnly} />
         <main className="min-w-0 flex-1 touch-pan-y">
-          <header className={cn("sticky top-0 z-30 px-2.5 py-2 backdrop-blur sm:px-4 lg:py-3 xl:px-8", rootAdminCentralOnly ? "border-b border-emerald-300/15 bg-[#04110A]/95 supports-[backdrop-filter]:bg-[#04110A]/90" : "border-b border-[#F4C7C4] bg-[#FFF3EC]/95 supports-[backdrop-filter]:bg-[#FFF3EC]/86")} style={{ transform: "translateZ(0)" }}>
+          <header className={cn("sticky top-0 z-30 px-2.5 py-2 sm:px-4 lg:py-3 xl:px-8", rootAdminCentralOnly ? "border-b border-emerald-300/15 bg-[#04110A]" : "border-b border-[#F4C7C4] bg-[#FFF3EC]")}>
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <Button
@@ -643,7 +643,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <nav className={`fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC]/78 pb-[env(safe-area-inset-bottom)] backdrop-blur-lg supports-[backdrop-filter]:bg-[#FFF3EC]/58 transition-all duration-300 ease-in-out xl:hidden ${shouldHideMobileNav ? 'hidden' : ''}`} style={{ transform: "translateZ(0)" }}>
+      <nav className={`fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC] pb-[env(safe-area-inset-bottom)] transition-all duration-200 ease-in-out xl:hidden ${shouldHideMobileNav ? 'hidden' : ''}`}>
         <div className="mx-auto flex h-14 w-full max-w-md items-center justify-around px-3">
           {bottomMobileItems.map((item) => {
             const Icon = item.icon;
