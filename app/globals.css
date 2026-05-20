@@ -246,7 +246,10 @@ video {
   }
 }
 
-/* ─── iPad / Tablet touch — premium tablet experience ─── */
+/* ─── iPad / Tablet — zero-jank, iPad-native feel ─── */
+/* Philosophy: iPad's retina makes solid colors look premium.
+   backdrop-filter is the #1 cause of jank on iPad Safari compositing.
+   We use solid backgrounds, simple shadows, and CSS containment instead. */
 @media (min-width: 768px) and (max-width: 1366px) and (pointer: coarse) {
   html,
   body {
@@ -286,17 +289,19 @@ video {
     touch-action: manipulation;
   }
 
-  /* Snappy but not dead — enough for visual feedback */
+  /* ─── Transitions: 80ms — snappy feedback, not dead ─── */
   * {
     transition-duration: 80ms !important;
   }
 
-  /* ─── Header: keep sticky, lightweight ─── */
+  /* ─── Header: sticky, solid bg, contained ─── */
   header.sticky {
     contain: layout style;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
 
-  /* ─── Animations: allow loading indicators, disable heavy page transitions ─── */
+  /* ─── Animations: loading indicators only ─── */
   .animate-pulse {
     animation-duration: 1.2s !important;
   }
@@ -309,99 +314,111 @@ video {
     animation: none !important;
   }
 
-  /* ─── Backdrop blur: light frosted glass — iPad Pro handles 6px fine ─── */
-  [class*="backdrop-blur-xl"] {
-    -webkit-backdrop-filter: blur(6px) !important;
-    backdrop-filter: blur(6px) !important;
-  }
-
-  [class*="backdrop-blur-sm"],
-  [class*="backdrop-blur-md"],
-  [class*="backdrop-blur-lg"],
+  /* ─── Backdrop-filter: DISABLED everywhere ─── */
+  /* iPad Safari compositing cannot handle backdrop-filter without jank.
+     Solid opaque backgrounds on retina look equally premium. */
+  [class*="backdrop-blur"],
+  [class*="supports-[backdrop-filter]"],
   .backdrop-blur,
   .backdrop-blur-sm,
   .backdrop-blur-md,
-  .backdrop-blur-lg {
-    -webkit-backdrop-filter: blur(4px) !important;
-    backdrop-filter: blur(4px) !important;
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .bg-glass {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  [style*="backdrop-filter"],
+  [style*="backdropFilter"],
+  [style*="-webkit-backdrop-filter"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
 
   .bg-glass {
-    background: rgba(255, 255, 255, 0.82) !important;
-    -webkit-backdrop-filter: blur(6px) !important;
-    backdrop-filter: blur(6px) !important;
+    background: rgba(255, 255, 255, 0.96) !important;
   }
 
-  /* ─── Shadows: moderate, premium feel ─── */
+  /* ─── Shadows: moderate, single-layer (one-time paint) ─── */
   [class*="shadow-[0_22px"],
   [class*="shadow-[0_24px"],
   [class*="shadow-[0_30px"] {
-    box-shadow: 0 8px 24px rgba(91, 52, 44, 0.10) !important;
+    box-shadow: 0 6px 20px rgba(91, 52, 44, 0.10) !important;
   }
 
   .shadow-2xl {
-    box-shadow: 0 10px 30px rgba(91, 52, 44, 0.12) !important;
+    box-shadow: 0 8px 24px rgba(91, 52, 44, 0.10) !important;
   }
 
   .shadow-xl {
-    box-shadow: 0 6px 20px rgba(91, 52, 44, 0.08) !important;
+    box-shadow: 0 4px 16px rgba(91, 52, 44, 0.08) !important;
   }
 
-  /* ─── Transforms: allow press feedback, disable hover ─── */
+  /* ─── Transforms: press feedback OK, hover disabled ─── */
   [class*="hover:-translate"],
   [class*="hover:scale"] {
     transform: none !important;
   }
 
-  /* Card-level containment for layout perf */
+  /* ─── GPU / fixed elements: no unnecessary promotion ─── */
+  .studio-gpu,
+  .studio-mobile-form-sheet {
+    transform: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+  }
+
+  /* ─── Card-level containment ─── */
   [data-row-id] {
     contain: layout style;
   }
 
-  /* ─── Bottom nav: iPad floating pill style ─── */
+  /* ─── Bottom nav: iPad dock style — solid, centered with flexbox ─── */
   .studio-bottom-nav {
-    display: block !important;
+    display: flex !important;
     position: fixed !important;
-    bottom: env(safe-area-inset-bottom, 0px) !important;
-    left: 50% !important;
-    right: auto !important;
-    transform: translateX(-50%) !important;
-    width: auto !important;
-    min-width: 340px !important;
-    max-width: 520px !important;
-    margin-bottom: 0.65rem !important;
-    border: 1px solid rgba(244, 199, 196, 0.5) !important;
-    border-radius: 2rem !important;
-    background: rgba(255, 243, 236, 0.88) !important;
-    -webkit-backdrop-filter: blur(8px) saturate(1.4) !important;
-    backdrop-filter: blur(8px) saturate(1.4) !important;
-    box-shadow: 0 8px 32px rgba(184, 95, 108, 0.14), 0 0 0 0.5px rgba(244, 199, 196, 0.3) !important;
-    padding-bottom: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    justify-content: center !important;
+    transform: none !important;
+    will-change: auto !important;
+    border-top: none !important;
+    border-radius: 0 !important;
+    background: #FFF3EC !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: 0 -1px 0 rgba(244, 199, 196, 0.5), 0 -4px 16px rgba(184, 95, 108, 0.06) !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px) !important;
     z-index: 40 !important;
   }
 
   .studio-bottom-nav > div {
-    height: 3.5rem !important;
-    padding-left: 1.25rem !important;
-    padding-right: 1.25rem !important;
-    gap: 0.25rem !important;
+    height: 3.25rem !important;
+    max-width: 520px !important;
+    width: 100% !important;
+    padding-left: 2rem !important;
+    padding-right: 2rem !important;
   }
 
   .studio-menu-trigger {
     display: inline-flex !important;
   }
 
-  /* ─── Drawer: wider panel for iPad real-estate ─── */
+  /* ─── Drawer: solid backgrounds, wider for iPad ─── */
   .studio-mobile-drawer {
     display: block !important;
     isolation: isolate;
     overscroll-behavior: contain;
+    contain: layout paint style;
   }
 
   .studio-mobile-drawer-backdrop {
-    background: rgba(43, 28, 26, 0.25) !important;
-    -webkit-backdrop-filter: blur(3px) !important;
-    backdrop-filter: blur(3px) !important;
+    background: rgba(43, 28, 26, 0.32) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    transition: none !important;
   }
 
   .studio-mobile-drawer-panel {
@@ -409,25 +426,41 @@ video {
     max-width: 420px !important;
     height: 100vh !important;
     height: 100svh !important;
-    contain: layout style;
-    box-shadow: 0 12px 40px rgba(91, 52, 44, 0.16) !important;
+    transform: none !important;
+    will-change: auto !important;
+    contain: layout paint style;
+    box-shadow: 4px 0 24px rgba(91, 52, 44, 0.12) !important;
   }
 
   .studio-mobile-drawer-panel .studio-ios-scroll {
     overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
+    -webkit-overflow-scrolling: auto;
   }
 
-  /* ─── Content area: account for floating bottom nav ─── */
+  /* ─── Content area: bottom padding for nav dock ─── */
   .studio-mobile-bottom-safe {
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom)) !important;
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom)) !important;
   }
 
-  /* Ẩn bottom nav khi modal đang mở */
+  /* ─── Modal: solid backdrop on iPad ─── */
+  .studio-modal-open-element .absolute.inset-0 {
+    background: rgba(47, 30, 26, 0.55) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Modal header: solid bg, no blur */
+  .studio-modal-open-element [class*="bg-white/95"] {
+    background: #ffffff !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  /* ─── Hide bottom nav when modal open ─── */
   body.studio-modal-open .studio-bottom-nav {
-    opacity: 0;
-    pointer-events: none;
-    transform: translateX(-50%) translateY(100%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    transition: none !important;
   }
 }
 

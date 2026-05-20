@@ -175,6 +175,15 @@ function shouldUseRouterScroll() {
 
 function resetViewportScroll() {
   if (typeof window === "undefined") return;
+  // On iPad, defer scroll reset to avoid blocking during route paint
+  if (isTabletTouchViewport()) {
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
+    });
+    return;
+  }
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 }
 
@@ -322,6 +331,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       resetViewportScroll();
       router.push(target, { scroll: true });
     };
+
+    // On iPad: close drawer first, let DOM settle, then navigate
+    // This prevents the drawer animation and route change from competing for GPU
+    if (isTabletTouchViewport() && mobileMenuOpen) {
+      setMobileMenuOpen(false);
+      window.setTimeout(() => startTransition(navigate), 60);
+      return;
+    }
 
     if (mobileMenuOpen) {
       setMobileMenuOpen(false);
