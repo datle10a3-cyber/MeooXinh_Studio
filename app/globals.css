@@ -246,8 +246,8 @@ video {
   }
 }
 
-/* Tablet touch performance: Xiaomi Pad 8 resolves to about 1280px wide in landscape. */
-@media (min-width: 768px) and (max-width: 1280px) and (pointer: coarse) {
+/* Tablet touch performance: Xiaomi/iPad class tablets, including landscape. */
+@media (min-width: 768px) and (max-width: 1366px) and (pointer: coarse) {
   html,
   body {
     min-height: 100svh;
@@ -355,6 +355,42 @@ video {
      so layout changes inside one card don't trigger re-layout of siblings */
   [data-row-id] {
     contain: layout style;
+  }
+
+  .studio-menu-trigger,
+  .studio-mobile-drawer,
+  .studio-bottom-nav {
+    display: none !important;
+  }
+
+  .studio-tablet-nav {
+    display: block !important;
+    height: 58px;
+    min-height: 58px;
+    overflow: hidden;
+    contain: layout paint style;
+  }
+
+  .studio-tablet-nav-scroll {
+    height: 42px;
+    align-items: center;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .studio-tablet-nav-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  .studio-tablet-nav-button {
+    min-width: max-content;
+    touch-action: manipulation;
+    transform: none !important;
+  }
+
+  .studio-mobile-bottom-safe {
+    padding-bottom: 1rem !important;
   }
 }
 

@@ -106,7 +106,6 @@ const mobilePrimary: NavItem[] = [
 const mobilePrimaryOrder = ["home", "booking", "wallets", "ai"];
 const bottomMobileItems = [...mobilePrimary].sort((a, b) => mobilePrimaryOrder.indexOf(a.id) - mobilePrimaryOrder.indexOf(b.id));
 const rootAdminNavItem: NavItem = { id: "root-admins", label: "Admin", href: "/root-admins", icon: ShieldCheck };
-const tabletWarmupRoutes = ["/categories", "/packages", "/booking", "/projects", "/invoices", "/transactions", "/customers", "/completed-bookings"];
 
 const mobileGroups: { title: string; items: NavItem[] }[] = [
   {
@@ -167,15 +166,11 @@ function isAuthPath(path: string | null | undefined) {
 
 function isTabletTouchViewport() {
   if (typeof window === "undefined") return false;
-  return window.matchMedia("(min-width: 768px) and (max-width: 1280px) and (pointer: coarse)").matches;
+  return window.matchMedia("(min-width: 768px) and (max-width: 1366px) and (pointer: coarse)").matches;
 }
 
 function shouldUseRouterScroll() {
   return !isTabletTouchViewport();
-}
-
-function routePathOnly(href: string) {
-  return href.split("?")[0] || "/";
 }
 
 function resetViewportScroll() {
@@ -206,7 +201,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [menuCloseTarget, setMenuCloseTarget] = useState<string | null>(null);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFrom, setSearchFrom] = useState("");
@@ -315,14 +309,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     if (meta) meta.content = rootAdminCentralOnly ? "#04110A" : "#EA7188";
   }, [rootAdminCentralOnly]);
 
-  useEffect(() => {
-    if (!session || !isTabletTouchViewport()) return;
-    const timer = window.setTimeout(() => {
-      tabletWarmupRoutes.forEach((href) => router.prefetch(href));
-    }, 250);
-    return () => window.clearTimeout(timer);
-  }, [router, session]);
-
   // Sync activeResource with the current pathname.
   useEffect(() => {
     if (!pathname) return;
@@ -331,23 +317,10 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setActiveResource(view);
   }, [pathname, setActiveResource]);
 
-  useEffect(() => {
-    if (!menuCloseTarget || routePathOnly(menuCloseTarget) !== (pathname || "/")) return;
-    const frame = window.requestAnimationFrame(() => {
-      setMobileMenuOpen(false);
-      setMenuCloseTarget(null);
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [menuCloseTarget, pathname]);
-
   function goTo(item: NavItem) {
     startTransition(() => {
       const target = item.href || studioViewPath(item.id);
-      if (isTabletTouchViewport() && mobileMenuOpen) {
-        setMenuCloseTarget(target);
-      } else {
-        setMobileMenuOpen(false);
-      }
+      setMobileMenuOpen(false);
       resetViewportScroll();
       router.push(target, { scroll: shouldUseRouterScroll() });
     });
@@ -477,7 +450,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Button
                    variant="secondary"
                   size="icon"
-                  className={cn("h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
+                  className={cn("studio-menu-trigger h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
                   aria-label="Mở menu"
                   onClick={() => setMobileMenuOpen(true)}
                 >
@@ -548,6 +521,33 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
+          {!rootAdminCentralOnly ? (
+            <nav className="studio-tablet-nav hidden border-b border-[#F4C7C4] bg-[#FFF3EC] px-4 py-2" aria-label="Điều hướng tablet">
+              <div className="studio-tablet-nav-scroll flex gap-2 overflow-x-auto">
+                {visibleMobileGroups.flatMap((group) => group.items).map((item) => {
+                  const Icon = item.icon;
+                  const active = isActive(item);
+                  return (
+                    <button
+                      key={`tablet-${item.id}`}
+                      type="button"
+                      className={cn(
+                        "studio-tablet-nav-button flex h-10 shrink-0 items-center gap-2 rounded-xl border px-3 text-sm font-black transition",
+                        active
+                          ? "border-[#EA7188] bg-[#EA7188] text-white shadow-sm"
+                          : "border-[#F4C7C4] bg-white text-[#7A5148] hover:bg-[#FFF0F4]",
+                      )}
+                      onClick={() => goTo(item)}
+                    >
+                      <Icon size={17} strokeWidth={active ? 2.8 : 2.2} />
+                      <span>{item.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </nav>
+          ) : null}
+
           <div className={cn("studio-ios-scroll studio-mobile-bottom-safe studio-xs-tight px-2.5 py-3 sm:px-4 sm:py-5 lg:pb-6 xl:px-8", rootAdminCentralOnly ? "bg-[#04110A]" : "")}>{children}</div>
         </main>
       </div>
@@ -563,7 +563,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
 
       {mobileMenuOpen ? (
-        <div className="fixed inset-0 z-50 xl:hidden" style={{ transform: "translateZ(0)" }}>
+        <div className="studio-mobile-drawer fixed inset-0 z-50 xl:hidden" style={{ transform: "translateZ(0)" }}>
           <button className={cn("absolute inset-0", rootAdminCentralOnly ? "bg-black/55" : "bg-[#2B1C1A]/35")} style={{ backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }} aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)} />
           <aside className={cn("absolute left-0 top-0 flex h-dvh w-[88vw] max-w-[360px] flex-col overflow-hidden pt-[env(safe-area-inset-top)] shadow-2xl sm:w-[380px] sm:max-w-md", rootAdminCentralOnly ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4] bg-[#FFF7F0]")} style={{ transform: "translate3d(0,0,0)", willChange: "transform" }}>
             <div className={cn("flex items-center justify-between border-b p-3 sm:p-4", rootAdminCentralOnly ? "border-emerald-300/15" : "border-[#F4C7C4]")}>
@@ -681,7 +681,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <nav className={`fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC] pb-[env(safe-area-inset-bottom)] transition-all duration-200 ease-in-out xl:hidden ${shouldHideMobileNav ? 'hidden' : ''}`}>
+      <nav className={`studio-bottom-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC] pb-[env(safe-area-inset-bottom)] transition-all duration-200 ease-in-out xl:hidden ${shouldHideMobileNav ? 'hidden' : ''}`}>
         <div className="mx-auto flex h-14 w-full max-w-md items-center justify-around px-3">
           {bottomMobileItems.map((item) => {
             const Icon = item.icon;
