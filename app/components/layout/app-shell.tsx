@@ -318,12 +318,20 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [pathname, setActiveResource]);
 
   function goTo(item: NavItem) {
-    startTransition(() => {
-      const target = item.href || studioViewPath(item.id);
+    const target = item.href || studioViewPath(item.id);
+    const navigate = () => {
       setMobileMenuOpen(false);
       resetViewportScroll();
       router.push(target, { scroll: shouldUseRouterScroll() });
-    });
+    };
+
+    if (isTabletTouchViewport() && mobileMenuOpen) {
+      setMobileMenuOpen(false);
+      window.setTimeout(() => startTransition(navigate), 0);
+      return;
+    }
+
+    startTransition(navigate);
   }
 
   async function stopViewingAsAdmin() {
@@ -521,33 +529,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
             </div>
           </header>
 
-          {!rootAdminCentralOnly ? (
-            <nav className="studio-tablet-nav hidden border-b border-[#F4C7C4] bg-[#FFF3EC] px-4 py-2" aria-label="Điều hướng tablet">
-              <div className="studio-tablet-nav-scroll flex gap-2 overflow-x-auto">
-                {visibleMobileGroups.flatMap((group) => group.items).map((item) => {
-                  const Icon = item.icon;
-                  const active = isActive(item);
-                  return (
-                    <button
-                      key={`tablet-${item.id}`}
-                      type="button"
-                      className={cn(
-                        "studio-tablet-nav-button flex h-10 shrink-0 items-center gap-2 rounded-xl border px-3 text-sm font-black transition",
-                        active
-                          ? "border-[#EA7188] bg-[#EA7188] text-white shadow-sm"
-                          : "border-[#F4C7C4] bg-white text-[#7A5148] hover:bg-[#FFF0F4]",
-                      )}
-                      onClick={() => goTo(item)}
-                    >
-                      <Icon size={17} strokeWidth={active ? 2.8 : 2.2} />
-                      <span>{item.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </nav>
-          ) : null}
-
           <div className={cn("studio-ios-scroll studio-mobile-bottom-safe studio-xs-tight px-2.5 py-3 sm:px-4 sm:py-5 lg:pb-6 xl:px-8", rootAdminCentralOnly ? "bg-[#04110A]" : "")}>{children}</div>
         </main>
       </div>
@@ -564,8 +545,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
       {mobileMenuOpen ? (
         <div className="studio-mobile-drawer fixed inset-0 z-50 xl:hidden" style={{ transform: "translateZ(0)" }}>
-          <button className={cn("absolute inset-0", rootAdminCentralOnly ? "bg-black/55" : "bg-[#2B1C1A]/35")} style={{ backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }} aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)} />
-          <aside className={cn("absolute left-0 top-0 flex h-dvh w-[88vw] max-w-[360px] flex-col overflow-hidden pt-[env(safe-area-inset-top)] shadow-2xl sm:w-[380px] sm:max-w-md", rootAdminCentralOnly ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4] bg-[#FFF7F0]")} style={{ transform: "translate3d(0,0,0)", willChange: "transform" }}>
+          <button className={cn("studio-mobile-drawer-backdrop absolute inset-0", rootAdminCentralOnly ? "bg-black/55" : "bg-[#2B1C1A]/35")} style={{ backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)" }} aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)} />
+          <aside className={cn("studio-mobile-drawer-panel absolute left-0 top-0 flex h-dvh w-[88vw] max-w-[360px] flex-col overflow-hidden pt-[env(safe-area-inset-top)] shadow-2xl sm:w-[380px] sm:max-w-md", rootAdminCentralOnly ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4] bg-[#FFF7F0]")} style={{ transform: "translate3d(0,0,0)", willChange: "transform" }}>
             <div className={cn("flex items-center justify-between border-b p-3 sm:p-4", rootAdminCentralOnly ? "border-emerald-300/15" : "border-[#F4C7C4]")}>
               {rootAdminCentralOnly ? (
                 <div className="flex items-center gap-3">

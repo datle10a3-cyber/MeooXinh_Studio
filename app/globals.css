@@ -252,6 +252,7 @@ video {
   body {
     min-height: 100svh;
     overflow-x: clip;
+    overscroll-behavior-x: none;
   }
 
   .min-h-dvh {
@@ -280,19 +281,32 @@ video {
     min-height: 100svh !important;
   }
 
-  /* Allow short transitions for visual feedback, but no more */
-  * {
-    transition-duration: 80ms !important;
+  button,
+  a {
+    touch-action: manipulation;
   }
 
-  /* Kill page-enter animation — causes a full-page repaint on navigate */
-  main {
+  /* Allow short transitions for visual feedback, but no more */
+  * {
+    transition-duration: 40ms !important;
+  }
+
+  /* Sticky repaint on Android tablets is expensive during route changes. */
+  header.sticky {
+    position: static !important;
+    top: auto !important;
+  }
+
+  /* Kill repaint-heavy animations during tablet navigation. */
+  main,
+  .animate-pulse,
+  .animate-bounce,
+  [class*="animate-"] {
     animation: none !important;
   }
 
   .animate-spin {
-    animation-duration: 1s !important;
-    animation-iteration-count: infinite !important;
+    animation: none !important;
   }
 
   /* Backdrop-blur is very expensive on iPad Safari compositing */
@@ -334,7 +348,8 @@ video {
 
   /* Disable hover transforms — they fire on tap and cause layout thrash */
   [class*="hover:-translate"],
-  [class*="hover:scale"] {
+  [class*="hover:scale"],
+  [class*="active:scale"] {
     transform: none !important;
   }
 
@@ -357,36 +372,42 @@ video {
     contain: layout style;
   }
 
-  .studio-menu-trigger,
-  .studio-mobile-drawer,
   .studio-bottom-nav {
     display: none !important;
   }
 
-  .studio-tablet-nav {
+  .studio-menu-trigger {
+    display: inline-flex !important;
+  }
+
+  .studio-mobile-drawer {
     display: block !important;
-    height: 58px;
-    min-height: 58px;
-    overflow: hidden;
+    isolation: isolate;
+    overscroll-behavior: contain;
     contain: layout paint style;
   }
 
-  .studio-tablet-nav-scroll {
-    height: 42px;
-    align-items: center;
-    overscroll-behavior-x: contain;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
+  .studio-mobile-drawer-backdrop {
+    background: rgba(43, 28, 26, 0.28) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    transition: none !important;
   }
 
-  .studio-tablet-nav-scroll::-webkit-scrollbar {
-    display: none;
-  }
-
-  .studio-tablet-nav-button {
-    min-width: max-content;
-    touch-action: manipulation;
+  .studio-mobile-drawer-panel {
+    width: min(390px, 44vw) !important;
+    max-width: 390px !important;
+    height: 100vh !important;
+    height: 100svh !important;
     transform: none !important;
+    will-change: auto !important;
+    contain: layout paint style;
+    box-shadow: 0 8px 24px rgba(91, 52, 44, 0.14) !important;
+  }
+
+  .studio-mobile-drawer-panel .studio-ios-scroll {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: auto;
   }
 
   .studio-mobile-bottom-safe {
