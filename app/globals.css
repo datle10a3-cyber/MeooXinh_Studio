@@ -245,7 +245,7 @@ video {
 }
 
 /* ─── Mobile-specific performance ─── */
-@media (hover: none), (pointer: coarse) {
+@media (max-width: 767px) and ((hover: none) or (pointer: coarse)) {
   /* Faster transitions on touch devices for snappy feel */
   * {
     transition-duration: 100ms !important;
@@ -333,23 +333,20 @@ video {
   }
 }
 
+/* ─── Tablet sidebar layout ─── */
+/* md (768-1023px): mini sidebar 80px — icon only, centered */
+/* lg (1024-1279px): sidebar 224px — icon + text, left-aligned */
+/* xl (1280px+): sidebar 256px — full sidebar, unchanged */
+
+/* Ensure no horizontal overflow in any nested content */
 @media (min-width: 768px) and (max-width: 1279px) {
-  .studio-sidebar,
-  .studio-brand-mark,
-  .studio-stable-decor,
-  [class*="animate-bounce"],
-  [class*="animate-pulse"] {
-    animation: none !important;
+  .studio-main {
+    min-width: 0;
+    overflow-x: hidden;
   }
 
-  [class*="hover:-translate"],
-  [class*="hover:scale"],
-  [class*="active:scale"] {
-    transform: none !important;
-  }
-
-  [class*="transition-all"] {
-    transition-property: color, background-color, border-color, box-shadow, opacity !important;
+  .studio-content-scroll {
+    overflow-x: hidden;
   }
 }
 
