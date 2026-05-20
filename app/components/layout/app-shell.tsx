@@ -177,6 +177,61 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
   }
 }
 
+/**
+ * Isolated tablet hamburger button — subscribes to zustand store independently.
+ * When tabletMenuOpen changes, ONLY this component re-renders, NOT AppShell children.
+ */
+function TabletHamburger({ rootAdminTheme }: { rootAdminTheme: boolean }) {
+  const setTabletMenuOpen = useUiStore((state) => state.setTabletMenuOpen);
+  return (
+    <Button
+      variant="secondary"
+      size="icon"
+      className={cn("studio-menu-trigger hidden h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition-colors md:flex xl:hidden sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl", rootAdminTheme ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
+      aria-label="Mở menu tablet"
+      onClick={() => setTabletMenuOpen(true)}
+    >
+      <Menu size={24} strokeWidth={2.8} />
+    </Button>
+  );
+}
+
+/**
+ * Isolated TabletMenu wrapper — subscribes to store independently.
+ * AppShell does NOT re-render when tablet menu opens/closes.
+ */
+function TabletMenuWrapper({ rootAdminTheme }: { rootAdminTheme: boolean }) {
+  const tabletMenuOpen = useUiStore((state) => state.tabletMenuOpen);
+  const setTabletMenuOpen = useUiStore((state) => state.setTabletMenuOpen);
+  const setActiveResource = useUiStore((state) => state.setActiveResource);
+  const session = useUiStore((state) => state.session);
+  const router = useRouter();
+
+  function handleNavigate(item: TabletNavItem) {
+    const target = item.href || studioViewPath(item.id);
+    // 1. Close menu immediately (unmounts dropdown)
+    setTabletMenuOpen(false);
+    // 2. Wait one frame for unmount commit
+    requestAnimationFrame(() => {
+      // 3. Navigate — content swap without menu visible
+      startTransition(() => {
+        setActiveResource(item.id);
+        router.push(target, { scroll: true });
+      });
+    });
+  }
+
+  return (
+    <TabletMenu
+      open={tabletMenuOpen}
+      onClose={() => setTabletMenuOpen(false)}
+      onNavigate={handleNavigate}
+      session={session}
+      rootAdminTheme={rootAdminTheme}
+    />
+  );
+}
+
 export function AppShell({ children }: { children: React.ReactNode }) {
   const setActiveResource = useUiStore((state) => state.setActiveResource);
   const darkMode = useUiStore((state) => state.darkMode);
@@ -189,7 +244,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [tabletMenuOpen, setTabletMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFrom, setSearchFrom] = useState("");
@@ -318,32 +372,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // Tablet menu is handled by handleTabletNavigate, not here.
-    // But if somehow called with tabletMenuOpen, close and navigate.
-    if (tabletMenuOpen) {
-      setTabletMenuOpen(false);
-    }
-
     startTransition(navigate);
-  }
-
-  /**
-   * Tablet menu navigation — close menu FIRST, wait for unmount,
-   * then navigate. This prevents the menu being visible during
-   * the route transition which causes the "grey flash" on iPad.
-   */
-  function handleTabletNavigate(item: TabletNavItem) {
-    const target = item.href || studioViewPath(item.id);
-    // 1. Close menu immediately (unmounts the dropdown)
-    setTabletMenuOpen(false);
-    // 2. Wait one frame for React to commit the unmount
-    requestAnimationFrame(() => {
-      // 3. Then navigate — content swap happens without menu overlay
-      startTransition(() => {
-        setActiveResource(item.id);
-        router.push(target, { scroll: true });
-      });
-    });
   }
 
   async function stopViewingAsAdmin() {
@@ -477,16 +506,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 >
                   <Menu size={24} strokeWidth={2.8} />
                 </Button>
-                {/* Tablet hamburger — md to xl (768px-1279px), opens TabletMenu NOT MobileDrawer */}
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  className={cn("studio-menu-trigger hidden h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition-colors md:flex xl:hidden sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
-                  aria-label="Mở menu tablet"
-                  onClick={() => setTabletMenuOpen(true)}
-                >
-                  <Menu size={24} strokeWidth={2.8} />
-                </Button>
+                {/* Tablet hamburger — isolated component, does NOT re-render AppShell */}
+                <TabletHamburger rootAdminTheme={rootAdminCentralOnly} />
                 <div className="min-w-0">
                   <p className={cn("line-clamp-1 text-xs font-black leading-4 sm:text-sm", rootAdminCentralOnly ? "text-emerald-200" : "text-[#E88498]")}>
                     Studio: {displayStudioName(session)}
@@ -556,14 +577,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* TabletMenu — dropdown panel, conditional mount (lightweight) */}
-      <TabletMenu
-        open={tabletMenuOpen}
-        onClose={() => setTabletMenuOpen(false)}
-        onNavigate={handleTabletNavigate}
-        session={session}
-        rootAdminTheme={rootAdminCentralOnly}
-      />
+      {/* TabletMenu — isolated wrapper, does NOT re-render AppShell */}
+      <TabletMenuWrapper rootAdminTheme={rootAdminCentralOnly} />
 
       {viewingAsAdmin ? (
         <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.3rem)] left-2 right-2 z-[70] rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-2xl sm:left-auto sm:right-4 sm:bottom-4 sm:w-[360px]">
