@@ -86,7 +86,7 @@ const rootAdminNavItem: NavItem = {
   href: "/root-admins",
 };
 
-export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }: { session: CurrentSession | null; rootAdminTheme?: boolean }) {
+export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false, collapsed = false }: { session: CurrentSession | null; rootAdminTheme?: boolean; collapsed?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const setActiveResource = useUiStore((state) => state.setActiveResource);
