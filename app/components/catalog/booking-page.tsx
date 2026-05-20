@@ -507,7 +507,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
       }
       window.setTimeout(() => {
         const element = document.querySelector(`[data-row-id="${CSS.escape(targetId)}"]`);
-        element?.scrollIntoView({ behavior: "smooth", block: "center" });
+        element?.scrollIntoView({ behavior: "auto", block: "center" });
         element?.classList.add("studio-focus-highlight");
         window.setTimeout(() => {
           element?.classList.remove("studio-focus-highlight");

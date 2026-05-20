@@ -14,8 +14,22 @@ interface DetailModalProps {
 }
 
 /**
+ * Returns true when we're on a tablet/iPad (pointer: coarse + wide screen).
+ * On tablet, skip body scroll lock to avoid layout jank on iPad Safari.
+ */
+function isTabletOrDesktop() {
+  if (typeof window === "undefined") return false;
+  return window.innerWidth >= 768;
+}
+
+/**
  * Unified detail modal — renders via Portal directly into <body>
  * to avoid any parent transform/overflow CSS breaking fixed positioning.
+ *
+ * Scroll lock strategy:
+ * - Mobile (<768px): position:fixed body + restore scrollY on close (standard iOS modal lock)
+ * - Tablet/Desktop (>=768px): NO body position:fixed — modal is self-contained,
+ *   body lock is not needed and causes jank when closing on iPad Safari.
  */
 export function DetailModal({
   onClose,
@@ -59,13 +73,35 @@ export function DetailModal({
         window.history.back();
       }
     };
-  }, []);  // Body scroll lock with stack counting to prevent losing scroll position on multiple modals
+  }, []);
+
+  // Body scroll lock — ONLY on mobile (<768px).
+  // Tablet/Desktop: skip entirely. position:fixed on body causes layout recalc
+  // when the modal closes, creating the "jank + hold finger" bug on iPad Safari.
   useEffect(() => {
     const body = document.body;
-    
-    // Check if a modal is already open
+    const tablet = isTabletOrDesktop();
+
+    // Force modal scroll to top after paint
+    requestAnimationFrame(() => {
+      if (scrollRef.current) scrollRef.current.scrollTop = 0;
+    });
+
+    if (tablet) {
+      // Tablet/Desktop: just mark the class for stacking, no position:fixed
+      const isAlreadyLocked = body.classList.contains("studio-modal-open");
+      if (!isAlreadyLocked) body.classList.add("studio-modal-open");
+      return () => {
+        setTimeout(() => {
+          if (!document.querySelector(".studio-modal-open-element")) {
+            body.classList.remove("studio-modal-open");
+          }
+        }, 0);
+      };
+    }
+
+    // Mobile: full scroll lock with position:fixed
     const isAlreadyLocked = body.classList.contains("studio-modal-open");
-    
     let scrollY = 0;
     if (!isAlreadyLocked) {
       scrollY = window.scrollY;
@@ -77,19 +113,9 @@ export function DetailModal({
       body.classList.add("studio-modal-open");
     }
 
-    // Force modal scroll to top after paint
-    requestAnimationFrame(() => {
-      if (scrollRef.current) scrollRef.current.scrollTop = 0;
-    });
-
     return () => {
-      // Only restore body if we are the last modal closing
-      // We can check if there are other modals by looking at the DOM, but
-      // a simple timeout allows other unmounts/mounts to settle.
-      // A better way is to just let the modal unmount and if no more modals exist, unlock.
-      // Since this is a simple app, we can just look for other modals.
       setTimeout(() => {
-        if (!document.querySelector('.studio-modal-open-element')) {
+        if (!document.querySelector(".studio-modal-open-element")) {
           body.style.position = "";
           body.style.top = "";
           body.style.left = "";
@@ -97,6 +123,7 @@ export function DetailModal({
           body.style.width = "";
           body.classList.remove("studio-modal-open");
           if (!isAlreadyLocked) {
+            // Restore scroll position — mobile only, no layout jank since body is not scrollable on tablet
             window.scrollTo(0, scrollY);
           }
         }

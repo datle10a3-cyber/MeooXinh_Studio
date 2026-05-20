@@ -176,7 +176,7 @@ export function PackagePage() {
     if (!focusedItemId || !rows.length) return;
     const timer = window.setTimeout(() => {
       const element = document.querySelector(`[data-row-id="${CSS.escape(focusedItemId)}"]`);
-      element?.scrollIntoView({ behavior: "smooth", block: "center" });
+      element?.scrollIntoView({ behavior: "auto", block: "center" });
       element?.classList.add("studio-focus-highlight");
       window.setTimeout(() => {
         element?.classList.remove("studio-focus-highlight");
