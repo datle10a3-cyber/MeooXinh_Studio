@@ -246,8 +246,40 @@ video {
   }
 }
 
-/* iPad/tablet PWA performance: avoid Safari repaint storms while scrolling */
-@media (min-width: 641px) and (max-width: 1279px) and (pointer: coarse) {
+/* Tablet touch performance: Xiaomi Pad 8 resolves to about 1280px wide in landscape. */
+@media (min-width: 768px) and (max-width: 1280px) and (pointer: coarse) {
+  html,
+  body {
+    min-height: 100svh;
+    overflow-x: clip;
+  }
+
+  .min-h-dvh {
+    min-height: 100vh !important;
+    min-height: 100svh !important;
+  }
+
+  .h-dvh {
+    height: 100vh !important;
+    height: 100svh !important;
+  }
+
+  [class*="max-h-[calc(100dvh"] {
+    max-height: calc(100vh - 1rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    max-height: calc(100svh - 1rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+  }
+
+  [class*="max-h-[30dvh"] {
+    max-height: 30vh !important;
+    max-height: 30svh !important;
+  }
+
+  .studio-mobile-page,
+  .studio-mobile-page > .flex {
+    min-height: 100vh !important;
+    min-height: 100svh !important;
+  }
+
   /* Allow short transitions for visual feedback, but no more */
   * {
     transition-duration: 80ms !important;
@@ -279,8 +311,10 @@ video {
   /* Avoid promoting fixed/sticky elements to GPU layers unnecessarily */
   header.sticky,
   nav.fixed,
+  .fixed.inset-0,
   .studio-gpu,
   .studio-mobile-form-sheet {
+    transform: none !important;
     will-change: auto !important;
     backface-visibility: visible !important;
   }
