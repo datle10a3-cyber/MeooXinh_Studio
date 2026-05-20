@@ -246,32 +246,15 @@ video {
   }
 }
 
-/* ─── iPad / Tablet — sidebar layout, zero-jank ─── */
-/* Tablet gets its own layout: compact sidebar always visible (like mini-laptop).
-   No drawer, no bottom-nav, no overlay. Only the content area changes on navigate.
-   backdrop-filter disabled everywhere — iPad Safari compositing can't handle it. */
+/* ─── iPad / Tablet — hamburger+drawer, no bottom nav, zero jank ─── */
 @media (min-width: 768px) and (max-width: 1366px) and (pointer: coarse) {
 
-  /* ── Viewport: fixed height, no body scroll ── */
+  /* Viewport: normal scroll, no fixed height */
   html,
   body {
-    height: 100svh !important;
-    overflow: hidden !important;
-    overscroll-behavior: none !important;
-  }
-
-  .studio-mobile-page {
-    height: 100svh !important;
-    min-height: 100svh !important;
-    max-height: 100svh !important;
-    overflow: hidden !important;
-  }
-
-  .studio-mobile-page > .flex {
-    height: 100svh !important;
-    min-height: 100svh !important;
-    max-height: 100svh !important;
-    overflow: hidden !important;
+    min-height: 100svh;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
   }
 
   .min-h-dvh {
@@ -282,92 +265,94 @@ video {
     height: 100svh !important;
   }
 
-  /* ── LAYOUT: Show sidebar, hide mobile nav ── */
-
-  /* Show desktop sidebar on tablet — compact width */
-  .studio-sidebar {
-    display: block !important;
-    width: 13rem !important;
-    padding: 0.75rem 0.5rem !important;
-    flex-shrink: 0 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    height: 100svh !important;
-    -webkit-overflow-scrolling: auto;
-    overscroll-behavior: contain;
+  .studio-mobile-page,
+  .studio-mobile-page > .flex {
+    min-height: 100svh !important;
   }
 
-  /* Compact sidebar branding */
-  .studio-sidebar > div:first-child {
-    margin-bottom: 0.5rem !important;
-    padding: 0.65rem !important;
-    border-radius: 1rem !important;
+  [class*="max-h-[calc(100dvh"] {
+    max-height: calc(100svh - 1rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
   }
 
-  /* Compact sidebar nav items */
-  .studio-sidebar nav .space-y-1 button {
-    height: 2.25rem !important;
-    font-size: 0.8125rem !important;
-    padding-left: 0.5rem !important;
-    padding-right: 0.5rem !important;
-    gap: 0.5rem !important;
+  [class*="max-h-[30dvh"] {
+    max-height: 30svh !important;
   }
-
-  .studio-sidebar nav .space-y-1 button svg {
-    width: 16px !important;
-    height: 16px !important;
-  }
-
-  /* Hide hamburger — sidebar replaces it */
-  .studio-menu-trigger {
-    display: none !important;
-  }
-
-  /* Hide bottom nav — sidebar replaces it */
-  .studio-bottom-nav {
-    display: none !important;
-  }
-
-  /* Hide drawer entirely — sidebar replaces it */
-  .studio-mobile-drawer {
-    display: none !important;
-  }
-
-  /* ── Content area: scrolls independently ── */
-  .studio-mobile-page > .flex > main {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    min-height: 0 !important;
-    flex: 1 1 0% !important;
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior: contain;
-  }
-
-  /* No bottom padding needed — no bottom nav */
-  .studio-mobile-bottom-safe {
-    padding-bottom: 1rem !important;
-  }
-
-  /* ── PERFORMANCE ── */
 
   button,
   a {
     touch-action: manipulation;
   }
 
-  /* Transitions: snappy but not dead */
-  * {
-    transition-duration: 80ms !important;
+  /* ── Navigation: hamburger + drawer, no bottom nav ── */
+
+  /* Keep hamburger visible */
+  .studio-menu-trigger {
+    display: inline-flex !important;
   }
 
-  /* Header: solid, contained, stays in scrolling content */
+  /* Hide bottom nav — reduces layout reflow */
+  .studio-bottom-nav {
+    display: none !important;
+  }
+
+  /* No bottom padding — no bottom nav */
+  .studio-mobile-bottom-safe {
+    padding-bottom: 1rem !important;
+  }
+
+  /* ── Drawer: INSTANT open/close, no animation ── */
+  .studio-mobile-drawer {
+    display: block !important;
+    contain: layout paint style;
+  }
+
+  /* Backdrop: solid dark, no blur, no transition */
+  .studio-mobile-drawer-backdrop {
+    background: rgba(43, 28, 26, 0.35) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    transition: none !important;
+    animation: none !important;
+  }
+
+  /* Panel: instant appear, no slide/transform animation */
+  .studio-mobile-drawer-panel {
+    width: min(380px, 48vw) !important;
+    max-width: 400px !important;
+    height: 100svh !important;
+    transform: none !important;
+    will-change: auto !important;
+    transition: none !important;
+    animation: none !important;
+    contain: layout paint style;
+    box-shadow: 4px 0 20px rgba(91, 52, 44, 0.10) !important;
+  }
+
+  .studio-mobile-drawer-panel * {
+    transition: none !important;
+    animation: none !important;
+  }
+
+  .studio-mobile-drawer-panel .studio-ios-scroll {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: auto;
+  }
+
+  /* ── Performance ── */
+
+  /* Transitions: short for tap feedback only */
+  * {
+    transition-duration: 60ms !important;
+  }
+
+  /* Header: solid bg, contained */
   header.sticky {
     contain: layout style;
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
 
-  /* Animations: loading indicators only */
+  /* Animations: loading only */
   .animate-pulse {
     animation-duration: 1.2s !important;
   }
@@ -380,7 +365,7 @@ video {
     animation: none !important;
   }
 
-  /* Backdrop-filter: DISABLED everywhere */
+  /* Backdrop-filter: OFF everywhere */
   [class*="backdrop-blur"],
   [class*="supports-[backdrop-filter]"],
   .backdrop-blur,
@@ -404,24 +389,22 @@ video {
     background: rgba(255, 255, 255, 0.96) !important;
   }
 
-  /* Shadows: moderate, single-layer */
+  /* Shadows: light, single-layer */
   [class*="shadow-[0_22px"],
   [class*="shadow-[0_24px"],
   [class*="shadow-[0_30px"] {
-    box-shadow: 0 6px 20px rgba(91, 52, 44, 0.10) !important;
+    box-shadow: 0 4px 14px rgba(91, 52, 44, 0.08) !important;
   }
 
-  .shadow-2xl {
-    box-shadow: 0 8px 24px rgba(91, 52, 44, 0.10) !important;
-  }
-
+  .shadow-2xl,
   .shadow-xl {
-    box-shadow: 0 4px 16px rgba(91, 52, 44, 0.08) !important;
+    box-shadow: 0 4px 14px rgba(91, 52, 44, 0.08) !important;
   }
 
-  /* Transforms: hover disabled, press feedback OK */
+  /* Transforms: disable hover, disable active:scale */
   [class*="hover:-translate"],
-  [class*="hover:scale"] {
+  [class*="hover:scale"],
+  [class*="active:scale"] {
     transform: none !important;
   }
 
@@ -438,7 +421,7 @@ video {
     contain: layout style;
   }
 
-  /* ── Modal: solid backdrop ── */
+  /* Modal: solid backdrop */
   .studio-modal-open-element .absolute.inset-0 {
     background: rgba(47, 30, 26, 0.55) !important;
     -webkit-backdrop-filter: none !important;
@@ -449,15 +432,6 @@ video {
     background: #ffffff !important;
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
-  }
-
-  /* Max-height overrides for scrollable containers */
-  [class*="max-h-[calc(100dvh"] {
-    max-height: calc(100svh - 1rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
-  }
-
-  [class*="max-h-[30dvh"] {
-    max-height: 30svh !important;
   }
 }
 

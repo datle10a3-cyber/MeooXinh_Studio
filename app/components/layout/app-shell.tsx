@@ -332,11 +332,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       router.push(target, { scroll: true });
     };
 
-    // On iPad: close drawer first, let DOM settle, then navigate
-    // This prevents the drawer animation and route change from competing for GPU
+    // On iPad: close drawer first, let React unmount it, then navigate
+    // Drawer CSS has transition:none on tablet so unmount is instant,
+    // but React needs a frame to reconcile before route change starts
     if (isTabletTouchViewport() && mobileMenuOpen) {
       setMobileMenuOpen(false);
-      window.setTimeout(() => startTransition(navigate), 60);
+      window.setTimeout(() => startTransition(navigate), 150);
       return;
     }
 
