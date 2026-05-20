@@ -784,6 +784,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }
 
   const deferredQuery = useDeferredValue(query);
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const filteredRows = useMemo(() => {
     const keyword = deferredQuery.trim().toLowerCase();
     if (!keyword) return rows;
@@ -795,6 +796,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }, [rows, deferredQuery]);
   const allVisibleSelected = filteredRows.length > 0 && filteredRows.every((row) => selectedIds.includes(row.id));
   const groupNames = parseGroupCustomers(form.groupCustomers);
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const displayGroups = useMemo(() => {
     const groups: Array<{ key: string; title?: string; rows: BookingItem[] }> = [];
     const grouped = new Map<string, { title: string; rows: BookingItem[] }>();

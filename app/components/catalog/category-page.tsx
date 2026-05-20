@@ -177,6 +177,7 @@ export function CategoryPage() {
   }
 
   const deferredQuery = useDeferredValue(query);
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const filteredRows = useMemo(() => {
     const keyword = deferredQuery.trim().toLowerCase();
     if (!keyword) return rows;
