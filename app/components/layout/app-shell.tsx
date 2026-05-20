@@ -164,8 +164,18 @@ function isAuthPath(path: string | null | undefined) {
   return path === "/login" || path === "/register" || path === "/forgot-password";
 }
 
+function isTabletTouchViewport() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(min-width: 768px) and (max-width: 1280px) and (pointer: coarse)").matches;
+}
+
+function shouldUseRouterScroll() {
+  return !isTabletTouchViewport();
+}
+
 function resetViewportScroll() {
   if (typeof window === "undefined") return;
+  if (isTabletTouchViewport()) return;
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 }
 
@@ -284,11 +294,12 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (rootAdminCentralOnly && pathname !== "/root-admins") {
-      router.replace("/root-admins", { scroll: true });
+      router.replace("/root-admins", { scroll: shouldUseRouterScroll() });
     }
   }, [pathname, rootAdminCentralOnly, router]);
 
   useEffect(() => {
+    if (isTabletTouchViewport()) return;
     const frame = window.requestAnimationFrame(resetViewportScroll);
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
@@ -311,7 +322,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       setMobileMenuOpen(false);
       const target = item.href || studioViewPath(item.id);
       resetViewportScroll();
-      router.push(target, { scroll: true });
+      router.push(target, { scroll: shouldUseRouterScroll() });
     });
   }
 
@@ -322,7 +333,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     localStorage.setItem("studio-session", JSON.stringify(result.data));
     window.dispatchEvent(new Event("studio-session-updated"));
     resetViewportScroll();
-    router.push("/root-admins", { scroll: true });
+    router.push("/root-admins", { scroll: shouldUseRouterScroll() });
   }
 
   function goToSearchResult(item: SearchResult) {
@@ -336,7 +347,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     setSearchQuery("");
     
     resetViewportScroll();
-    router.push(item.targetPath, { scroll: true });
+    router.push(item.targetPath, { scroll: shouldUseRouterScroll() });
   }
 
   function isActive(item: NavItem) {

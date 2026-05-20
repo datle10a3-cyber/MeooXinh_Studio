@@ -319,6 +319,19 @@ video {
     backface-visibility: visible !important;
   }
 
+  [style*="translate3d"],
+  [style*="translateZ"] {
+    transform: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+  }
+
+  [style*="backdrop-filter"],
+  [style*="backdropFilter"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
   /* Disable hover transforms — they fire on tap and cause layout thrash */
   [class*="hover:-translate"],
   [class*="hover:scale"] {
