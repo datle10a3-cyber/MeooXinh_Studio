@@ -336,7 +336,11 @@ video {
 /* ─── Tablet touch performance (768px–1279px) ─── */
 /*
   Tablet/iPad uses TabletMenu, no sidebar.
-  Full-width content. Kill all GPU-expensive effects that cause jank on iPad Safari.
+  Kill GPU-expensive effects that cause jank on iPad Safari.
+
+  IMPORTANT: Do NOT use transform:translateZ(0) or will-change:transform
+  on broad selectors — this forces GPU compositing layers on EVERY matched
+  element, causing memory pressure on iPad with large lists (resource-manager).
 */
 @media (min-width: 768px) and (max-width: 1279px) {
   /* Ensure no horizontal overflow */
@@ -346,42 +350,42 @@ video {
     overflow-x: hidden;
   }
 
-  /* Main scroll container: GPU pan, prevent bounce/overscroll jank */
+  /* Main scroll: GPU pan, contain overscroll bounce */
   .studio-main {
     touch-action: pan-y;
     overscroll-behavior-y: contain;
   }
 
-  /* Content scroll: prevent bounce at top/bottom */
+  /* Content scroll: no bounce at edges */
   .studio-content-scroll {
     overscroll-behavior-y: none;
   }
 
-  /* ── Kill all hover transforms ── */
-  /* Tailwind hover:-translate-y-* and hover:translate-* */
-  [class*="hover:-translate"],
-  [class*="hover:translate-"] {
+  /* ── Disable hover transforms (touch has no hover, but reset vars to be safe) ──
+     Only target the :hover state so we don't add GPU layers in default state.
+     On touch devices :hover generally doesn't fire, so this is a safeguard only. */
+  [class*="hover:-translate"]:hover,
+  [class*="hover:translate-"]:hover {
     --tw-translate-x: 0 !important;
     --tw-translate-y: 0 !important;
-    transform: translateZ(0) !important; /* keep GPU layer, no movement */
+    transform: none !important;
   }
 
-  /* Tailwind hover:scale-* and hover:scale-[*] */
-  [class*="hover:scale-"] {
+  [class*="hover:scale-"]:hover {
     --tw-scale-x: 1 !important;
     --tw-scale-y: 1 !important;
-    transform: translateZ(0) !important;
+    transform: none !important;
   }
 
-  /* Tailwind active:scale-* */
-  [class*="active:scale"] {
+  /* ── Disable active:scale — fires on tap, causes layout recalc ── */
+  [class*="active:scale"]:active {
     --tw-scale-x: 1 !important;
     --tw-scale-y: 1 !important;
-    transform: translateZ(0) !important;
+    transform: none !important;
   }
 
-  /* ── Kill backdrop-filter ── */
-  /* Extremely expensive on iPad Safari — causes full compositing layer */
+  /* ── Kill backdrop-filter everywhere ──
+     Extremely expensive on iPad Safari — full compositing layer per element. */
   [class*="backdrop-blur"],
   [class*="backdrop-filter"] {
     -webkit-backdrop-filter: none !important;
@@ -394,9 +398,9 @@ video {
     transition-duration: 150ms !important;
   }
 
-  /* ── Kill CSS @keyframe animations on layout elements ── */
-  /* animate-in / zoom-in-95 / slide-in-from-* from tailwindcss-animate */
-  /* These trigger paint + composite on every modal open on tablet */
+  /* ── Kill CSS @keyframe animations ──
+     animate-in/zoom-in/slide-in from tailwindcss-animate trigger
+     paint + composite on every modal open. */
   [class*="animate-in"],
   [class*="zoom-in"],
   [class*="slide-in"],
@@ -406,28 +410,22 @@ video {
   [class*="animate-pulse"] {
     animation: none !important;
     opacity: 1 !important;
-    transform: none !important;
+    /* Do NOT set transform:none here — it can break layout transforms */
   }
 
-  /* ── Prevent smooth scroll ── */
+  /* ── Prevent smooth scroll causing layout recalc ── */
   * {
     scroll-behavior: auto !important;
   }
 
-  /* ── Disable heavy animations on layout chrome ── */
+  /* ── Disable animations on layout chrome only ── */
   .studio-sidebar,
   .studio-brand-mark,
   .studio-stable-decor {
     animation: none !important;
   }
-
-  /* ── Cleanup will-change on non-transforming elements ── */
-  /* Prevent orphaned GPU layers from elements that no longer animate */
-  [class*="hover:-translate"] *,
-  [class*="hover:scale-"] * {
-    will-change: auto !important;
-  }
 }
+
 
 
 /* ─── Small screens ─── */
