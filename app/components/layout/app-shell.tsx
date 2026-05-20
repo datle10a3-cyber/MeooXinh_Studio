@@ -459,7 +459,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className={rootAdminCentralOnly ? "studio-mobile-page min-h-dvh bg-[#04110A] text-slate-100" : darkMode ? "studio-mobile-page min-h-dvh bg-[#2B1C1A] text-white" : "studio-mobile-page min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
       <div className="flex min-h-dvh">
         <Sidebar session={session} rootAdminTheme={rootAdminCentralOnly} collapsed={isTabletSidebarCollapsed} />
-        <main className="min-w-0 flex-1 touch-pan-y">
+        <main className="min-w-0 flex-1 overflow-x-hidden touch-pan-y">
           <header className={cn("sticky top-0 z-30 px-2.5 py-2 sm:px-4 lg:py-3 xl:px-8", rootAdminCentralOnly ? "border-b border-emerald-300/15 bg-[#04110A]" : "border-b border-[#F4C7C4] bg-[#FFF3EC]")}>
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
