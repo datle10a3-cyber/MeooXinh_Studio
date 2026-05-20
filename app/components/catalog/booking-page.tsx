@@ -814,7 +814,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const visibleGroupKeys = displayGroups.filter((group) => group.title).map((group) => group.key);
   const selectedGroupRows = displayGroups.filter((group) => selectedGroupKeys.includes(group.key)).flatMap((group) => group.rows);
   const selectedDeleteCount = new Set([...selectedIds, ...selectedGroupRows.map((row) => row.id)]).size;
-  const progressiveGroups = useProgressiveList(displayGroups, 50);
+  const progressiveGroups = useProgressiveList(displayGroups, 20);
   const paymentGroup = paymentTarget ? displayGroups.find((group) => group.key && group.key === bookingGroupKey(paymentTarget)) : null;
   const paymentGroupRows = paymentGroup?.rows ?? (paymentTarget ? [paymentTarget] : []);
 

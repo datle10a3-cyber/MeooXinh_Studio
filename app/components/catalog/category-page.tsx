@@ -181,7 +181,7 @@ export function CategoryPage() {
     if (!keyword) return true;
     return [row.name, row.description].some((value) => String(value ?? "").toLowerCase().includes(keyword));
   });
-  const progressiveRows = useProgressiveList(filteredRows, 80);
+  const progressiveRows = useProgressiveList(filteredRows, 30);
   const allVisibleSelected = filteredRows.length > 0 && filteredRows.every((row) => selectedIds.includes(row.id));
 
   function toggleSelect(id: string) {

@@ -2466,7 +2466,7 @@ function TransactionDateListWithProgressive({
   onOpenDetail: (row: Row) => void;
   onOpenGallery: (row: Row, index: number) => void;
 }) {
-  const { visibleItems, sentinelRef, hasMore } = useProgressiveList(groups, 8); // Load 8 groups (days) at a time
+  const { visibleItems, sentinelRef, hasMore } = useProgressiveList(groups, 5); // Load 5 groups (days) at a time
 
   return (
     <>
@@ -2509,7 +2509,7 @@ function ResourceListWithProgressive({
   setDeleteTarget: (row: Row | null) => void;
   openRowGallery: (row: Row, index: number) => void;
 }) {
-  const { visibleItems, sentinelRef, hasMore } = useProgressiveList(visibleRows, 50);
+  const { visibleItems, sentinelRef, hasMore } = useProgressiveList(visibleRows, 20);
 
   const rowGroups = resource === "transactions" ? [] : [{ title: "", tone: "", rows: visibleItems }];
 

@@ -311,7 +311,7 @@ export function PackagePage() {
       String(value ?? "").toLowerCase().includes(keyword),
     );
   });
-  const progressiveRows = useProgressiveList(filteredRows, 60);
+  const progressiveRows = useProgressiveList(filteredRows, 25);
   const allVisibleSelected = filteredRows.length > 0 && filteredRows.every((row) => selectedIds.includes(row.id));
 
   return (
