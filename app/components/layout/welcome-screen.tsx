@@ -65,7 +65,7 @@ export function WelcomeScreen() {
         </div>
       </section>
 
-      <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         {features.map((feature) => {
           const Icon = feature.icon;
           return (

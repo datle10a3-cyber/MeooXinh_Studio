@@ -311,7 +311,7 @@ export function ModuleHome() {
 
       <Card>
         <CardTitle>Luồng vận hành</CardTitle>
-        <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3 lg:grid-cols-3 xl:grid-cols-6">
+        <div className="mt-4 grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-3 xl:grid-cols-6">
           {flow.map((item) => {
             const Icon = item.icon;
             const tile = (
@@ -335,7 +335,7 @@ export function ModuleHome() {
         </div>
       </Card>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         {quick.map((item) => {
           const Icon = item.icon;
           return (

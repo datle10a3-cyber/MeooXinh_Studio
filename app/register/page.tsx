@@ -87,7 +87,7 @@ export default function RegisterPage() {
           <h2 className="mt-2 text-3xl font-black text-[#5B342C]">Tạo tài khoản quản trị</h2>
           <p className="mt-2 text-sm font-semibold text-[#9B746B]">Chỉ người có mã mời mới tạo được studio mới.</p>
 
-          <div className="mt-7 grid gap-4 lg:grid-cols-2">
+          <div className="mt-7 grid gap-4 md:grid-cols-2">
             <label className="block md:col-span-2">
               <span className="mb-2 block text-sm font-bold text-[#7B554D]">Tên studio</span>
               <Input className="rounded-2xl border-[#F1C5C1] bg-[#FFF9F4] focus:border-[#EA7188] focus:ring-[#FFD4DF]" value={form.studioName} onChange={(event) => setForm({ ...form, studioName: event.target.value })} placeholder="MÈOO XINHH STUDIO make & photo" />

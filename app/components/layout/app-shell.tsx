@@ -209,7 +209,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isTabletSidebarCollapsed, setIsTabletSidebarCollapsed] = useState(true);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFrom, setSearchFrom] = useState("");
@@ -458,28 +457,17 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <div className={rootAdminCentralOnly ? "studio-mobile-page min-h-dvh bg-[#04110A] text-slate-100" : darkMode ? "studio-mobile-page min-h-dvh bg-[#2B1C1A] text-white" : "studio-mobile-page min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
       <div className="flex min-h-dvh">
-        <Sidebar session={session} rootAdminTheme={rootAdminCentralOnly} collapsed={isTabletSidebarCollapsed} />
-        <main className="min-w-0 flex-1 overflow-x-hidden touch-pan-y">
+        <Sidebar session={session} rootAdminTheme={rootAdminCentralOnly} />
+        <main className="min-w-0 flex-1 touch-pan-y">
           <header className={cn("sticky top-0 z-30 px-2.5 py-2 sm:px-4 lg:py-3 xl:px-8", rootAdminCentralOnly ? "border-b border-emerald-300/15 bg-[#04110A]" : "border-b border-[#F4C7C4] bg-[#FFF3EC]")}>
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-                {/* Mobile Hamburger - opens drawer */}
                 <Button
                    variant="secondary"
                   size="icon"
-                  className={cn("studio-menu-trigger h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl md:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
+                  className={cn("studio-menu-trigger h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
                   aria-label="Mở menu"
                   onClick={() => setMobileMenuOpen(true)}
-                >
-                  <Menu size={24} strokeWidth={2.8} />
-                </Button>
-                {/* Tablet Hamburger - toggles sidebar */}
-                <Button
-                   variant="secondary"
-                  size="icon"
-                  className={cn("studio-menu-trigger hidden h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl md:flex lg:hidden items-center justify-center", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
-                  aria-label="Mở rộng menu"
-                  onClick={() => setIsTabletSidebarCollapsed(prev => !prev)}
                 >
                   <Menu size={24} strokeWidth={2.8} />
                 </Button>
@@ -563,7 +551,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
 
       {mobileMenuOpen ? (
-        <div className="studio-mobile-drawer fixed inset-0 z-50 md:hidden">
+        <div className="studio-mobile-drawer fixed inset-0 z-50 xl:hidden">
           <button className={cn("studio-mobile-drawer-backdrop absolute inset-0", rootAdminCentralOnly ? "bg-black/55" : "bg-[#2B1C1A]/35")} aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)} />
           <aside className={cn("studio-mobile-drawer-panel absolute left-0 top-0 flex h-dvh w-[88vw] max-w-[360px] flex-col overflow-hidden pt-[env(safe-area-inset-top)] shadow-2xl sm:w-[380px] sm:max-w-md", rootAdminCentralOnly ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4] bg-[#FFF7F0]")}>
             <div className={cn("flex items-center justify-between border-b p-3 sm:p-4", rootAdminCentralOnly ? "border-emerald-300/15" : "border-[#F4C7C4]")}>
@@ -578,7 +566,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                   </div>
                 </div>
               ) : (
-                <StudioCatMark compact />
+                <StudioCatMark />
               )}
               <Button variant="secondary" size="icon" aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)}>
                 <X size={18} />
