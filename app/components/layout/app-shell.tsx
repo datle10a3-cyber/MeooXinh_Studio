@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import dynamic from "next/dynamic";
 import type React from "react";
@@ -32,6 +32,7 @@ import {
 import { Button } from "@/app/components/ui/button";
 import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/components/brand/studio-brand";
 import { Sidebar } from "@/app/components/layout/sidebar";
+import { TabletMenu } from "@/app/components/layout/tablet-menu";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { studioViewPath } from "@/app/utils/studio-navigation";
@@ -188,6 +189,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [tabletMenuOpen, setTabletMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFrom, setSearchFrom] = useState("");
@@ -285,10 +287,9 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     }
   }, [pathname, rootAdminCentralOnly, router]);
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(resetViewportScroll);
-    return () => window.cancelAnimationFrame(frame);
-  }, [pathname]);
+  // NOTE: resetViewportScroll on every pathname removed.
+  // window.scrollTo() on every route change was causing layout jank on iPad Safari.
+  // Next.js handles scroll via { scroll: true } in router.push().
 
   useEffect(() => {
     const meta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -311,8 +312,16 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     };
 
     if (mobileMenuOpen) {
+      // Mobile: close drawer first, then navigate on next tick
       setMobileMenuOpen(false);
       window.setTimeout(() => startTransition(navigate), 0);
+      return;
+    }
+
+    if (tabletMenuOpen) {
+      // Tablet: close menu immediately, no delay
+      setTabletMenuOpen(false);
+      startTransition(navigate);
       return;
     }
 
@@ -440,12 +449,23 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <header className={cn("studio-header sticky top-0 z-30 px-2.5 py-2 sm:px-4 lg:py-3 xl:px-8", rootAdminCentralOnly ? "border-b border-emerald-300/15 bg-[#04110A]" : "border-b border-[#F4C7C4] bg-[#FFF3EC]")}>
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
+                {/* Mobile hamburger — below md (768px) only */}
                 <Button
                    variant="secondary"
                   size="icon"
-                  className={cn("studio-menu-trigger h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl md:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
+                  className={cn("studio-menu-trigger h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition-colors active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl md:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
                   aria-label="Mở menu"
                   onClick={() => setMobileMenuOpen(true)}
+                >
+                  <Menu size={24} strokeWidth={2.8} />
+                </Button>
+                {/* Tablet hamburger — md to xl (768px-1279px), opens TabletMenu NOT MobileDrawer */}
+                <Button
+                  variant="secondary"
+                  size="icon"
+                  className={cn("studio-menu-trigger hidden h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition-colors md:flex xl:hidden sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
+                  aria-label="Mở menu tablet"
+                  onClick={() => setTabletMenuOpen(true)}
                 >
                   <Menu size={24} strokeWidth={2.8} />
                 </Button>
@@ -517,6 +537,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           <div className={cn("studio-content-scroll studio-ios-scroll studio-mobile-bottom-safe studio-xs-tight px-2.5 py-3 sm:px-4 sm:py-5 lg:pb-6 xl:px-8", rootAdminCentralOnly ? "bg-[#04110A]" : "")}>{children}</div>
         </main>
       </div>
+
+      {/* TabletMenu — always mounted in DOM, transform-toggle, no mount/unmount jank */}
+      <TabletMenu
+        open={tabletMenuOpen}
+        onClose={() => setTabletMenuOpen(false)}
+        session={session}
+        rootAdminTheme={rootAdminCentralOnly}
+      />
 
       {viewingAsAdmin ? (
         <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.3rem)] left-2 right-2 z-[70] rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-2xl sm:left-auto sm:right-4 sm:bottom-4 sm:w-[360px]">
