@@ -310,7 +310,7 @@ export function CategoryPage() {
                   <X size={16} />
                 </Button>
               </div>
-              <div className="grid gap-3 md:grid-cols-[1fr_1.5fr_auto] md:items-start">
+              <div className="grid gap-3 lg:grid-cols-[1fr_1.5fr_auto] lg:items-start">
                 <Input placeholder="Tên danh mục" value={form.name} onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))} />
                 <Textarea placeholder="Mô tả" value={form.description} onChange={(event) => setForm((current) => ({ ...current, description: event.target.value }))} />
                 <Button className="min-h-11" onClick={save}>{editingId ? "Cập nhật" : "Lưu"}</Button>

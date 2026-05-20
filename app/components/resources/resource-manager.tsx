@@ -2171,7 +2171,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
                 </div>
               ) : null}
 
-              <div className="grid gap-3 sm:gap-4 md:grid-cols-2 xl:grid-cols-1">
+              <div className="grid gap-3 sm:gap-4 lg:grid-cols-2 xl:grid-cols-1">
                 {groupedFields.main.filter((field) => !(resource === "transactions" && field.key === "type")).map((field) => (
                   <label key={field.key}>
                     <span className="mb-2 block text-sm font-medium text-[#7B554D]">{field.label}</span>

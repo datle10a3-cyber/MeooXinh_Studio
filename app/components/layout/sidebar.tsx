@@ -101,40 +101,42 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
   function classes(active: boolean) {
     if (rootAdminTheme) {
       return cn(
-        "flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition-all duration-200",
+        "flex h-10 w-full items-center rounded-xl font-bold transition-all duration-200",
+        collapsed ? "justify-center px-0" : "gap-3 px-3 text-left text-sm",
         active ? "bg-emerald-400/12 text-emerald-100 shadow-[0_0_24px_rgba(52,211,153,0.10)] ring-1 ring-emerald-300/25" : "text-slate-400 hover:bg-emerald-400/8 hover:text-emerald-100",
       );
     }
     return cn(
-      "flex h-10 w-full items-center gap-3 rounded-xl px-3 text-left text-sm font-bold transition-all duration-200",
+      "flex h-10 w-full items-center rounded-xl font-bold transition-all duration-200",
+      collapsed ? "justify-center px-0" : "gap-3 px-3 text-left text-sm",
       active ? "bg-white text-[#5B342C] shadow-[0_4px_12px_rgba(184,95,108,0.08)] ring-1 ring-[#F4C7C4]/50" : "text-[#9B746B] hover:bg-white/40 hover:text-[#5B342C]",
     );
   }
 
   return (
-    <aside className={cn("studio-sidebar hidden md:flex md:flex-col md:w-56 xl:w-64 shrink-0 px-3 xl:px-4 py-6", rootAdminTheme ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4]/50 bg-white/50")}>
-      <div className={cn("mb-6 rounded-[2rem] p-5 shadow-[0_8px_20px_rgba(184,95,108,0.06)]", rootAdminTheme ? "border border-emerald-300/20 bg-[#06140D] text-slate-100 shadow-[0_18px_50px_rgba(2,6,23,0.28)]" : "border-2 border-[#F7AFC0] bg-white text-[#5B342C]")}>
+    <aside className={cn("studio-sidebar hidden md:flex flex-col shrink-0 py-6 transition-[width] duration-150 ease-out", collapsed ? "w-20 items-center px-2" : "w-56 xl:w-64 items-start px-3 xl:px-4", rootAdminTheme ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4]/50 bg-white/50")}>
+      <div className={cn("mb-6 rounded-[2rem] shadow-[0_8px_20px_rgba(184,95,108,0.06)]", collapsed ? "p-2 bg-transparent border-0" : "p-5 border-2 border-[#F7AFC0] bg-white text-[#5B342C]", rootAdminTheme && !collapsed ? "border border-emerald-300/20 bg-[#06140D] text-slate-100 shadow-[0_18px_50px_rgba(2,6,23,0.28)]" : "")}>
         {rootAdminTheme ? (
-          <div className="flex items-center gap-3">
-            <span className="grid h-12 w-12 place-items-center rounded-2xl border border-emerald-300/25 bg-emerald-400/10 text-emerald-200">
+          <div className={cn("flex items-center gap-3", collapsed ? "justify-center" : "")}>
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl border border-emerald-300/25 bg-emerald-400/10 text-emerald-200">
               <ShieldCheck size={22} />
             </span>
-            <div>
+            <div className={cn(collapsed ? "hidden" : "block")}>
               <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-200">Root</p>
               <p className="text-lg font-black leading-5 text-white">Super Admin</p>
             </div>
           </div>
         ) : (
-          <StudioCatMark compact />
+          <StudioCatMark compact={collapsed} />
         )}
 
-        <p className={cn("mt-3 rounded-full px-3 py-2 text-center text-xs font-black", rootAdminTheme ? "bg-emerald-400/10 text-emerald-100 ring-1 ring-emerald-300/15" : "bg-white text-[#74443A]")}>
+        <p className={cn("mt-3 rounded-full px-3 py-2 text-center text-xs font-black", collapsed ? "hidden" : "block", rootAdminTheme ? "bg-emerald-400/10 text-emerald-100 ring-1 ring-emerald-300/15" : "bg-white text-[#74443A]")}>
           {rootAdminTheme ? "quản lý chính" : "make & photo"}
         </p>
       </div>
 
       {session ? (
-        <div className={cn("mb-5 flex items-center gap-3 rounded-[1.4rem] border p-3 shadow-sm", rootAdminTheme ? "border-emerald-300/15 bg-[#06140D] text-slate-100" : "border-[#F4C7C4] bg-white")}>
+        <div className={cn("mb-5 flex items-center gap-3 rounded-[1.4rem] border shadow-sm", collapsed ? "p-1.5 bg-transparent border-transparent" : "p-3 bg-white border-[#F4C7C4]", rootAdminTheme && !collapsed ? "border-emerald-300/15 bg-[#06140D] text-slate-100" : "")}>
           <div className={cn("grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-2xl font-black text-white", rootAdminTheme ? "border border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "bg-[#EA7188]")}>
             {rootAdminTheme ? (
               <ShieldCheck size={18} />
@@ -145,7 +147,7 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
             )}
           </div>
 
-          <div className="min-w-0">
+          <div className={cn("min-w-0", collapsed ? "hidden" : "block")}>
             <p className={cn("whitespace-normal break-words text-sm font-black leading-5", rootAdminTheme ? "text-white" : "text-[#5B342C]")}>
               {rootAdminTheme ? "Super Admin" : session.user.name}
             </p>
@@ -156,11 +158,11 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
         </div>
       ) : null}
 
-      <nav className="space-y-4">
+      <nav className="w-full space-y-4">
         {visibleNavGroups.map((group) => (
-          <div key={group.title}>
-            <p className={cn("mb-2 px-2 text-xs font-black uppercase tracking-wide", rootAdminTheme ? "text-slate-500" : "text-[#C17D8A]")}>{group.title}</p>
-            <div className="space-y-1">
+          <div key={group.title} className={cn("w-full", collapsed ? "flex flex-col items-center" : "")}>
+            <p className={cn("mb-2 px-2 text-xs font-black uppercase tracking-wide", collapsed ? "hidden" : "block", rootAdminTheme ? "text-slate-500" : "text-[#C17D8A]")}>{group.title}</p>
+            <div className="w-full space-y-1">
               {group.items
                 .filter((item) => !item.adminOnly || role === "ADMIN" || role === "MANAGER")
                 .map((item) => {
@@ -177,8 +179,8 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
                       }}
                       className={classes(active)}
                     >
-                      <Icon size={18} />
-                      <span>{item.label}</span>
+                      <Icon size={18} className="shrink-0" />
+                      <span className={cn(collapsed ? "hidden" : "block")}>{item.label}</span>
                     </button>
                   );
                 })}
@@ -187,10 +189,10 @@ export const Sidebar = memo(function Sidebar({ session, rootAdminTheme = false }
         ))}
       </nav>
 
-      <div className={cn("mt-5 border-t pt-4", rootAdminTheme ? "border-emerald-300/15" : "border-[#F4C7C4]")}>
-        <Button variant="ghost" className={cn("w-full justify-start", rootAdminTheme ? "text-slate-400 hover:bg-emerald-400/8 hover:text-emerald-100" : "")}>
-          <Settings size={18} />
-          Cài đặt
+      <div className={cn("mt-5 border-t pt-4 w-full", rootAdminTheme ? "border-emerald-300/15" : "border-[#F4C7C4]")}>
+        <Button variant="ghost" className={cn("w-full", collapsed ? "justify-center px-0" : "justify-start px-3", rootAdminTheme ? "text-slate-400 hover:bg-emerald-400/8 hover:text-emerald-100" : "")}>
+          <Settings size={18} className="shrink-0" />
+          <span className={cn(collapsed ? "hidden" : "block")}>Cài đặt</span>
         </Button>
       </div>
     </aside>
