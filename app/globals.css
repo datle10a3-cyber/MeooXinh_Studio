@@ -335,8 +335,8 @@ video {
 
 /* ─── Tablet touch performance (768px–1279px) ─── */
 /*
-  Tablet/iPad uses TabletMenu, no sidebar icon.
-  Content is full-width. Kill GPU-expensive CSS that causes jank on iPad Safari.
+  Tablet/iPad uses TabletMenu, no sidebar.
+  Full-width content. Kill all GPU-expensive effects that cause jank on iPad Safari.
 */
 @media (min-width: 768px) and (max-width: 1279px) {
   /* Ensure no horizontal overflow */
@@ -346,47 +346,89 @@ video {
     overflow-x: hidden;
   }
 
-  /* Kill hover:transform — tablet is touch, these cause paint layers */
+  /* Main scroll container: GPU pan, prevent bounce/overscroll jank */
+  .studio-main {
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+  }
+
+  /* Content scroll: prevent bounce at top/bottom */
+  .studio-content-scroll {
+    overscroll-behavior-y: none;
+  }
+
+  /* ── Kill all hover transforms ── */
+  /* Tailwind hover:-translate-y-* and hover:translate-* */
   [class*="hover:-translate"],
+  [class*="hover:translate-"] {
+    --tw-translate-x: 0 !important;
+    --tw-translate-y: 0 !important;
+    transform: translateZ(0) !important; /* keep GPU layer, no movement */
+  }
+
+  /* Tailwind hover:scale-* and hover:scale-[*] */
   [class*="hover:scale-"] {
-    transform: none !important;
+    --tw-scale-x: 1 !important;
+    --tw-scale-y: 1 !important;
+    transform: translateZ(0) !important;
   }
 
-  /* Kill active:scale on large containers — causes layout recalc on touch */
+  /* Tailwind active:scale-* */
   [class*="active:scale"] {
-    transform: none !important;
+    --tw-scale-x: 1 !important;
+    --tw-scale-y: 1 !important;
+    transform: translateZ(0) !important;
   }
 
-  /* backdrop-filter is extremely expensive on iPad Safari — disable entirely */
-  [class*="backdrop-blur"] {
+  /* ── Kill backdrop-filter ── */
+  /* Extremely expensive on iPad Safari — causes full compositing layer */
+  [class*="backdrop-blur"],
+  [class*="backdrop-filter"] {
     -webkit-backdrop-filter: none !important;
     backdrop-filter: none !important;
   }
 
-  /* Scope transition-all to cheap properties only */
+  /* ── Scope transition-all to cheap properties only ── */
   [class*="transition-all"] {
     transition-property: color, background-color, border-color, opacity !important;
     transition-duration: 150ms !important;
   }
 
-  /* Prevent smooth scroll from causing layout recalc */
+  /* ── Kill CSS @keyframe animations on layout elements ── */
+  /* animate-in / zoom-in-95 / slide-in-from-* from tailwindcss-animate */
+  /* These trigger paint + composite on every modal open on tablet */
+  [class*="animate-in"],
+  [class*="zoom-in"],
+  [class*="slide-in"],
+  [class*="fade-in"],
+  [class*="animate-bounce"],
+  [class*="animate-spin"],
+  [class*="animate-pulse"] {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  /* ── Prevent smooth scroll ── */
   * {
     scroll-behavior: auto !important;
   }
 
-  /* Disable heavy animations on layout chrome (no sidebar on tablet anyway) */
+  /* ── Disable heavy animations on layout chrome ── */
   .studio-sidebar,
   .studio-brand-mark,
   .studio-stable-decor {
     animation: none !important;
   }
 
-  /* Main scroll container: use GPU pan, prevent bounce jank */
-  .studio-main {
-    touch-action: pan-y;
-    overscroll-behavior-y: contain;
+  /* ── Cleanup will-change on non-transforming elements ── */
+  /* Prevent orphaned GPU layers from elements that no longer animate */
+  [class*="hover:-translate"] *,
+  [class*="hover:scale-"] * {
+    will-change: auto !important;
   }
 }
+
 
 /* ─── Small screens ─── */
 @media (max-width: 640px) {
