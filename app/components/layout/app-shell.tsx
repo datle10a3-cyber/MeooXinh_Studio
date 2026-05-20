@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import dynamic from "next/dynamic";
 import type React from "react";
@@ -32,7 +32,7 @@ import {
 import { Button } from "@/app/components/ui/button";
 import { STUDIO_AVATAR_URL, STUDIO_DISPLAY_NAME, StudioCatMark } from "@/app/components/brand/studio-brand";
 import { Sidebar } from "@/app/components/layout/sidebar";
-import { TabletMenu } from "@/app/components/layout/tablet-menu";
+import { TabletMenu, type NavItem as TabletNavItem } from "@/app/components/layout/tablet-menu";
 import { useUiStore } from "@/app/store/ui-store";
 import type { CurrentSession } from "@/app/types/auth";
 import { studioViewPath } from "@/app/utils/studio-navigation";
@@ -318,14 +318,32 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Tablet menu is handled by handleTabletNavigate, not here.
+    // But if somehow called with tabletMenuOpen, close and navigate.
     if (tabletMenuOpen) {
-      // Tablet: close menu immediately, no delay
       setTabletMenuOpen(false);
-      startTransition(navigate);
-      return;
     }
 
     startTransition(navigate);
+  }
+
+  /**
+   * Tablet menu navigation — close menu FIRST, wait for unmount,
+   * then navigate. This prevents the menu being visible during
+   * the route transition which causes the "grey flash" on iPad.
+   */
+  function handleTabletNavigate(item: TabletNavItem) {
+    const target = item.href || studioViewPath(item.id);
+    // 1. Close menu immediately (unmounts the dropdown)
+    setTabletMenuOpen(false);
+    // 2. Wait one frame for React to commit the unmount
+    requestAnimationFrame(() => {
+      // 3. Then navigate — content swap happens without menu overlay
+      startTransition(() => {
+        setActiveResource(item.id);
+        router.push(target, { scroll: true });
+      });
+    });
   }
 
   async function stopViewingAsAdmin() {
@@ -538,10 +556,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </main>
       </div>
 
-      {/* TabletMenu — always mounted in DOM, transform-toggle, no mount/unmount jank */}
+      {/* TabletMenu — dropdown panel, conditional mount (lightweight) */}
       <TabletMenu
         open={tabletMenuOpen}
         onClose={() => setTabletMenuOpen(false)}
+        onNavigate={handleTabletNavigate}
         session={session}
         rootAdminTheme={rootAdminCentralOnly}
       />
