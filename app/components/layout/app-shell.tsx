@@ -209,6 +209,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFrom, setSearchFrom] = useState("");
@@ -225,6 +226,19 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ? [{ title: "Quản lý", items: [rootAdminNavItem] }]
       : mobileGroups.map((group) => group.title === "Quản lý" ? { ...group, items: [...group.items, rootAdminNavItem] } : group)
     : mobileGroups;
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia("(max-width: 767px)");
+    const updateMobileViewport = () => {
+      const isMobile = mobileQuery.matches;
+      setIsMobileViewport(isMobile);
+      if (!isMobile) setMobileMenuOpen(false);
+    };
+
+    updateMobileViewport();
+    mobileQuery.addEventListener("change", updateMobileViewport);
+    return () => mobileQuery.removeEventListener("change", updateMobileViewport);
+  }, []);
 
   // Sync session from localStorage instantly on client render.
   // Do not refetch/rewrite session state on every page tap; that causes jank on iPad Safari.
@@ -327,7 +341,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   function goTo(item: NavItem) {
     const target = item.href || studioViewPath(item.id);
     const navigate = () => {
-      setMobileMenuOpen(false);
       resetViewportScroll();
       router.push(target, { scroll: true });
     };
@@ -458,14 +471,14 @@ export function AppShell({ children }: { children: React.ReactNode }) {
     <div className={rootAdminCentralOnly ? "studio-mobile-page min-h-dvh bg-[#04110A] text-slate-100" : darkMode ? "studio-mobile-page min-h-dvh bg-[#2B1C1A] text-white" : "studio-mobile-page min-h-dvh bg-[#FFF3EC] text-[#5B342C]"}>
       <div className="flex min-h-dvh">
         <Sidebar session={session} rootAdminTheme={rootAdminCentralOnly} />
-        <main className="min-w-0 flex-1 touch-pan-y">
+        <main className="min-w-0 flex-1 overflow-x-hidden touch-pan-y">
           <header className={cn("sticky top-0 z-30 px-2.5 py-2 sm:px-4 lg:py-3 xl:px-8", rootAdminCentralOnly ? "border-b border-emerald-300/15 bg-[#04110A]" : "border-b border-[#F4C7C4] bg-[#FFF3EC]")}>
             <div className="flex items-center justify-between gap-2 sm:gap-4">
               <div className="flex min-w-0 items-center gap-2 sm:gap-3">
                 <Button
                    variant="secondary"
                   size="icon"
-                  className={cn("studio-menu-trigger h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
+                  className={cn("studio-menu-trigger h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl md:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
                   aria-label="Mở menu"
                   onClick={() => setMobileMenuOpen(true)}
                 >
@@ -550,8 +563,8 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      {mobileMenuOpen ? (
-        <div className="studio-mobile-drawer fixed inset-0 z-50 xl:hidden">
+      {isMobileViewport && mobileMenuOpen ? (
+        <div className="studio-mobile-drawer fixed inset-0 z-50 md:hidden">
           <button className={cn("studio-mobile-drawer-backdrop absolute inset-0", rootAdminCentralOnly ? "bg-black/55" : "bg-[#2B1C1A]/35")} aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)} />
           <aside className={cn("studio-mobile-drawer-panel absolute left-0 top-0 flex h-dvh w-[88vw] max-w-[360px] flex-col overflow-hidden pt-[env(safe-area-inset-top)] shadow-2xl sm:w-[380px] sm:max-w-md", rootAdminCentralOnly ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4] bg-[#FFF7F0]")}>
             <div className={cn("flex items-center justify-between border-b p-3 sm:p-4", rootAdminCentralOnly ? "border-emerald-300/15" : "border-[#F4C7C4]")}>
@@ -669,29 +682,31 @@ export function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       ) : null}
 
-      <nav className={`studio-bottom-nav studio-tablet-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC] pb-[env(safe-area-inset-bottom)] transition-all duration-200 ease-in-out md:hidden ${shouldHideMobileNav ? 'hidden' : ''}`}>
-        <div className="mx-auto flex h-14 w-full max-w-md items-center justify-around px-3">
-          {bottomMobileItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item);
-            return (
-              <button
-                key={item.id}
-                className={`group relative flex h-full flex-1 flex-col items-center justify-center transition-all active:scale-95`}
-                onClick={() => goTo(item)}
-              >
-                <div className={`flex flex-col items-center gap-0.5 transition-colors ${active ? "text-[#EA7188]" : "text-[#9B746B] group-hover:text-[#5B342C]"}`}>
-                  <Icon size={20} strokeWidth={active ? 2.8 : 2} />
-                  <span className="max-w-full truncate text-[10px] font-black uppercase">{item.label}</span>
-                </div>
-                {active && (
-                  <div className="absolute -bottom-[2px] h-1 w-6 rounded-full bg-[#EA7188] shadow-[0_0_8px_rgba(234,113,136,0.5)]" />
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </nav>
+      {isMobileViewport ? (
+        <nav className={`studio-bottom-nav studio-tablet-nav fixed inset-x-0 bottom-0 z-40 border-t border-[#F4C7C4]/60 bg-[#FFF3EC] pb-[env(safe-area-inset-bottom)] transition-all duration-200 ease-in-out md:hidden ${shouldHideMobileNav ? 'hidden' : ''}`}>
+          <div className="mx-auto flex h-14 w-full max-w-md items-center justify-around px-3">
+            {bottomMobileItems.map((item) => {
+              const Icon = item.icon;
+              const active = isActive(item);
+              return (
+                <button
+                  key={item.id}
+                  className={`group relative flex h-full flex-1 flex-col items-center justify-center transition-all active:scale-95`}
+                  onClick={() => goTo(item)}
+                >
+                  <div className={`flex flex-col items-center gap-0.5 transition-colors ${active ? "text-[#EA7188]" : "text-[#9B746B] group-hover:text-[#5B342C]"}`}>
+                    <Icon size={20} strokeWidth={active ? 2.8 : 2} />
+                    <span className="max-w-full truncate text-[10px] font-black uppercase">{item.label}</span>
+                  </div>
+                  {active && (
+                    <div className="absolute -bottom-[2px] h-1 w-6 rounded-full bg-[#EA7188] shadow-[0_0_8px_rgba(234,113,136,0.5)]" />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </nav>
+      ) : null}
     </div>
   );
 }
