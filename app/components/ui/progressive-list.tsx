@@ -2,6 +2,11 @@
 
 import { type RefObject, useEffect, useMemo, useRef, useState, startTransition } from "react";
 
+function isTabletTouchViewport() {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(min-width: 768px) and (max-width: 1366px) and (pointer: coarse)").matches;
+}
+
 /**
  * Progressive list hook – renders items in batches using IntersectionObserver.
  *
@@ -13,11 +18,14 @@ import { type RefObject, useEffect, useMemo, useRef, useState, startTransition }
  *   to avoid rendering a stale large list that causes jank.
  */
 export function useProgressiveList<T>(items: T[], batchSize = 60) {
+  const [tabletTouch] = useState(isTabletTouchViewport);
+  const effectiveBatchSize = tabletTouch ? Math.min(batchSize, 6) : batchSize;
   // Cap the very first render to a small number so mounting is fast
-  const initialBatch = Math.min(batchSize, 12);
+  const initialBatch = tabletTouch ? Math.min(batchSize, 6) : Math.min(batchSize, 12);
   const [visibleCount, setVisibleCount] = useState(initialBatch);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const prevLengthRef = useRef(items.length);
+  const pendingRef = useRef(false);
 
   // When the items array length changes (filter/search/new data), reset visible count
   // so we don't try to render hundreds of items at once on iPad
@@ -31,17 +39,32 @@ export function useProgressiveList<T>(items: T[], batchSize = 60) {
   useEffect(() => {
     const target = sentinelRef.current;
     if (!target) return;
+    let timer: number | null = null;
     const observer = new IntersectionObserver((entries) => {
+      if (pendingRef.current) return;
       if (entries.some((entry) => entry.isIntersecting)) {
-        // Use startTransition so the browser can keep responding to taps/scrolls
-        startTransition(() => {
-          setVisibleCount((current) => Math.min(items.length, current + batchSize));
-        });
+        pendingRef.current = true;
+        const loadMore = () => {
+          // Use startTransition so the browser can keep responding to taps/scrolls
+          startTransition(() => {
+            setVisibleCount((current) => Math.min(items.length, current + effectiveBatchSize));
+          });
+          pendingRef.current = false;
+        };
+        if (tabletTouch) {
+          timer = window.setTimeout(loadMore, 90);
+        } else {
+          loadMore();
+        }
       }
-    }, { rootMargin: "600px 0px" });
+    }, { rootMargin: tabletTouch ? "160px 0px" : "600px 0px" });
     observer.observe(target);
-    return () => observer.disconnect();
-  }, [items.length, batchSize]);
+    return () => {
+      observer.disconnect();
+      if (timer) window.clearTimeout(timer);
+      pendingRef.current = false;
+    };
+  }, [items.length, effectiveBatchSize, tabletTouch]);
 
   const visibleItems = useMemo(() => items.slice(0, visibleCount), [items, visibleCount]);
 
