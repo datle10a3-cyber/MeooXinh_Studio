@@ -14,7 +14,14 @@ import { prisma } from "@/app/lib/prisma";
 import type { Prisma } from "@prisma/client";
 
 function parseDate(value: unknown) {
-  const date = new Date(String(value ?? ""));
+  if (!value) return null;
+  let str = String(value).trim();
+  if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/.test(str)) {
+    str += "+07:00";
+  } else if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}(:\d{2})?$/.test(str)) {
+    str = str.replace(" ", "T") + "+07:00";
+  }
+  const date = new Date(str);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
