@@ -1,20 +1,15 @@
 import type { NextConfig } from "next";
 import withPWAInit from "@ducanh2912/next-pwa";
-import { runtimeCaching } from "@ducanh2912/next-pwa";
-
-const navigationCacheNames = new Set(["start-url", "apis", "next-data", "pages-rsc-prefetch", "pages-rsc", "pages"]);
 
 const withPWA = withPWAInit({
   dest: "public",
   disable: process.env.NODE_ENV === "development",
   register: true,
-  cacheStartUrl: false,
-  cacheOnFrontEndNav: false,
-  aggressiveFrontEndNavCaching: false,
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
   reloadOnOnline: true,
   workboxOptions: {
     disableDevLogs: true,
-    runtimeCaching: runtimeCaching.filter((entry) => !navigationCacheNames.has(entry.options?.cacheName ?? "")),
   },
 });
 

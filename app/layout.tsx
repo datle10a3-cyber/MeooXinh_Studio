@@ -6,7 +6,7 @@ import { ShellLayout } from "@/app/components/layout/shell-layout";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
-const pwaAssetVersion = "6";
+const pwaAssetVersion = "5";
 
 export const metadata: Metadata = {
   title: "MÈOO XINHH STUDIO | Make & Photo",
