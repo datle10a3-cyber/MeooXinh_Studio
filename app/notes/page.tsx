@@ -1,5 +1,5 @@
-import { ResourceManager } from "@/app/components/resources/resource-manager";
+import { NotesView } from "@/app/components/notes/notes-view";
 
 export default function NotesPage() {
-  return <ResourceManager resource="notes" />;
+  return <NotesView />;
 }
