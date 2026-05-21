@@ -1437,13 +1437,13 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   }, []);
   
   useEffect(() => {
-    if (showForm || !!detailRow) {
+    if (isMobile && (showForm || !!detailRow)) {
       document.body.classList.add("studio-modal-open");
     } else {
       document.body.classList.remove("studio-modal-open");
     }
     return () => document.body.classList.remove("studio-modal-open");
-  }, [showForm, detailRow]);
+  }, [isMobile, showForm, detailRow]);
 
   const endpoint = `/api/resources/${resource}`;
   const title = useMemo(() => (editingId ? `Cập nhật ${config.shortLabel}` : `Thêm ${config.shortLabel}`), [config.shortLabel, editingId]);
@@ -1482,7 +1482,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     if (mode === "append" && !cursor) return;
     setLoadingMoreRows(mode === "append");
 
-    const url = `${endpoint}?${new URLSearchParams({ take: "50", cursorMode: "1", ...(mode === "append" && cursor ? { cursor } : {}) }).toString()}`;
+    const url = `${endpoint}?${new URLSearchParams({ take: tabletTouch ? "32" : "50", cursorMode: "1", ...(mode === "append" && cursor ? { cursor } : {}) }).toString()}`;
 
     // On reset: try to show cached data instantly while fetching fresh
     if (mode === "reset") {
@@ -2039,8 +2039,8 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
         </div>
       ) : null}
 
-      <div className={canMutate(session) && showForm ? "grid items-start gap-4 xl:grid-cols-[1fr_420px]" : "grid gap-4"}>
-        <div className="order-2 space-y-4 xl:order-1">
+      <div className={canMutate(session) && showForm ? "grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_minmax(340px,380px)] xl:grid-cols-[1fr_420px]" : "grid gap-4"}>
+        <div className="order-2 space-y-4 md:order-1">
           {selectedIds.length > 0 && visibleRows.length > 0 && canDelete(session) && resource !== "wallets" ? (
             <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <label className="flex items-center gap-2 text-sm font-black text-[#5B342C]">
@@ -2132,7 +2132,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       {(() => {
         if (!canMutate(session) || !showForm) return null;
         const formElement = (
-          <div ref={formRef} className="order-1 scroll-mt-20 xl:order-2">
+          <div ref={formRef} className="order-1 scroll-mt-20 md:order-2">
             <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setEditingSystemNote(""); setForm(emptyForm(config.fields)); setShowForm(false); }} />
             <Card className="studio-mobile-form-sheet rounded-[1.5rem] border-[#F4C7C4] bg-white shadow-[0_18px_50px_rgba(184,95,108,0.1)] sm:sticky sm:top-[5.5rem] sm:rounded-[2rem]">
               <div className="mb-4 flex items-center justify-between gap-3">

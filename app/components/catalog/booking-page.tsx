@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
+import { startTransition, useCallback, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarClock, CheckCircle2, ChevronDown, ChevronUp, CreditCard, Images, Loader2, Pencil, Plus, Printer, ReceiptText, Search, Trash2, Users, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { DetailModal } from "@/app/components/ui/detail-modal";
@@ -53,6 +53,7 @@ type GroupBookingSnapshot = {
   customers: GroupBookingCustomerSnapshot[];
 };
 type BookingApiData = BookingItem & { groupBooking?: GroupBookingSnapshot };
+type BookingPageData = { items: BookingItem[]; nextCursor: string | null; hasMore: boolean };
 
 const PAYMENT_BANK_BIN = "970415";
 const PAYMENT_ACCOUNT_NUMBER = "100882473179";
@@ -302,6 +303,9 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const [customers, setCustomers] = useState<CustomerItem[]>([]);
   const [packages, setPackages] = useState<PackageItem[]>([]);
   const [rows, setRows] = useState<BookingItem[]>([]);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMoreRows, setHasMoreRows] = useState(false);
+  const [loadingMoreRows, setLoadingMoreRows] = useState(false);
   const [form, setForm] = useState(emptyForm);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [detail, setDetail] = useState<BookingItem | null>(null);
@@ -458,25 +462,49 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     clearLongPress();
   }
 
-  const loadData = useCallback(async () => {
-    setLoadingData(true);
+  const loadData = useCallback(async (mode: "reset" | "append" = "reset", cursor?: string | null) => {
+    if (mode === "append" && !cursor) return;
+    if (mode === "append") setLoadingMoreRows(true);
+    else setLoadingData(true);
     try {
+      const bookingParams = new URLSearchParams();
+      if (completedOnly) bookingParams.set("view", "completed");
+      if (tabletTouch) {
+        bookingParams.set("cursorMode", "1");
+        bookingParams.set("take", "36");
+        if (mode === "append" && cursor) bookingParams.set("cursor", cursor);
+      }
+      const bookingUrl = `/api/bookings${bookingParams.toString() ? `?${bookingParams.toString()}` : ""}`;
       const [customerResult, packageResult, bookingResult] = await Promise.all([
         fetch("/api/resources/customers").then((res) => res.json() as Promise<ApiResult<CustomerItem[] | CustomerPage>>),
         fetch("/api/packages").then((res) => res.json() as Promise<ApiResult<PackageItem[]>>),
-        fetch(completedOnly ? "/api/bookings?view=completed" : "/api/bookings").then((res) => res.json() as Promise<ApiResult<BookingItem[]>>),
+        fetch(bookingUrl).then((res) => res.json() as Promise<ApiResult<BookingItem[] | BookingPageData>>),
       ]);
       const nextCustomers = customerListFromData(customerResult.data);
       if (customerResult.data) setCustomers(nextCustomers);
       if (packageResult.data) setPackages(packageResult.data);
       if (bookingResult.data) {
-        setRows(
-          bookingResult.data.map((booking) => {
+        const page = bookingResult.data;
+        const pageItems = Array.isArray(page) ? page : page.items;
+        const nextRows = pageItems.map((booking) => {
             if (booking.customer || booking.customerId) return booking;
             const matchedCustomer = nextCustomers.find((customer) => customer.name.trim().toLowerCase() === String(booking.customerName ?? "").trim().toLowerCase());
             return matchedCustomer ? { ...booking, customerId: matchedCustomer.id, customer: matchedCustomer } : booking;
-          }),
-        );
+        });
+        startTransition(() => {
+          setRows((current) => {
+            if (mode === "reset") return nextRows;
+            const seen = new Set(current.map((row) => row.id));
+            return [...current, ...nextRows.filter((row) => !seen.has(row.id))];
+          });
+        });
+        if (Array.isArray(page)) {
+          setNextCursor(null);
+          setHasMoreRows(false);
+        } else {
+          setNextCursor(page.nextCursor);
+          setHasMoreRows(page.hasMore);
+        }
       }
       if (customerResult.error && !/chưa đăng nhập/i.test(customerResult.error.message)) setMessage(customerResult.error.message);
       if (packageResult.error && !/chưa đăng nhập/i.test(packageResult.error.message)) setMessage(packageResult.error.message);
@@ -484,7 +512,8 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     } catch (err) {
       console.error("Booking load error:", err);
     } finally {
-      if (tabletTouch) {
+      setLoadingMoreRows(false);
+      if (tabletTouch && mode === "reset") {
         window.setTimeout(() => setLoadingData(false), 80);
       } else {
         setLoadingData(false);
@@ -498,7 +527,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }, [loadData]);
 
   useEffect(() => {
-    if (showForm && !completedOnly) {
+    if (isMobile && showForm && !completedOnly) {
       document.body.classList.add("studio-modal-open");
       return () => {
         document.body.classList.remove("studio-modal-open");
@@ -506,7 +535,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     } else {
       document.body.classList.remove("studio-modal-open");
     }
-  }, [completedOnly, showForm]);
+  }, [completedOnly, isMobile, showForm]);
 
   useEffect(() => {
     if (!focusedItemId || !rows.length) return;
@@ -1099,7 +1128,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         ) : null}
       </div>
 
-      <div className={completedOnly || !showForm ? "grid gap-5" : "grid gap-5 xl:grid-cols-[1fr_420px]"}>
+      <div className={completedOnly || !showForm ? "grid gap-5" : "grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(340px,380px)] xl:grid-cols-[1fr_420px]"}>
         <div className="space-y-3">
           {selectedDeleteCount > 0 && filteredRows.length > 0 && (role === "ADMIN" || role === "MANAGER") ? (
             <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -1246,6 +1275,14 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
             );
           })}
           <ProgressiveListSentinel refTarget={progressiveGroups.sentinelRef} hasMore={progressiveGroups.hasMore} />
+          {hasMoreRows ? (
+            <div className="flex justify-center">
+              <Button variant="secondary" disabled={loadingMoreRows} onClick={() => void loadData("append", nextCursor)}>
+                {loadingMoreRows ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+                Tải thêm booking
+              </Button>
+            </div>
+          ) : null}
       </div>
 
       {(() => {

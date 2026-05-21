@@ -1,6 +1,6 @@
 "use client";
 
-import { type Dispatch, type SetStateAction, useCallback, useRef, useEffect, useDeferredValue, useMemo, useState } from "react";
+import { startTransition, type Dispatch, type SetStateAction, useCallback, useRef, useEffect, useDeferredValue, useMemo, useState } from "react";
 import {
   CheckCircle2,
   Clock,
@@ -31,6 +31,8 @@ import { useUiStore } from "@/app/store/ui-store";
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 import { Portal } from "@/app/components/ui/portal";
+
+type PackagePageData = { items: PackageItem[]; nextCursor: string | null; hasMore: boolean };
 
 const emptyForm = {
   name: "",
@@ -85,6 +87,9 @@ export function PackagePage() {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkDeleteMode, setBulkDeleteMode] = useState<"selected" | "all" | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [hasMoreRows, setHasMoreRows] = useState(false);
+  const [loadingMoreRows, setLoadingMoreRows] = useState(false);
   const [longPressActivated, setLongPressActivated] = useState(false);
   const [editStudioPassword, setEditStudioPassword] = useState("");
   const formRef = useRef<HTMLDivElement>(null);
@@ -153,15 +158,43 @@ export function PackagePage() {
     clearLongPress();
   }
 
-  const loadData = useCallback(async () => {
+  const loadData = useCallback(async (mode: "reset" | "append" = "reset", cursor?: string | null) => {
+    if (mode === "append" && !cursor) return;
+    if (mode === "append") setLoadingMoreRows(true);
+    else setInitialLoading(true);
+    const packageParams = new URLSearchParams();
+    if (tabletTouch) {
+      packageParams.set("cursorMode", "1");
+      packageParams.set("take", "36");
+      if (mode === "append" && cursor) packageParams.set("cursor", cursor);
+    }
+    const packageUrl = `/api/packages${packageParams.toString() ? `?${packageParams.toString()}` : ""}`;
     const [categoryResult, packageResult] = await Promise.all([
       fetch("/api/categories").then((res) => res.json() as Promise<ApiResult<CategoryItem[]>>),
-      fetch("/api/packages").then((res) => res.json() as Promise<ApiResult<PackageItem[]>>),
+      fetch(packageUrl).then((res) => res.json() as Promise<ApiResult<PackageItem[] | PackagePageData>>),
     ]);
     if (categoryResult.data) setCategories(categoryResult.data);
-    if (packageResult.data) setRows(packageResult.data);
+    if (packageResult.data) {
+      const page = packageResult.data;
+      const items = Array.isArray(page) ? page : page.items;
+      startTransition(() => {
+        setRows((current) => {
+          if (mode === "reset") return items;
+          const seen = new Set(current.map((row) => row.id));
+          return [...current, ...items.filter((row) => !seen.has(row.id))];
+        });
+      });
+      if (Array.isArray(page)) {
+        setNextCursor(null);
+        setHasMoreRows(false);
+      } else {
+        setNextCursor(page.nextCursor);
+        setHasMoreRows(page.hasMore);
+      }
+    }
     if (categoryResult.error && !/chưa đăng nhập/i.test(categoryResult.error.message)) setMessage(categoryResult.error.message);
     if (packageResult.error && !/chưa đăng nhập/i.test(packageResult.error.message)) setMessage(packageResult.error.message);
+    setLoadingMoreRows(false);
     if (tabletTouch) {
       window.setTimeout(() => setInitialLoading(false), 80);
     } else {
@@ -175,7 +208,7 @@ export function PackagePage() {
   }, [loadData]);
 
   useEffect(() => {
-    if (showForm) {
+    if (isMobile && showForm) {
       document.body.classList.add("studio-modal-open");
       return () => {
         document.body.classList.remove("studio-modal-open");
@@ -183,7 +216,7 @@ export function PackagePage() {
     } else {
       document.body.classList.remove("studio-modal-open");
     }
-  }, [showForm]);
+  }, [isMobile, showForm]);
 
   useEffect(() => {
     if (!focusedItemId || !rows.length) return;
@@ -382,7 +415,7 @@ export function PackagePage() {
         />
       </div>
 
-      <div className={showForm ? "grid items-start gap-4 xl:grid-cols-[1fr_420px]" : "grid gap-4"}>
+      <div className={showForm ? "grid items-start gap-4 md:grid-cols-[minmax(0,1fr)_minmax(340px,380px)] xl:grid-cols-[1fr_420px]" : "grid gap-4"}>
         <div className="space-y-3">
           {selectedIds.length > 0 && filteredRows.length > 0 && (role === "ADMIN" || role === "MANAGER") ? (
             <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
@@ -430,6 +463,14 @@ export function PackagePage() {
             />
           ))}
           <ProgressiveListSentinel refTarget={progressiveRows.sentinelRef} hasMore={progressiveRows.hasMore} />
+          {hasMoreRows ? (
+            <div className="flex justify-center">
+              <Button variant="secondary" disabled={loadingMoreRows} onClick={() => void loadData("append", nextCursor)}>
+                {loadingMoreRows ? <Clock className="h-4 w-4 animate-spin" /> : null}
+                Tải thêm gói
+              </Button>
+            </div>
+          ) : null}
 
           {initialLoading && filteredRows.length === 0 ? (
             <PageSpinner label="Đang tải gói dịch vụ…" />
