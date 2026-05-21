@@ -167,10 +167,18 @@ function ImageSlot({
 
     const form = new FormData();
     form.append("file", finalFile);
-    const result = await fetch("/api/media", { method: "POST", body: form })
-      .then((res) => res.json())
-      .catch(() => null);
-    if (result?.data?.url) onChange(result.data.url);
+    try {
+      const res = await fetch("/api/media", { method: "POST", body: form });
+      const result = await res.json().catch(() => null);
+      if (res.ok && result?.data?.url) {
+        onChange(result.data.url);
+      } else {
+        const errorMsg = result?.error?.message || "Lỗi tải ảnh lên máy chủ. Vui lòng kiểm tra lại.";
+        window.alert(errorMsg);
+      }
+    } catch (err) {
+      window.alert("Không thể kết nối đến máy chủ để tải ảnh.");
+    }
     setUploading(false);
   }
 

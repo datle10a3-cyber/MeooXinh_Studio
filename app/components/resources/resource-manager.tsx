@@ -1749,6 +1749,11 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     setEditingSystemNote("");
     setForm(next);
     setShowForm(true);
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+    });
   }
 
   function openRowGallery(row: Row, index: number) {

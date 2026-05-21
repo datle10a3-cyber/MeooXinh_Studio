@@ -12,7 +12,7 @@ type UploadResult = {
 const DEFAULT_MAX_UPLOAD_MB = 12;
 
 export function validateMediaFile(file: File) {
-  const maxMb = Math.max(1, Number(process.env.MAX_UPLOAD_MB ?? DEFAULT_MAX_UPLOAD_MB));
+  const maxMb = Math.max(4, Number(process.env.MAX_UPLOAD_MB ?? DEFAULT_MAX_UPLOAD_MB));
   const maxBytes = maxMb * 1024 * 1024;
   if (!file.type.startsWith("image/")) return `Chỉ hỗ trợ upload ảnh.`;
   if (file.size > maxBytes) return `Ảnh quá nặng. Vui lòng chọn ảnh dưới ${maxMb} MB.`;
