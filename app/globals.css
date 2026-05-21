@@ -477,12 +477,6 @@ video {
     max-width: none !important;
   }
 
-  [data-row-id] {
-    content-visibility: auto;
-    contain: layout paint style;
-    contain-intrinsic-size: auto 190px;
-  }
-
   [data-row-id] :where([class*="hover:-translate"], [class*="hover:scale"], [class*="active:scale"]) {
     transform: none !important;
   }
