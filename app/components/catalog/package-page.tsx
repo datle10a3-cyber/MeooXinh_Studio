@@ -30,6 +30,7 @@ import { formatMoney } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { PageSpinner } from "@/app/components/ui/skeleton";
+import { Portal } from "@/app/components/ui/portal";
 
 const emptyForm = {
   name: "",
@@ -93,6 +94,13 @@ export function PackagePage() {
   const focusedItemId = useUiStore((state) => state.focusedItemId);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   function clearLongPress() {
     if (longPressTimer.current) {
@@ -176,7 +184,7 @@ export function PackagePage() {
     if (!focusedItemId || !rows.length) return;
     const timer = window.setTimeout(() => {
       const element = document.querySelector(`[data-row-id="${CSS.escape(focusedItemId)}"]`);
-      element?.scrollIntoView({ behavior: "auto", block: "center" });
+      element?.scrollIntoView({ behavior: "smooth", block: "center" });
       element?.classList.add("studio-focus-highlight");
       window.setTimeout(() => {
         element?.classList.remove("studio-focus-highlight");
@@ -311,7 +319,7 @@ export function PackagePage() {
   const allVisibleSelected = filteredRows.length > 0 && filteredRows.every((row) => selectedIds.includes(row.id));
 
   return (
-    <div className="studio-page-container mx-auto w-full max-w-[1100px] space-y-4 sm:space-y-5">
+    <div className="mx-auto max-w-[1100px] space-y-4 sm:space-y-5">
       <StudioBrandPanel
         eyebrow="Menu khách xem"
         title="Gói dịch vụ"
@@ -368,8 +376,8 @@ export function PackagePage() {
         />
       </div>
 
-      <div className={showForm ? "grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_420px]" : "grid min-w-0 gap-4"}>
-        <div className="min-w-0 space-y-3">
+      <div className={showForm ? "grid items-start gap-4 xl:grid-cols-[1fr_420px]" : "grid gap-4"}>
+        <div className="space-y-3">
           {selectedIds.length > 0 && filteredRows.length > 0 && (role === "ADMIN" || role === "MANAGER") ? (
             <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <label className="flex items-center gap-2 text-sm font-black text-[#5B342C]">
@@ -432,7 +440,7 @@ export function PackagePage() {
         {(() => {
           if (!showForm) return null;
           const formElement = (
-            <div ref={formRef} className="min-w-0 scroll-mt-20">
+            <div ref={formRef} className="scroll-mt-20">
               <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm); setShowForm(false); }} />
               <PackageForm
                 categories={categories}
@@ -448,7 +456,7 @@ export function PackagePage() {
               />
             </div>
           );
-          return formElement;
+          return isMobile ? <Portal>{formElement}</Portal> : formElement;
         })()}
       </div>
 

@@ -12,6 +12,7 @@ import { MediaGalleryPicker } from "@/app/components/media/media-picker";
 import { ImagePreview } from "@/app/components/media/image-preview";
 import { formatMoney } from "@/app/utils/format";
 import { AlertModal } from "@/app/components/ui/alert-modal";
+import { Portal } from "@/app/components/ui/portal";
 
 type StaffRow = {
   id: string;
@@ -85,6 +86,14 @@ export function UserManagement() {
   const formRef = useRef<HTMLDivElement>(null);
   const editing = Boolean(form.id);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
 
   async function loadRows() {
     const result = await fetch("/api/users").then((res) => res.json() as Promise<ApiResult<StaffRow[]>>);
@@ -209,7 +218,7 @@ export function UserManagement() {
   }
 
   return (
-    <div className="studio-page-container w-full space-y-5">
+    <div className="space-y-5">
       <StudioBrandPanel
         eyebrow="Hồ sơ + tài khoản"
         title="Nhân sự"
@@ -247,8 +256,8 @@ export function UserManagement() {
         </div>
       ) : null}
 
-      <div className={showForm ? "grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_460px]" : "grid min-w-0 items-start gap-5"}>
-        <div className="grid min-w-0 items-start gap-4 lg:grid-cols-2">
+      <div className={showForm ? "grid items-start gap-5 xl:grid-cols-[1fr_460px]" : "grid items-start gap-5"}>
+        <div className="grid items-start gap-4 lg:grid-cols-2">
           {selectedIds.length > 0 && rows.length > 0 ? (
             <div className="rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm lg:col-span-2">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -478,7 +487,7 @@ export function UserManagement() {
             </Card>
           </div>
         );
-        return formElement;
+        return isMobile ? <Portal>{formElement}</Portal> : formElement;
       })()}
       </div>
       <ImagePreview

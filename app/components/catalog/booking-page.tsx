@@ -325,6 +325,13 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const [selectedGroupKeys, setSelectedGroupKeys] = useState<string[]>([]);
   const [groupSelectionMode, setGroupSelectionMode] = useState(false);
   const role = useUiStore((state) => state.session?.user.role ?? null);
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
   const focusedItemId = useUiStore((state) => state.focusedItemId);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
   const longPressTimer = useRef<number | null>(null);
@@ -507,7 +514,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
       }
       window.setTimeout(() => {
         const element = document.querySelector(`[data-row-id="${CSS.escape(targetId)}"]`);
-        element?.scrollIntoView({ behavior: "auto", block: "center" });
+        element?.scrollIntoView({ behavior: "smooth", block: "center" });
         element?.classList.add("studio-focus-highlight");
         window.setTimeout(() => {
           element?.classList.remove("studio-focus-highlight");
@@ -1018,7 +1025,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }
 
   return (
-    <div className="studio-page-container w-full space-y-5">
+    <div className="space-y-5">
       <StudioBrandPanel
         eyebrow={completedOnly ? "Quản lý" : "Booking"}
         title={completedOnly ? "Booking hoàn tất" : "Booking"}
@@ -1086,8 +1093,8 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         ) : null}
       </div>
 
-      <div className={completedOnly || !showForm ? "grid min-w-0 gap-5" : "grid min-w-0 gap-5 xl:grid-cols-[minmax(0,1fr)_420px]"}>
-        <div className="min-w-0 space-y-3">
+      <div className={completedOnly || !showForm ? "grid gap-5" : "grid gap-5 xl:grid-cols-[1fr_420px]"}>
+        <div className="space-y-3">
           {selectedDeleteCount > 0 && filteredRows.length > 0 && (role === "ADMIN" || role === "MANAGER") ? (
             <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <label className="flex items-center gap-2 text-sm font-black text-[#5B342C]">
@@ -1238,7 +1245,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
       {(() => {
         if (completedOnly || !showForm) return null;
         const formElement = (
-          <div ref={formRef} className="min-w-0 scroll-mt-20">
+          <div ref={formRef} className="scroll-mt-20">
             <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setForm(emptyForm); setShowForm(false); }} />
             <Card className="studio-mobile-form-sheet h-fit xl:sticky xl:top-24">
               <div className="mb-3 flex justify-end">
@@ -1419,7 +1426,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
             </Card>
           </div>
         );
-        return formElement;
+        return isMobile ? <Portal>{formElement}</Portal> : formElement;
       })()}
       </div>
 

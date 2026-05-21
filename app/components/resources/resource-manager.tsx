@@ -1388,13 +1388,6 @@ const FinancialCompactCard = memo(function FinancialCompactCard({
 });
 
 export function ResourceManager({ resource }: { resource: ResourceKey }) {
-  // Debug render counter + Test C
-  if (typeof window !== "undefined" && new URLSearchParams(window.location.search).has("debug")) {
-    console.count(`[RENDER] ResourceManager(${resource})`);
-  }
-  if (typeof window !== "undefined" && sessionStorage.getItem("debug-testC") === "1") {
-    return (<div style={{ padding: 24, fontSize: 18, fontWeight: "bold", color: "#5B342C" }}>[TEST C] Title only - {resource} - no content</div>);
-  }
   const config = getConfig(resource);
   const router = useRouter();
   const pathname = usePathname();
@@ -1433,6 +1426,14 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const [editingSystemNote, setEditingSystemNote] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 640);
+    checkMobile();
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
   
   useEffect(() => {
     if (showForm || !!detailRow) {
@@ -1813,7 +1814,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
 
   if (resource === "transactions" && !transactionView) {
     return (
-      <div className="studio-page-container mx-auto w-full max-w-[1100px] space-y-4 sm:space-y-6">
+      <div className="mx-auto max-w-[1100px] space-y-4 sm:space-y-6">
         <StudioBrandPanel
           eyebrow="Tài chính"
           title="Thu chi"
@@ -1876,7 +1877,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   }
 
   return (
-    <div className="studio-page-container mx-auto w-full max-w-[1500px] space-y-4 sm:space-y-6">
+    <div className="mx-auto max-w-[1500px] space-y-4 sm:space-y-6">
       <StudioBrandPanel
         eyebrow={config.group}
         title={config.label}
@@ -2031,8 +2032,8 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
         </div>
       ) : null}
 
-      <div className={canMutate(session) && showForm ? "grid min-w-0 items-start gap-4 xl:grid-cols-[minmax(0,1fr)_420px]" : "grid min-w-0 gap-4"}>
-        <div className="order-2 min-w-0 space-y-4 xl:order-1">
+      <div className={canMutate(session) && showForm ? "grid items-start gap-4 xl:grid-cols-[1fr_420px]" : "grid gap-4"}>
+        <div className="order-2 space-y-4 xl:order-1">
           {selectedIds.length > 0 && visibleRows.length > 0 && canDelete(session) && resource !== "wallets" ? (
             <div className="flex flex-col gap-2 rounded-2xl border border-[#F4C7C4] bg-white p-3 shadow-sm sm:flex-row sm:items-center sm:justify-between">
               <label className="flex items-center gap-2 text-sm font-black text-[#5B342C]">
@@ -2124,7 +2125,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
       {(() => {
         if (!canMutate(session) || !showForm) return null;
         const formElement = (
-          <div ref={formRef} className="order-1 min-w-0 scroll-mt-20 xl:order-2">
+          <div ref={formRef} className="order-1 scroll-mt-20 xl:order-2">
             <button className="studio-mobile-form-backdrop sm:hidden" aria-label="Đóng form" onClick={() => { setEditingId(null); setEditingSystemNote(""); setForm(emptyForm(config.fields)); setShowForm(false); }} />
             <Card className="studio-mobile-form-sheet rounded-[1.5rem] border-[#F4C7C4] bg-white shadow-[0_18px_50px_rgba(184,95,108,0.1)] sm:sticky sm:top-[5.5rem] sm:rounded-[2rem]">
               <div className="mb-4 flex items-center justify-between gap-3">
@@ -2216,7 +2217,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
             </Card>
           </div>
         );
-        return formElement;
+        return isMobile ? <Portal>{formElement}</Portal> : formElement;
       })()}
       </div>
 
@@ -2580,7 +2581,7 @@ function ResourceListWithProgressive({
                   focusedItemId === String(row.id ?? "") ? "ring-2 ring-[#EA7188]" : "",
                 )}
               >
-                <div className={cn("grid min-w-0 grid-cols-[auto_1fr_auto] items-start gap-2 sm:flex sm:flex-row sm:flex-wrap xl:flex-nowrap", resource === "customers" ? "sm:gap-2.5" : richInfoCard ? "sm:gap-3" : "sm:gap-4")}>
+                <div className={cn("grid grid-cols-[auto_1fr_auto] items-start gap-2 sm:flex sm:flex-row md:flex-nowrap", resource === "customers" ? "sm:gap-2.5" : richInfoCard ? "sm:gap-3" : "sm:gap-4")}>
                   <OrderBadge value={visibleRows.length - index} />
                   {canDelete(session) && (selectedIds.length > 0 || selectedIds.includes(String(row.id ?? ""))) ? (
                     <button
@@ -2664,7 +2665,7 @@ function ResourceListWithProgressive({
                     ) : null}
                   </div>
                   {canMutate(session) ? (
-                    <div className="col-span-3 flex shrink-0 flex-row flex-wrap justify-end gap-2 sm:col-span-1 xl:flex-col">
+                    <div className="col-span-3 flex shrink-0 flex-row justify-end gap-2 sm:col-span-1 md:flex-col">
                       {["invoices", "transactions"].includes(resource) ? <PrintInvoiceMenu row={row} /> : null}
                       <Button variant="secondary" size="icon" className="h-10 w-10 shrink-0 rounded-2xl" aria-label="Sửa dữ liệu" onClick={(event) => { event.stopPropagation(); edit(row); }}>
                         <Pencil size={16} className="text-[#EA7188]" />
