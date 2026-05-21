@@ -372,8 +372,9 @@ video {
     contain: layout style;
   }
 
-  .studio-bottom-nav {
-    display: none !important;
+  .studio-bottom-nav:not(.hidden) {
+    display: block !important;
+    min-height: calc(5.75rem + env(safe-area-inset-bottom));
   }
 
   .studio-menu-trigger {
@@ -395,8 +396,8 @@ video {
   }
 
   .studio-mobile-drawer-panel {
-    width: min(390px, 44vw) !important;
-    max-width: 390px !important;
+    width: min(620px, 72vw) !important;
+    max-width: none !important;
     height: 100vh !important;
     height: 100svh !important;
     transform: none !important;
@@ -411,7 +412,46 @@ video {
   }
 
   .studio-mobile-bottom-safe {
-    padding-bottom: 1rem !important;
+    padding-bottom: calc(6.75rem + env(safe-area-inset-bottom)) !important;
+    padding-left: clamp(1.25rem, 3vw, 2.5rem) !important;
+    padding-right: clamp(1.25rem, 3vw, 2.5rem) !important;
+  }
+
+  .studio-bottom-nav > div {
+    max-width: none !important;
+    height: 5.75rem !important;
+    padding-left: clamp(1rem, 4vw, 3rem) !important;
+    padding-right: clamp(1rem, 4vw, 3rem) !important;
+  }
+
+  .studio-bottom-nav button {
+    min-height: 5.75rem;
+  }
+
+  .studio-bottom-nav svg {
+    width: 1.65rem;
+    height: 1.65rem;
+  }
+
+  .studio-bottom-nav span {
+    font-size: 0.78rem !important;
+    line-height: 1rem !important;
+  }
+
+  .studio-menu-trigger {
+    width: 4rem !important;
+    height: 4rem !important;
+    border-radius: 1.35rem !important;
+  }
+
+  .studio-mobile-drawer-panel .studio-ios-scroll {
+    padding: 1.25rem !important;
+    padding-bottom: max(env(safe-area-inset-bottom), 2.5rem) !important;
+  }
+
+  .studio-mobile-drawer-panel button {
+    min-height: 3.75rem;
+    font-size: 1rem;
   }
 }
 
@@ -428,6 +468,13 @@ video {
     max-width: 900px !important;
     margin-left: auto !important;
     margin-right: auto !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .studio-mobile-bottom-safe > :where(div, section, main),
+  .studio-mobile-form-sheet {
+    max-width: none !important;
   }
 }
 
