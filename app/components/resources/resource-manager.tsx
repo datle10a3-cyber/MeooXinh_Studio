@@ -2466,7 +2466,7 @@ function TransactionDateListWithProgressive({
   onOpenDetail: (row: Row) => void;
   onOpenGallery: (row: Row, index: number) => void;
 }) {
-  const { visibleItems, sentinelRef, hasMore } = useProgressiveList(groups, 2); // Keep date groups light on tablets with heavy transaction data.
+  const { visibleItems, sentinelRef, hasMore } = useProgressiveList(groups, 5); // Load 5 groups (days) at a time
 
   return (
     <>

@@ -497,59 +497,6 @@ video {
   .studio-mobile-form-sheet {
     max-width: none !important;
   }
-
-  [data-row-id] {
-    content-visibility: auto;
-    contain: layout paint style;
-    contain-intrinsic-size: auto 168px;
-  }
-
-  [data-row-id] :where(img) {
-    content-visibility: auto;
-  }
-
-  [data-row-id] :where(.shadow-sm, .shadow-md, .shadow-lg, .shadow-xl, .shadow-2xl),
-  [data-row-id][class*="shadow-"] {
-    box-shadow: 0 3px 10px rgba(91, 52, 44, 0.07) !important;
-  }
-
-  [data-row-id] :where([class*="bg-gradient-to-br"]) {
-    background-image: none !important;
-  }
-
-  [data-row-id] :where([class*="hover:-translate"], [class*="active:scale"], [class*="hover:scale"]) {
-    transform: none !important;
-  }
-
-  [data-row-id] :where([class*="transition"]) {
-    transition-property: background-color, border-color, color, opacity !important;
-    transition-duration: 40ms !important;
-  }
-
-  [data-row-id] :where(button, [role="button"]) {
-    min-height: 2.6rem;
-  }
-
-  [data-row-id] :where(.rounded-\[1\.75rem\], .rounded-\[1\.5rem\], .rounded-\[1\.35rem\]) {
-    border-radius: 1.15rem !important;
-  }
-
-  [data-row-id] :where(.p-4, .sm\:p-4, .sm\:p-5) {
-    padding: 0.75rem !important;
-  }
-
-  [data-row-id] :where(.mt-6, .sm\:mt-6) {
-    margin-top: 1rem !important;
-  }
-
-  [data-row-id] :where(.gap-4, .sm\:gap-4, .gap-3, .sm\:gap-3) {
-    gap: 0.65rem !important;
-  }
-
-  [data-row-id] :where(.h-20, .w-20, .sm\:h-20, .sm\:w-20) {
-    width: 3.75rem !important;
-    height: 3.75rem !important;
-  }
 }
 
 @media (max-width: 640px) {
