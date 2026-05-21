@@ -538,6 +538,15 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }, [completedOnly, isMobile, showForm]);
 
   useEffect(() => {
+    if (showForm && formRef.current) {
+      const timer = setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [showForm, editingId]);
+
+  useEffect(() => {
     if (!focusedItemId || !rows.length) return;
     const focusedRow = rows.find((row) => row.id === focusedItemId);
     const focusedGroupKey = focusedRow ? bookingGroupKey(focusedRow) : "";

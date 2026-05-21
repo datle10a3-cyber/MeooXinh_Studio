@@ -3,7 +3,7 @@ import { requireUser } from "@/app/lib/auth";
 import { uploadMediaFile } from "@/app/lib/media-service";
 import { prisma } from "@/app/lib/prisma";
 
-const maxAvatarSize = 4 * 1024 * 1024;
+const maxAvatarSize = 10 * 1024 * 1024;
 
 export async function POST(req: Request) {
   try {
@@ -12,7 +12,7 @@ export async function POST(req: Request) {
     const file = form.get("file");
     if (!(file instanceof File)) return fail("Vui lòng chọn ảnh đại diện.", 422);
     if (!file.type.startsWith("image/")) return fail("File phải là ảnh.", 422);
-    if (file.size > maxAvatarSize) return fail("Ảnh đại diện tối đa 4MB.", 422);
+    if (file.size > maxAvatarSize) return fail("Ảnh đại diện tối đa 10MB.", 422);
 
     const uploaded = await uploadMediaFile(file);
     const user = await prisma.user.update({

@@ -308,8 +308,8 @@ export function ProfilePage() {
 
   async function upload(file?: File) {
     if (!file || !summary || !session) return;
-    if (file.size > 4 * 1024 * 1024) {
-      setMessage("Ảnh đại diện tối đa 4MB.");
+    if (file.size > 10 * 1024 * 1024) {
+      setMessage("Ảnh đại diện tối đa 10MB.");
       return;
     }
 

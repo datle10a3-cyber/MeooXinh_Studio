@@ -219,6 +219,15 @@ export function PackagePage() {
   }, [isMobile, showForm]);
 
   useEffect(() => {
+    if (showForm && formRef.current) {
+      const timer = setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [showForm, editingId]);
+
+  useEffect(() => {
     if (!focusedItemId || !rows.length) return;
     const timer = window.setTimeout(() => {
       const element = document.querySelector(`[data-row-id="${CSS.escape(focusedItemId)}"]`);
