@@ -374,7 +374,7 @@ video {
 
   .studio-bottom-nav:not(.hidden) {
     display: block !important;
-    min-height: calc(5.75rem + env(safe-area-inset-bottom));
+    min-height: calc(clamp(6.5rem, 9vw, 7.75rem) + env(safe-area-inset-bottom));
   }
 
   .studio-menu-trigger {
@@ -396,7 +396,7 @@ video {
   }
 
   .studio-mobile-drawer-panel {
-    width: min(620px, 72vw) !important;
+    width: min(92vw, calc(100vw - 1.5rem)) !important;
     max-width: none !important;
     height: 100vh !important;
     height: 100svh !important;
@@ -412,46 +412,46 @@ video {
   }
 
   .studio-mobile-bottom-safe {
-    padding-bottom: calc(6.75rem + env(safe-area-inset-bottom)) !important;
-    padding-left: clamp(1.25rem, 3vw, 2.5rem) !important;
-    padding-right: clamp(1.25rem, 3vw, 2.5rem) !important;
+    padding-bottom: calc(clamp(7.5rem, 10vw, 9rem) + env(safe-area-inset-bottom)) !important;
+    padding-left: clamp(1.5rem, 4vw, 4rem) !important;
+    padding-right: clamp(1.5rem, 4vw, 4rem) !important;
   }
 
   .studio-bottom-nav > div {
     max-width: none !important;
-    height: 5.75rem !important;
-    padding-left: clamp(1rem, 4vw, 3rem) !important;
-    padding-right: clamp(1rem, 4vw, 3rem) !important;
+    height: clamp(6.5rem, 9vw, 7.75rem) !important;
+    padding-left: clamp(1.5rem, 5vw, 5rem) !important;
+    padding-right: clamp(1.5rem, 5vw, 5rem) !important;
   }
 
   .studio-bottom-nav button {
-    min-height: 5.75rem;
+    min-height: clamp(6.5rem, 9vw, 7.75rem);
   }
 
   .studio-bottom-nav svg {
-    width: 1.65rem;
-    height: 1.65rem;
+    width: clamp(1.9rem, 3.25vw, 2.35rem);
+    height: clamp(1.9rem, 3.25vw, 2.35rem);
   }
 
   .studio-bottom-nav span {
-    font-size: 0.78rem !important;
-    line-height: 1rem !important;
+    font-size: clamp(0.86rem, 1.45vw, 1rem) !important;
+    line-height: 1.15rem !important;
   }
 
   .studio-menu-trigger {
-    width: 4rem !important;
-    height: 4rem !important;
-    border-radius: 1.35rem !important;
+    width: clamp(4.25rem, 7vw, 5.25rem) !important;
+    height: clamp(4.25rem, 7vw, 5.25rem) !important;
+    border-radius: clamp(1.35rem, 2.5vw, 1.85rem) !important;
   }
 
   .studio-mobile-drawer-panel .studio-ios-scroll {
-    padding: 1.25rem !important;
-    padding-bottom: max(env(safe-area-inset-bottom), 2.5rem) !important;
+    padding: clamp(1.5rem, 3vw, 2.75rem) !important;
+    padding-bottom: max(env(safe-area-inset-bottom), 3rem) !important;
   }
 
   .studio-mobile-drawer-panel button {
-    min-height: 3.75rem;
-    font-size: 1rem;
+    min-height: clamp(4.15rem, 6vw, 5rem);
+    font-size: clamp(1.04rem, 1.7vw, 1.2rem);
   }
 }
 
@@ -485,6 +485,17 @@ video {
 
   .studio-mobile-form-sheet {
     max-width: 960px !important;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1366px) and (pointer: coarse) {
+  .studio-sidebar {
+    display: none !important;
+  }
+
+  .studio-mobile-bottom-safe > :where(div, section, main),
+  .studio-mobile-form-sheet {
+    max-width: none !important;
   }
 }
 

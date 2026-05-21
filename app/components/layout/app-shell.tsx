@@ -166,7 +166,7 @@ function isAuthPath(path: string | null | undefined) {
 
 function isTabletTouchViewport() {
   if (typeof window === "undefined") return false;
-  return window.matchMedia("(min-width: 768px) and (max-width: 1366px) and (pointer: coarse)").matches;
+  return false;
 }
 
 function shouldUseRouterScroll() {
