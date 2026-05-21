@@ -6,7 +6,7 @@ import { ShellLayout } from "@/app/components/layout/shell-layout";
 import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
-const pwaAssetVersion = "6";
+const pwaAssetVersion = "7";
 
 export const metadata: Metadata = {
   title: "MÈOO XINHH STUDIO | Make & Photo",
@@ -80,8 +80,18 @@ export default function RootLayout({
         />
         <link
           rel="apple-touch-startup-image"
+          href={`/splash/splash-ipad-2048x1536.png?v=${pwaAssetVersion}`}
+          media="screen and (device-width: 768px) and (device-height: 1024px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"
+        />
+        <link
+          rel="apple-touch-startup-image"
           href={`/splash/splash-ipad-1668x2388.png?v=${pwaAssetVersion}`}
           media="screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)"
+        />
+        <link
+          rel="apple-touch-startup-image"
+          href={`/splash/splash-ipad-2388x1668.png?v=${pwaAssetVersion}`}
+          media="screen and (device-width: 834px) and (device-height: 1194px) and (-webkit-device-pixel-ratio: 2) and (orientation: landscape)"
         />
       </head>
       <body suppressHydrationWarning className="antialiased">
