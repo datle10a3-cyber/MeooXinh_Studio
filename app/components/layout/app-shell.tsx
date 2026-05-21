@@ -164,18 +164,12 @@ function isAuthPath(path: string | null | undefined) {
   return path === "/login" || path === "/register" || path === "/forgot-password";
 }
 
-function isTabletTouchViewport() {
-  if (typeof window === "undefined") return false;
-  return window.matchMedia("(min-width: 768px) and (max-width: 1366px) and (pointer: coarse)").matches;
-}
-
 function shouldUseRouterScroll() {
-  return !isTabletTouchViewport();
+  return true;
 }
 
 function resetViewportScroll() {
   if (typeof window === "undefined") return;
-  if (isTabletTouchViewport()) return;
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 }
 
@@ -299,7 +293,6 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [pathname, rootAdminCentralOnly, router]);
 
   useEffect(() => {
-    if (isTabletTouchViewport()) return;
     const frame = window.requestAnimationFrame(resetViewportScroll);
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);
@@ -458,7 +451,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
                 <Button
                    variant="secondary"
                   size="icon"
-                  className={cn("studio-menu-trigger h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl xl:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
+                  className={cn("studio-menu-trigger h-10 w-10 shrink-0 touch-manipulation rounded-xl border-2 shadow-[0_8px_20px_rgba(184,95,108,0.18)] transition active:scale-95 sm:h-[3.25rem] sm:w-[3.25rem] sm:rounded-2xl md:hidden", rootAdminCentralOnly ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100" : "border-[#F4A7B9] bg-white text-[#5B342C]")}
                   aria-label="Mở menu"
                   onClick={() => setMobileMenuOpen(true)}
                 >
@@ -544,7 +537,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       ) : null}
 
       {mobileMenuOpen ? (
-        <div className="studio-mobile-drawer fixed inset-0 z-50 xl:hidden">
+        <div className="studio-mobile-drawer fixed inset-0 z-50 md:hidden">
           <button className={cn("studio-mobile-drawer-backdrop absolute inset-0", rootAdminCentralOnly ? "bg-black/55" : "bg-[#2B1C1A]/35")} aria-label="Đóng menu" onClick={() => setMobileMenuOpen(false)} />
           <aside className={cn("studio-mobile-drawer-panel absolute left-0 top-0 flex h-dvh w-[88vw] max-w-[360px] flex-col overflow-hidden pt-[env(safe-area-inset-top)] shadow-2xl sm:w-[380px] sm:max-w-md", rootAdminCentralOnly ? "border-r border-emerald-300/15 bg-[#04110A]" : "border-r border-[#F4C7C4] bg-[#FFF7F0]")}>
             <div className={cn("flex items-center justify-between border-b p-3 sm:p-4", rootAdminCentralOnly ? "border-emerald-300/15" : "border-[#F4C7C4]")}>
