@@ -1448,6 +1448,15 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     return () => document.body.classList.remove("studio-modal-open");
   }, [isMobile, showForm, detailRow]);
 
+  useEffect(() => {
+    if (showForm && formRef.current) {
+      const timer = setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [showForm, editingId]);
+
   const endpoint = `/api/resources/${resource}`;
   const title = useMemo(() => (editingId ? `Cập nhật ${config.shortLabel}` : `Thêm ${config.shortLabel}`), [config.shortLabel, editingId]);
   const groupedFields = useMemo(() => splitFields(config.fields), [config.fields]);
@@ -1749,11 +1758,6 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     setEditingSystemNote("");
     setForm(next);
     setShowForm(true);
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    });
   }
 
   function openRowGallery(row: Row, index: number) {
