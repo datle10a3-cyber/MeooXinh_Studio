@@ -221,38 +221,56 @@ function ImageSlot({
         onChange={(event) => void upload(event.target.files?.[0])}
       />
 
-      <div className={cn("flex gap-2", compact ? "grid grid-cols-2" : "flex-wrap")}>
-        <Button
-          variant="secondary"
-          size="sm"
+      <div className={cn("flex items-center gap-1.5", compact ? "justify-center" : "flex-wrap gap-2")}>
+        <button
           type="button"
-          className={compact ? "px-2 text-xs" : ""}
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
+          className={cn(
+            "flex items-center justify-center border border-[#F4C7C4] bg-white text-[#5B342C] shadow-sm hover:bg-[#FFF0F4] transition duration-200 disabled:opacity-50",
+            compact ? "h-8 w-8 rounded-lg" : "h-10 px-3 sm:px-4 rounded-2xl text-sm font-bold gap-2"
+          )}
+          title="Tải ảnh lên"
         >
-          <Upload size={14} />
-          {uploading ? "Tải" : compact ? "" : "Upload"}
-        </Button>
-        <Button
-          variant="secondary"
-          size="sm"
+          <Upload size={14} className="shrink-0" />
+          {!compact && (uploading ? "Tải" : "Upload")}
+        </button>
+
+        <button
           type="button"
-          className={compact ? "px-2 text-xs" : ""}
           onClick={() => setLibraryOpen(true)}
+          className={cn(
+            "flex items-center justify-center border border-[#F4C7C4] bg-white text-[#5B342C] shadow-sm hover:bg-[#FFF0F4] transition duration-200",
+            compact ? "h-8 w-8 rounded-lg" : "h-10 px-3 sm:px-4 rounded-2xl text-sm font-bold gap-2"
+          )}
+          title="Thư viện ảnh"
         >
-          <Library size={14} />
-          {compact ? "" : "Thư viện"}
-        </Button>
+          <Library size={14} className="shrink-0" />
+          {!compact && "Thư viện"}
+        </button>
+
         {!compact ? (
           <Button variant="ghost" size="sm" type="button" onClick={() => setLinkOpen(!linkOpen)}>
-            <LinkIcon size={14} />
+            <LinkIcon size={14} className="shrink-0" />
             Link
           </Button>
         ) : null}
-        {value && !compact ? (
-          <Button variant="ghost" size="sm" type="button" onClick={() => onChange("")}>
-            Bỏ ảnh
-          </Button>
+
+        {value ? (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className={cn(
+              "flex items-center justify-center transition duration-200",
+              compact
+                ? "h-8 w-8 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 shadow-sm"
+                : "h-10 px-3 sm:px-4 rounded-2xl text-sm font-bold border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 shadow-sm gap-2"
+            )}
+            title="Xóa ảnh"
+          >
+            <Trash2 size={14} className="shrink-0" />
+            {!compact && "Bỏ ảnh"}
+          </button>
         ) : null}
       </div>
 
