@@ -9,7 +9,7 @@ import { DeleteConfirmation } from "@/app/components/ui/delete-confirmation";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 import { MediaPicker } from "@/app/components/media/media-picker";
 import { DateTimeInput, Input, Textarea } from "@/app/components/ui/input";
-import { ProgressiveListSentinel, useProgressiveList } from "@/app/components/ui/progressive-list";
+import { ProgressiveListSentinel, useProgressiveList, useTabletTouchViewport } from "@/app/components/ui/progressive-list";
 import type { ApiResult, BookingItem, PackageItem } from "@/app/components/catalog/types";
 import { formatDate, formatMoney } from "@/app/utils/format";
 import { viOption } from "@/app/lib/vietnamese-labels";
@@ -325,6 +325,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   const [selectedGroupKeys, setSelectedGroupKeys] = useState<string[]>([]);
   const [groupSelectionMode, setGroupSelectionMode] = useState(false);
   const role = useUiStore((state) => state.session?.user.role ?? null);
+  const tabletTouch = useTabletTouchViewport();
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -483,9 +484,13 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
     } catch (err) {
       console.error("Booking load error:", err);
     } finally {
-      setLoadingData(false);
+      if (tabletTouch) {
+        window.setTimeout(() => setLoadingData(false), 80);
+      } else {
+        setLoadingData(false);
+      }
     }
-  }, [completedOnly]);
+  }, [completedOnly, tabletTouch]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadData(), 0);
@@ -514,7 +519,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
       }
       window.setTimeout(() => {
         const element = document.querySelector(`[data-row-id="${CSS.escape(targetId)}"]`);
-        element?.scrollIntoView({ behavior: "smooth", block: "center" });
+        element?.scrollIntoView({ behavior: tabletTouch ? "auto" : "smooth", block: "center" });
         element?.classList.add("studio-focus-highlight");
         window.setTimeout(() => {
           element?.classList.remove("studio-focus-highlight");
@@ -523,7 +528,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
       }, focusedGroupKey ? 90 : 0);
     }, focusedGroupKey ? 220 : 120);
     return () => window.clearTimeout(timer);
-  }, [focusedItemId, rows, setFocusedItemId]);
+  }, [focusedItemId, rows, setFocusedItemId, tabletTouch]);
 
   async function save() {
     setSaving(true);

@@ -1,6 +1,6 @@
 "use client";
 
-import { type Dispatch, type SetStateAction, useRef, useEffect, useDeferredValue, useMemo, useState } from "react";
+import { type Dispatch, type SetStateAction, useCallback, useRef, useEffect, useDeferredValue, useMemo, useState } from "react";
 import {
   CheckCircle2,
   Clock,
@@ -22,7 +22,7 @@ import { Card, CardTitle } from "@/app/components/ui/card";
 import { DeleteConfirmation } from "@/app/components/ui/delete-confirmation";
 import { StudioBrandPanel } from "@/app/components/brand/studio-brand";
 import { Input, Textarea } from "@/app/components/ui/input";
-import { ProgressiveListSentinel, useProgressiveList } from "@/app/components/ui/progressive-list";
+import { ProgressiveListSentinel, useProgressiveList, useTabletTouchViewport } from "@/app/components/ui/progressive-list";
 import { MediaGalleryPicker } from "@/app/components/media/media-picker";
 import { ImagePreview } from "@/app/components/media/image-preview";
 import type { ApiResult, CategoryItem, PackageItem } from "@/app/components/catalog/types";
@@ -94,6 +94,7 @@ export function PackagePage() {
   const focusedItemId = useUiStore((state) => state.focusedItemId);
   const setFocusedItemId = useUiStore((state) => state.setFocusedItemId);
   const [initialLoading, setInitialLoading] = useState(true);
+  const tabletTouch = useTabletTouchViewport();
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 640);
@@ -152,7 +153,7 @@ export function PackagePage() {
     clearLongPress();
   }
 
-  async function loadData() {
+  const loadData = useCallback(async () => {
     const [categoryResult, packageResult] = await Promise.all([
       fetch("/api/categories").then((res) => res.json() as Promise<ApiResult<CategoryItem[]>>),
       fetch("/api/packages").then((res) => res.json() as Promise<ApiResult<PackageItem[]>>),
@@ -161,13 +162,17 @@ export function PackagePage() {
     if (packageResult.data) setRows(packageResult.data);
     if (categoryResult.error && !/chưa đăng nhập/i.test(categoryResult.error.message)) setMessage(categoryResult.error.message);
     if (packageResult.error && !/chưa đăng nhập/i.test(packageResult.error.message)) setMessage(packageResult.error.message);
-    setInitialLoading(false);
-  }
+    if (tabletTouch) {
+      window.setTimeout(() => setInitialLoading(false), 80);
+    } else {
+      setInitialLoading(false);
+    }
+  }, [tabletTouch]);
 
   useEffect(() => {
     const timer = window.setTimeout(() => void loadData(), 0);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [loadData]);
 
   useEffect(() => {
     if (showForm) {
@@ -184,7 +189,7 @@ export function PackagePage() {
     if (!focusedItemId || !rows.length) return;
     const timer = window.setTimeout(() => {
       const element = document.querySelector(`[data-row-id="${CSS.escape(focusedItemId)}"]`);
-      element?.scrollIntoView({ behavior: "smooth", block: "center" });
+      element?.scrollIntoView({ behavior: tabletTouch ? "auto" : "smooth", block: "center" });
       element?.classList.add("studio-focus-highlight");
       window.setTimeout(() => {
         element?.classList.remove("studio-focus-highlight");
@@ -192,7 +197,7 @@ export function PackagePage() {
       }, 2800);
     }, 120);
     return () => window.clearTimeout(timer);
-  }, [focusedItemId, rows, setFocusedItemId]);
+  }, [focusedItemId, rows, setFocusedItemId, tabletTouch]);
 
   async function save() {
     const result = await fetch("/api/packages", {
@@ -399,7 +404,7 @@ export function PackagePage() {
               </div>
             </div>
           ) : null}
-          {progressiveRows.visibleItems.map((row, index) => (
+          {(!tabletTouch || !initialLoading) && progressiveRows.visibleItems.map((row, index) => (
             <PackageListItem
               key={row.id}
               row={row}

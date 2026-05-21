@@ -476,6 +476,25 @@ video {
   .studio-mobile-form-sheet {
     max-width: none !important;
   }
+
+  [data-row-id] {
+    content-visibility: auto;
+    contain: layout paint style;
+    contain-intrinsic-size: auto 190px;
+  }
+
+  [data-row-id] :where([class*="hover:-translate"], [class*="hover:scale"], [class*="active:scale"]) {
+    transform: none !important;
+  }
+
+  [data-row-id] :where([class*="transition"]) {
+    transition-property: background-color, border-color, color, opacity, box-shadow !important;
+    transition-duration: 40ms !important;
+  }
+
+  [data-row-id] :where(.shadow-xl, .shadow-2xl, [class*="shadow-[0_18px"], [class*="shadow-[0_22px"], [class*="shadow-[0_24px"], [class*="shadow-[0_30px"]) {
+    box-shadow: 0 5px 16px rgba(91, 52, 44, 0.08) !important;
+  }
 }
 
 @media (min-width: 1280px) {

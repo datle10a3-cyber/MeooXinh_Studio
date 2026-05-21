@@ -42,7 +42,7 @@ import { formatDate, formatMoney } from "@/app/utils/format";
 import { cn } from "@/app/utils/cn";
 import { useUiStore } from "@/app/store/ui-store";
 import { navigateStudioView, studioViewPath } from "@/app/utils/studio-navigation";
-import { useProgressiveList, ProgressiveListSentinel } from "@/app/components/ui/progressive-list";
+import { useProgressiveList, ProgressiveListSentinel, useTabletTouchViewport } from "@/app/components/ui/progressive-list";
 import { buildStudioReceiptHtml, openReceiptPrintWindow } from "@/app/utils/receipt-template";
 
 type Row = Record<string, unknown>;
@@ -1399,6 +1399,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const setTransactionIntent = useUiStore((state) => state.setTransactionIntent);
   const setTransactionViewIntent = useUiStore((state) => state.setTransactionViewIntent);
   const session = useUiStore((state) => state.session);
+  const tabletTouch = useTabletTouchViewport();
   const [rows, setRows] = useState<Row[]>([]);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [hasMoreRows, setHasMoreRows] = useState(false);
@@ -1487,7 +1488,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     if (mode === "reset") {
       try {
         const cached = sessionStorage.getItem(`rc:${endpoint}`);
-        if (cached) {
+        if (cached && !tabletTouch) {
           const page = JSON.parse(cached) as PaginatedRows;
           setRows(page.items);
           setNextCursor(page.nextCursor);
@@ -1524,8 +1525,12 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
     }
     if (payload.error && !/chưa đăng nhập/i.test(payload.error.message)) setMessage(payload.error.message);
     setLoadingMoreRows(false);
-    setInitialLoading(false);
-  }, [endpoint]);
+    if (tabletTouch && mode === "reset") {
+      window.setTimeout(() => setInitialLoading(false), 80);
+    } else {
+      setInitialLoading(false);
+    }
+  }, [endpoint, tabletTouch]);
 
   const loadWalletRows = useCallback(async () => {
     if (resource !== "transactions") return;
@@ -1791,6 +1796,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const expenseCount = rows.filter((row) => String(row.type) === "EXPENSE").length;
   const allVisibleSelected = visibleRows.length > 0 && visibleRows.every((row) => selectedIds.includes(String(row.id ?? "")));
   const bulkRows = bulkDeleteMode === "all" ? visibleRows : visibleRows.filter((row) => selectedIds.includes(String(row.id ?? "")));
+  const holdDataListForTablet = tabletTouch && initialLoading;
 
   const groupedSourceRows = resource === "transactions" ? visibleRows : rows;
 
@@ -2058,7 +2064,7 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
 
           <section className="space-y-3">
             {resource === "bookings" ? <BookingCalendar bookings={rows} onMove={moveBooking} /> : null}
-            {initialLoading && visibleRows.length === 0 ? (
+            {(holdDataListForTablet || (initialLoading && visibleRows.length === 0)) ? (
               <PageSpinner label={`Đang tải ${config.label}…`} />
             ) : visibleRows.length === 0 && resource !== "wallets" ? (
               <Card className="rounded-[2rem] border-[#F4C7C4] bg-white py-12 text-center">
@@ -2466,7 +2472,7 @@ function TransactionDateListWithProgressive({
   onOpenDetail: (row: Row) => void;
   onOpenGallery: (row: Row, index: number) => void;
 }) {
-  const { visibleItems, sentinelRef, hasMore } = useProgressiveList(groups, 5); // Load 5 groups (days) at a time
+  const { visibleItems, sentinelRef, hasMore } = useProgressiveList(groups, 2);
 
   return (
     <>
