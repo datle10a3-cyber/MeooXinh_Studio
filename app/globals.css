@@ -415,6 +415,32 @@ video {
   }
 }
 
+@media (min-width: 768px) {
+  .studio-mobile-bottom-safe > :where(div, section, main) {
+    width: 100%;
+    max-width: 1040px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  .studio-mobile-form-sheet {
+    width: 100%;
+    max-width: 900px !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+}
+
+@media (min-width: 1280px) {
+  .studio-mobile-bottom-safe > :where(div, section, main) {
+    max-width: 1200px !important;
+  }
+
+  .studio-mobile-form-sheet {
+    max-width: 960px !important;
+  }
+}
+
 @media (max-width: 640px) {
   html,
   body {
