@@ -160,7 +160,7 @@ export function ImagePreview({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[120] overflow-y-auto overscroll-contain bg-[#2B1C1A]/80 p-2 backdrop-blur-md sm:p-4"
+      className="fixed inset-0 z-[420] overflow-y-auto overscroll-contain bg-[#2B1C1A]/80 p-2 backdrop-blur-md sm:p-4"
       onClick={handleBackdropClick}
       onWheel={handleWheel}
     >
