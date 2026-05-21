@@ -190,6 +190,34 @@ export async function GET(request: Request) {
       }),
     ]);
 
+    const openShifts = await prisma.walletShift.findMany({
+      where: { studioId: user.studioId, status: "OPEN" },
+    });
+    const openShiftByWallet = new Map(openShifts.map((s) => [s.walletId, s]));
+    for (const row of wallets as any[]) {
+      const shift = openShiftByWallet.get(row.id);
+      if (shift) {
+        const transactions = await prisma.transaction.findMany({
+          where: {
+            studioId: user.studioId,
+            walletId: row.id,
+            deletedAt: null,
+            approvalStatus: "APPROVED",
+            occurredAt: { gte: shift.openedAt },
+          },
+          select: { type: true, amount: true },
+        });
+        const totalIncome = transactions
+          .filter((item) => item.type === "INCOME")
+          .reduce((sum, item) => sum + Number(item.amount), 0);
+        const totalExpense = transactions
+          .filter((item) => item.type === "EXPENSE")
+          .reduce((sum, item) => sum + Number(item.amount), 0);
+        
+        row.balance = Number(shift.openingBalance) + totalIncome - totalExpense;
+      }
+    }
+
     const totalIncome = toNumber(income._sum.amount);
     const totalExpense = toNumber(expense._sum.amount);
     const revenue = buildRevenue(chartMode, chartTransactions, chartDate, now, fromYear, toYear);

@@ -179,6 +179,40 @@ export async function getResource(req: Request, resourceName: string) {
       orderBy: resource.key === "notes" ? [{ isPinned: "desc" }, { createdAt: "desc" }] : { createdAt: "desc" },
     });
 
+    if (resourceName === "wallets") {
+      const openShifts = await prisma.walletShift.findMany({
+        where: {
+          studioId: user.studioId,
+          status: "OPEN"
+        }
+      });
+      const openShiftByWallet = new Map(openShifts.map((s) => [s.walletId, s]));
+
+      for (const row of rows as any[]) {
+        const shift = openShiftByWallet.get(row.id);
+        if (shift) {
+          const transactions = await prisma.transaction.findMany({
+            where: {
+              studioId: user.studioId,
+              walletId: row.id,
+              deletedAt: null,
+              approvalStatus: "APPROVED",
+              occurredAt: { gte: shift.openedAt },
+            },
+            select: { type: true, amount: true },
+          });
+          const totalIncome = transactions
+            .filter((item) => item.type === "INCOME")
+            .reduce((sum, item) => sum + Number(item.amount), 0);
+          const totalExpense = transactions
+            .filter((item) => item.type === "EXPENSE")
+            .reduce((sum, item) => sum + Number(item.amount), 0);
+          
+          row.balance = Number(shift.openingBalance) + totalIncome - totalExpense;
+        }
+      }
+    }
+
     if (cursorMode) {
       const hasMore = rows.length > take;
       const items = hasMore ? rows.slice(0, take) : rows;
