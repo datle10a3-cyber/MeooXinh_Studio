@@ -374,7 +374,7 @@ video {
 
   .studio-bottom-nav:not(.hidden) {
     display: block !important;
-    min-height: calc(clamp(6.5rem, 9vw, 7.75rem) + env(safe-area-inset-bottom));
+    min-height: calc(4.25rem + env(safe-area-inset-bottom));
   }
 
   .studio-menu-trigger {
@@ -396,7 +396,7 @@ video {
   }
 
   .studio-mobile-drawer-panel {
-    width: min(92vw, calc(100vw - 1.5rem)) !important;
+    width: 320px !important;
     max-width: none !important;
     height: 100vh !important;
     height: 100svh !important;
@@ -412,46 +412,46 @@ video {
   }
 
   .studio-mobile-bottom-safe {
-    padding-bottom: calc(clamp(7.5rem, 10vw, 9rem) + env(safe-area-inset-bottom)) !important;
-    padding-left: clamp(1.5rem, 4vw, 4rem) !important;
-    padding-right: clamp(1.5rem, 4vw, 4rem) !important;
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom)) !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
   }
 
   .studio-bottom-nav > div {
     max-width: none !important;
-    height: clamp(6.5rem, 9vw, 7.75rem) !important;
-    padding-left: clamp(1.5rem, 5vw, 5rem) !important;
-    padding-right: clamp(1.5rem, 5vw, 5rem) !important;
+    height: 4.25rem !important;
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
   }
 
   .studio-bottom-nav button {
-    min-height: clamp(6.5rem, 9vw, 7.75rem);
+    min-height: 4.25rem;
   }
 
   .studio-bottom-nav svg {
-    width: clamp(1.9rem, 3.25vw, 2.35rem);
-    height: clamp(1.9rem, 3.25vw, 2.35rem);
+    width: 1.35rem;
+    height: 1.35rem;
   }
 
   .studio-bottom-nav span {
-    font-size: clamp(0.86rem, 1.45vw, 1rem) !important;
-    line-height: 1.15rem !important;
+    font-size: 0.72rem !important;
+    line-height: 0.95rem !important;
   }
 
   .studio-menu-trigger {
-    width: clamp(4.25rem, 7vw, 5.25rem) !important;
-    height: clamp(4.25rem, 7vw, 5.25rem) !important;
-    border-radius: clamp(1.35rem, 2.5vw, 1.85rem) !important;
+    width: 2.75rem !important;
+    height: 2.75rem !important;
+    border-radius: 0.85rem !important;
   }
 
   .studio-mobile-drawer-panel .studio-ios-scroll {
-    padding: clamp(1.5rem, 3vw, 2.75rem) !important;
-    padding-bottom: max(env(safe-area-inset-bottom), 3rem) !important;
+    padding: 1.5rem !important;
+    padding-bottom: max(env(safe-area-inset-bottom), 2rem) !important;
   }
 
   .studio-mobile-drawer-panel button {
-    min-height: clamp(4.15rem, 6vw, 5rem);
-    font-size: clamp(1.04rem, 1.7vw, 1.2rem);
+    min-height: 2.75rem;
+    font-size: 0.92rem;
   }
 }
 
