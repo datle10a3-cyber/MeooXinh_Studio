@@ -789,16 +789,17 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
   }
 
   const deferredQuery = useDeferredValue(query);
+  const rowsForView = useMemo(() => tabletTouch && loadingData ? [] : rows, [loadingData, rows, tabletTouch]);
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const filteredRows = useMemo(() => {
     const keyword = deferredQuery.trim().toLowerCase();
-    if (!keyword) return rows;
-    return rows.filter((row) =>
+    if (!keyword) return rowsForView;
+    return rowsForView.filter((row) =>
       [row.customerName, row.packageName, row.categoryName, row.status, row.note].some((value) =>
         String(value ?? "").toLowerCase().includes(keyword),
       ),
     );
-  }, [rows, deferredQuery]);
+  }, [rowsForView, deferredQuery]);
   const allVisibleSelected = filteredRows.length > 0 && filteredRows.every((row) => selectedIds.includes(row.id));
   const groupNames = parseGroupCustomers(form.groupCustomers);
   // eslint-disable-next-line react-hooks/preserve-manual-memoization

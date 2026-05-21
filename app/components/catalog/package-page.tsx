@@ -310,16 +310,17 @@ export function PackagePage() {
   }
 
   const deferredQuery = useDeferredValue(query);
+  const rowsForView = useMemo(() => tabletTouch && initialLoading ? [] : rows, [initialLoading, rows, tabletTouch]);
   // eslint-disable-next-line react-hooks/preserve-manual-memoization
   const filteredRows = useMemo(() => {
     const keyword = deferredQuery.trim().toLowerCase();
-    if (!keyword) return rows;
-    return rows.filter((row) =>
+    if (!keyword) return rowsForView;
+    return rowsForView.filter((row) =>
       [row.name, row.category?.name, row.description, row.duration, row.location, row.suitableFor].some((value) =>
         String(value ?? "").toLowerCase().includes(keyword),
       ),
     );
-  }, [rows, deferredQuery]);
+  }, [rowsForView, deferredQuery]);
   const progressiveRows = useProgressiveList(filteredRows, 25);
   const allVisibleSelected = filteredRows.length > 0 && filteredRows.every((row) => selectedIds.includes(row.id));
 

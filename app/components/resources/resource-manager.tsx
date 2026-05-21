@@ -1772,19 +1772,21 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const deferredQuery = useDeferredValue(query);
   const deferredFromDate = useDeferredValue(fromDate);
   const deferredToDate = useDeferredValue(toDate);
+  const holdDataListForTablet = tabletTouch && initialLoading;
+  const rowsForView = useMemo(() => holdDataListForTablet ? [] : rows, [holdDataListForTablet, rows]);
 
   const filteredRows = useMemo(() => {
     const keyword = deferredQuery.trim().toLowerCase();
     const dateFilteredRows = ["transactions", "invoices", "projects"].includes(resource)
-      ? rows.filter((row) => dateInRange(
+      ? rowsForView.filter((row) => dateInRange(
           resource === "transactions" ? row.occurredAt ?? row.createdAt : resource === "projects" ? row.deadlineAt ?? row.createdAt : row.issueDate ?? row.createdAt,
           deferredFromDate,
           deferredToDate,
         ))
-      : rows;
+      : rowsForView;
     if (!keyword) return dateFilteredRows;
     return dateFilteredRows.filter((row) => Object.values(row).some((value) => String(value ?? "").toLowerCase().includes(keyword)));
-  }, [deferredFromDate, deferredQuery, resource, rows, deferredToDate]);
+  }, [deferredFromDate, deferredQuery, resource, rowsForView, deferredToDate]);
   const transactionType = transactionView === "income" ? "INCOME" : transactionView === "expense" ? "EXPENSE" : null;
   const visibleRows = resource === "transactions" && transactionType ? filteredRows.filter((row) => String(row.type) === transactionType) : filteredRows;
   const walletById = useMemo(() => new Map(walletRows.map((wallet) => [String(wallet.id), wallet])), [walletRows]);
@@ -1796,9 +1798,8 @@ export function ResourceManager({ resource }: { resource: ResourceKey }) {
   const expenseCount = rows.filter((row) => String(row.type) === "EXPENSE").length;
   const allVisibleSelected = visibleRows.length > 0 && visibleRows.every((row) => selectedIds.includes(String(row.id ?? "")));
   const bulkRows = bulkDeleteMode === "all" ? visibleRows : visibleRows.filter((row) => selectedIds.includes(String(row.id ?? "")));
-  const holdDataListForTablet = tabletTouch && initialLoading;
 
-  const groupedSourceRows = resource === "transactions" ? visibleRows : rows;
+  const groupedSourceRows = resource === "transactions" ? visibleRows : rowsForView;
 
   const _rowGroups = resource === "transactions"
     ? [
