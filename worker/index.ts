@@ -2,6 +2,16 @@
 
 const sw = self as unknown as ServiceWorkerGlobalScope;
 
+const navigationCacheNames = ["start-url", "apis", "next-data", "pages-rsc-prefetch", "pages-rsc", "pages"];
+
+sw.addEventListener("activate", (event) => {
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((key) => navigationCacheNames.some((name) => key.includes(name))).map((key) => caches.delete(key)))),
+  );
+});
+
 // Handle push notifications from the server
 sw.addEventListener("push", (event) => {
   if (!event.data) return;
