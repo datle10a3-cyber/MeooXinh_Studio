@@ -170,20 +170,12 @@ function isTabletTouchViewport() {
 }
 
 function shouldUseRouterScroll() {
-  return true;
+  return !isTabletTouchViewport();
 }
 
 function resetViewportScroll() {
   if (typeof window === "undefined") return;
-  // On iPad, defer scroll reset to avoid blocking during route paint
-  if (isTabletTouchViewport()) {
-    window.requestAnimationFrame(() => {
-      window.requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      });
-    });
-    return;
-  }
+  if (isTabletTouchViewport()) return;
   window.scrollTo({ top: 0, left: 0, behavior: "auto" });
 }
 
@@ -307,6 +299,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }, [pathname, rootAdminCentralOnly, router]);
 
   useEffect(() => {
+    if (isTabletTouchViewport()) return;
     const frame = window.requestAnimationFrame(resetViewportScroll);
     return () => window.cancelAnimationFrame(frame);
   }, [pathname]);

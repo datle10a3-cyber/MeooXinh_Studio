@@ -255,6 +255,166 @@ video {
 }
 
 /* ─── Small screens ─── */
+/* Tablet touch performance: Xiaomi/iPad class tablets, including landscape. */
+@media (min-width: 768px) and (max-width: 1366px) and (pointer: coarse) {
+  html,
+  body {
+    min-height: 100svh;
+    overflow-x: clip;
+    overscroll-behavior-x: none;
+  }
+
+  .min-h-dvh {
+    min-height: 100vh !important;
+    min-height: 100svh !important;
+  }
+
+  .h-dvh {
+    height: 100vh !important;
+    height: 100svh !important;
+  }
+
+  [class*="max-h-[calc(100dvh"] {
+    max-height: calc(100vh - 1rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    max-height: calc(100svh - 1rem - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+  }
+
+  [class*="max-h-[30dvh"] {
+    max-height: 30vh !important;
+    max-height: 30svh !important;
+  }
+
+  .studio-mobile-page,
+  .studio-mobile-page > .flex {
+    min-height: 100vh !important;
+    min-height: 100svh !important;
+  }
+
+  button,
+  a {
+    touch-action: manipulation;
+  }
+
+  * {
+    transition-duration: 40ms !important;
+  }
+
+  header.sticky {
+    position: static !important;
+    top: auto !important;
+  }
+
+  main,
+  .animate-pulse,
+  .animate-bounce,
+  [class*="animate-"] {
+    animation: none !important;
+  }
+
+  .animate-spin {
+    animation: none !important;
+  }
+
+  [class*="backdrop-blur"],
+  [class*="supports-[backdrop-filter]"],
+  .backdrop-blur,
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl,
+  .bg-glass {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  header.sticky,
+  nav.fixed,
+  .fixed.inset-0,
+  .studio-gpu,
+  .studio-mobile-form-sheet {
+    transform: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+  }
+
+  [style*="translate3d"],
+  [style*="translateZ"] {
+    transform: none !important;
+    will-change: auto !important;
+    backface-visibility: visible !important;
+  }
+
+  [style*="backdrop-filter"],
+  [style*="backdropFilter"] {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
+
+  [class*="hover:-translate"],
+  [class*="hover:scale"],
+  [class*="active:scale"] {
+    transform: none !important;
+  }
+
+  [class*="shadow-[0_12px"],
+  [class*="shadow-[0_14px"],
+  [class*="shadow-[0_18px"],
+  [class*="shadow-[0_20px"],
+  [class*="shadow-[0_22px"],
+  [class*="shadow-[0_24px"],
+  [class*="shadow-[0_30px"],
+  .shadow-2xl,
+  .shadow-xl {
+    box-shadow: 0 4px 14px rgba(91, 52, 44, 0.08) !important;
+  }
+
+  [data-row-id] {
+    contain: layout style;
+  }
+
+  .studio-bottom-nav {
+    display: none !important;
+  }
+
+  .studio-menu-trigger {
+    display: inline-flex !important;
+  }
+
+  .studio-mobile-drawer {
+    display: block !important;
+    isolation: isolate;
+    overscroll-behavior: contain;
+    contain: layout paint style;
+  }
+
+  .studio-mobile-drawer-backdrop {
+    background: rgba(43, 28, 26, 0.28) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    transition: none !important;
+  }
+
+  .studio-mobile-drawer-panel {
+    width: min(390px, 44vw) !important;
+    max-width: 390px !important;
+    height: 100vh !important;
+    height: 100svh !important;
+    transform: none !important;
+    will-change: auto !important;
+    contain: layout paint style;
+    box-shadow: 0 8px 24px rgba(91, 52, 44, 0.14) !important;
+  }
+
+  .studio-mobile-drawer-panel .studio-ios-scroll {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: auto;
+  }
+
+  .studio-mobile-bottom-safe {
+    padding-bottom: 1rem !important;
+  }
+}
+
 @media (max-width: 640px) {
   html,
   body {
