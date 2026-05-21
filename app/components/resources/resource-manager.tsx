@@ -463,6 +463,8 @@ function printableInvoiceData(row: Row) {
 }
 
 function cleanSystemNote(row: Row) {
+  const content = String(row.content ?? "").trim();
+  if (content && row.note === undefined) return content;
   const note = String(row.note ?? "").trim();
   if (!note) return "";
   if (note.includes("GROUP_BOOKING_DONE") || note.includes("GROUP_BOOKING:")) {
@@ -860,6 +862,7 @@ function detailFields(config: ReturnType<typeof getConfig>, resource: ResourceKe
 
 function cardInfoFields(config: ReturnType<typeof getConfig>, resource: ResourceKey, richInfoCard: boolean) {
   if (resource === "customers") return ["phone", "email", "source", "totalSpent", "note"];
+  if (resource === "notes") return ["category", "username", "secret", "content"];
   return detailFields(config, resource)
     .filter((field) => !richInfoCard || field !== config.primaryField)
     .slice(0, richInfoCard ? 8 : 4);
@@ -2535,7 +2538,8 @@ function ResourceListWithProgressive({
             const statusField = config.tableFields.find((field: string) => ["status", "approvalStatus", "type", "isActive"].includes(field));
             const thumbs = rowGallery(row);
             const compact = ["invoices", "projects"].includes(resource);
-            const richInfoCard = ["customers", "equipment"].includes(resource);
+            const richInfoCard = ["customers", "equipment", "notes"].includes(resource);
+            const opensDetail = compact || resource === "notes";
 
             if (compact) {
               return (
@@ -2573,7 +2577,7 @@ function ResourceListWithProgressive({
                     setLongPressActivated(false);
                     return;
                   }
-                  if (compact) setDetailRow(row);
+                  if (opensDetail) setDetailRow(row);
                 }}
                 onPointerDown={(event) => startRowLongPress(event, row)}
                 onPointerUp={clearLongPress}
@@ -2581,7 +2585,7 @@ function ResourceListWithProgressive({
                 onPointerLeave={clearLongPress}
                 className={cn(
                   "h-fit rounded-2xl p-2 transition hover:shadow-md sm:rounded-[1.5rem] sm:p-3",
-                  compact ? "cursor-pointer" : "",
+                  opensDetail ? "cursor-pointer" : "",
                   richInfoCard
                     ? "border-[#F4C7C4] bg-[linear-gradient(135deg,#FFFFFF_0%,#FFF8F1_48%,#FFF0F4_100%)] hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(184,95,108,0.16)]"
                     : "border-[#F4C7C4] bg-white hover:-translate-y-0.5 hover:shadow-[0_18px_45px_rgba(184,95,108,0.16)]",
@@ -2642,8 +2646,10 @@ function ResourceListWithProgressive({
                       <div className={cn("mt-2 grid grid-cols-2 gap-1.5 sm:gap-2.5", resource === "customers" ? "md:grid-cols-4 xl:grid-cols-5" : richInfoCard ? "xl:grid-cols-4" : "sm:mt-4 sm:gap-3 xl:grid-cols-3")}>
                         {cardInfoFields(config, resource, richInfoCard)
                           .map((field) => {
-                            const noteLike = ["note", "message"].includes(field);
-                            const value = noteLike ? cleanSystemNote(row) || "Chưa có ghi chú" : renderValue(config, field, row[field]);
+                            const noteLike = ["note", "message", "content"].includes(field);
+                            const value = field === "secret"
+                              ? row.secret ? "••••••" : "Chưa có"
+                              : noteLike ? cleanSystemNote(row) || "Chưa có ghi chú" : renderValue(config, field, row[field]);
                             return (
                               <div key={field} className={cn("min-w-0 rounded-xl border border-[#F8D8D4] bg-white/78 px-2 py-1.5 shadow-sm sm:rounded-2xl sm:px-3 sm:py-2", resource === "customers" && noteLike ? "col-span-2 md:col-span-4 xl:col-span-1" : richInfoCard && noteLike ? "col-span-2 xl:col-span-2" : "")}>
                                 <p className="text-[11px] font-black uppercase tracking-wide text-[#C87888]">{fieldLabel(config, field)}</p>

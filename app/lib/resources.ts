@@ -85,6 +85,13 @@ export const RESOURCE_DEFINITIONS = {
     numberFields: [],
     trashable: true,
   },
+  notes: {
+    model: "note",
+    entity: "Note",
+    dateFields: [],
+    numberFields: [],
+    trashable: true,
+  },
   auditLogs: {
     model: "auditLog",
     entity: "AuditLog",

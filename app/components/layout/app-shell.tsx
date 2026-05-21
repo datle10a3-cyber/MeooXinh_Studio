@@ -18,6 +18,7 @@ import {
   LayoutDashboard,
   Menu,
   Moon,
+  NotebookPen,
   Package,
   Search,
   ShieldCheck,
@@ -138,6 +139,7 @@ const mobileGroups: { title: string; items: NavItem[] }[] = [
     title: "Quản lý",
     items: [
       { id: "customers", label: "Khách", href: "/customers", icon: Users },
+      { id: "notes", label: "Ghi chú", href: "/notes", icon: NotebookPen },
       { id: "users", label: "Nhân sự", href: "/users", icon: Users },
       { id: "completed-bookings", label: "Booking hoàn tất", href: "/completed-bookings", icon: CalendarCheck2 },
       { id: "equipment", label: "Thiết bị", href: "/equipment", icon: Wrench },

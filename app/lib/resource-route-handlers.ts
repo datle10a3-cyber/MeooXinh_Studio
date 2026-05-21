@@ -176,7 +176,7 @@ export async function getResource(req: Request, resourceName: string) {
       include: resourceInclude(resource.key),
       take: cursorMode ? take + 1 : take,
       ...(cursorMode && cursor ? { cursor: { id: cursor }, skip: 1 } : {}),
-      orderBy: { createdAt: "desc" },
+      orderBy: resource.key === "notes" ? [{ isPinned: "desc" }, { createdAt: "desc" }] : { createdAt: "desc" },
     });
 
     if (cursorMode) {

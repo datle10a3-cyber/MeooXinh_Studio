@@ -34,6 +34,7 @@ model Studio {
   employees         Employee[]
   equipment         Equipment[]
   notifications     Notification[]
+  notes             Note[]
   auditLogs         AuditLog[]
   automationRules   AutomationRule[]
   media             Media[]
@@ -622,6 +623,28 @@ model Notification {
   @@index([studioId, isRead])
   @@index([studioId, createdAt])
   @@index([studioId, dueAt])
+  @@index([studioId, deletedAt])
+}
+
+model Note {
+  id         String   @id @default(cuid())
+  studioId   String
+  title      String
+  category   String?
+  username   String?
+  secret     String?
+  url        String?
+  content    String?
+  isPinned   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  deletedAt  DateTime?
+  studio     Studio   @relation(fields: [studioId], references: [id], onDelete: Cascade)
+
+  @@index([studioId, isPinned, createdAt])
+  @@index([studioId, category])
+  @@index([studioId, createdAt])
+  @@index([studioId, updatedAt])
   @@index([studioId, deletedAt])
 }
 

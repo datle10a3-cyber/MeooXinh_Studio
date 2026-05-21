@@ -8,7 +8,8 @@ export type ResourceKey =
   | "invoices"
   | "employees"
   | "equipment"
-  | "notifications";
+  | "notifications"
+  | "notes";
 
 export type FieldType = "text" | "number" | "textarea" | "select" | "boolean" | "date" | "datetime" | "image" | "gallery";
 
@@ -269,6 +270,26 @@ export const RESOURCE_CONFIG: Record<ResourceKey, ResourceConfig> = {
       { key: "dueAt", label: "Thời gian nhắc", type: "datetime" },
       { key: "type", label: "Loại thông báo", type: "select", options: ["SYSTEM", "BOOKING", "PAYMENT", "DEBT", "APPROVAL"] },
       { key: "imageUrl", label: "Ảnh đính kèm (nếu có)", type: "image", placeholder: "Upload ảnh đính kèm" },
+    ],
+  },
+  notes: {
+    label: "Ghi chú",
+    shortLabel: "ghi chú",
+    group: "Hệ thống",
+    description: "Lưu nhanh mật khẩu, tài khoản, lưu ý vận hành và các ghi nhớ quan trọng của studio.",
+    workflowHint: "Dùng để ghi những thông tin cần nhớ: tài khoản, mật khẩu, link, quy trình hoặc lưu ý nội bộ.",
+    related: ["customers", "bookings", "projects"],
+    primaryField: "title",
+    secondaryField: "category",
+    tableFields: ["title", "category", "username", "isPinned"],
+    fields: [
+      { key: "title", label: "Tiêu đề", type: "text", placeholder: "VD: Mật khẩu Canva, lưu ý khách VIP..." },
+      { key: "category", label: "Nhóm ghi chú", type: "text", placeholder: "Tài khoản, khách hàng, vận hành..." },
+      { key: "username", label: "Tài khoản / email", type: "text", placeholder: "Tên đăng nhập nếu có" },
+      { key: "secret", label: "Mật khẩu / mã cần nhớ", type: "text", placeholder: "Mật khẩu, mã PIN, mã backup..." },
+      { key: "url", label: "Link liên quan", type: "text", placeholder: "https://..." },
+      { key: "isPinned", label: "Ghim ghi chú", type: "boolean", options: ["true", "false"] },
+      { key: "content", label: "Nội dung ghi chú", type: "textarea", placeholder: "Ghi nội dung cần nhớ, lưu ý xử lý, hướng dẫn nội bộ..." },
     ],
   },
 };

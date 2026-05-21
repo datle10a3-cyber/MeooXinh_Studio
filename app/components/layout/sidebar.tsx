@@ -14,6 +14,7 @@ import {
   FolderOpen,
   Home,
   LayoutDashboard,
+  NotebookPen,
   Package,
   Settings,
   ShieldCheck,
@@ -70,6 +71,7 @@ const navGroups: Array<{ title: string; items: NavItem[] }> = [
     title: "Quản lý",
     items: [
       { id: "customers", label: "Khách", icon: Users },
+      { id: "notes", label: "Ghi chú", icon: NotebookPen },
       { id: "completed-bookings", label: "Booking hoàn tất", icon: CheckCircle2, href: "/completed-bookings" },
       { id: "users", label: "Nhân sự", icon: Users, adminOnly: true },
       { id: "equipment", label: "Thiết bị", icon: Camera },
