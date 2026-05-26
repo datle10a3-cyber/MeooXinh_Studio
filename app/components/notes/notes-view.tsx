@@ -2,7 +2,7 @@
 
 import { memo, useCallback, useEffect, useRef, useState, startTransition } from "react";
 import {
-  Copy, Eye, EyeOff, ExternalLink, Loader2, Pencil, Pin, PinOff,
+  Copy, Eye, EyeOff, ExternalLink, Loader2, Pencil, Pin,
   Plus, Save, Search, StickyNote, Trash2, X,
 } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
@@ -295,7 +295,10 @@ export function NotesView() {
     }
   }, []);
 
-  useEffect(() => { fetchNotes(); }, [fetchNotes]);
+  useEffect(() => {
+    const timer = window.setTimeout(() => void fetchNotes(), 0);
+    return () => window.clearTimeout(timer);
+  }, [fetchNotes]);
 
   const openCreate = () => {
     setEditingNote(null);

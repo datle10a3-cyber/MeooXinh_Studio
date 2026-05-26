@@ -194,7 +194,7 @@ export async function GET(request: Request) {
       where: { studioId: user.studioId, status: "OPEN" },
     });
     const openShiftByWallet = new Map(openShifts.map((s) => [s.walletId, s]));
-    for (const row of wallets as any[]) {
+    for (const row of wallets as Array<{ id: string; balance: unknown }>) {
       const shift = openShiftByWallet.get(row.id);
       if (shift) {
         const transactions = await prisma.transaction.findMany({

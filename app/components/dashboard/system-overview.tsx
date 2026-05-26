@@ -354,7 +354,7 @@ export function ReportsView() {
 
   useEffect(() => {
     let mounted = true;
-    fetch("/api/system/health")
+    fetch("/api/system/status")
       .then((res) => res.json())
       .then((result) => {
         if (mounted) setHealth(result.data ?? null);

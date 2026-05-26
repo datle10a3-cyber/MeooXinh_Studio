@@ -245,7 +245,7 @@ export function NotificationBell() {
     const first = window.setTimeout(() => void load(), 0);
     const timer = window.setInterval(() => {
       if (document.visibilityState === "visible") void load();
-    }, 3000);
+    }, 5 * 60 * 1000);
     window.addEventListener("focus", reloadWhenVisible);
     document.addEventListener("visibilitychange", reloadWhenVisible);
     return () => {

@@ -188,13 +188,14 @@ export async function getResource(req: Request, resourceName: string) {
       });
       const openShiftByWallet = new Map(openShifts.map((s) => [s.walletId, s]));
 
-      for (const row of rows as any[]) {
-        const shift = openShiftByWallet.get(row.id);
+      for (const row of rows) {
+        const walletId = String(row.id ?? "");
+        const shift = openShiftByWallet.get(walletId);
         if (shift) {
           const transactions = await prisma.transaction.findMany({
             where: {
               studioId: user.studioId,
-              walletId: row.id,
+              walletId,
               deletedAt: null,
               approvalStatus: "APPROVED",
               occurredAt: { gte: shift.openedAt },
