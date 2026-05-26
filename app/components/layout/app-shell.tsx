@@ -476,13 +476,13 @@ export function AppShell({ children }: { children: React.ReactNode }) {
 
               <div className="flex min-w-0 shrink-0 items-center justify-end gap-1 sm:gap-2">
                 {!rootAdminCentralOnly ? <div className="hidden items-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-2 py-1 shadow-sm xl:flex">
-                  <Link className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/categories">
+                  <Link prefetch={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/categories">
                     Danh mục
                   </Link>
-                  <Link className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/packages">
+                  <Link prefetch={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/packages">
                     Gói
                   </Link>
-                  <Link className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/booking">
+                  <Link prefetch={false} className="rounded-xl px-3 py-2 text-sm font-black text-[#5B342C] hover:bg-[#FFF0F4]" href="/booking">
                     Booking
                   </Link>
                 </div> : null}

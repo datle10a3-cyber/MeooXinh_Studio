@@ -90,7 +90,7 @@ export default function ForgotPasswordPage() {
             Đặt lại mật khẩu
           </Button>
 
-          <Link href="/login" className="mt-5 block rounded-2xl border border-[#F4C7C4] bg-white px-4 py-3 text-center text-sm font-black text-[#EA7188] shadow-sm transition hover:bg-[#FFF3EC]">
+          <Link prefetch={false} href="/login" className="mt-5 block rounded-2xl border border-[#F4C7C4] bg-white px-4 py-3 text-center text-sm font-black text-[#EA7188] shadow-sm transition hover:bg-[#FFF3EC]">
             Quay lại đăng nhập
           </Link>
         </form>

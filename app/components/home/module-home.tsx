@@ -243,7 +243,7 @@ export function ModuleHome() {
             </p>
           </div>
           <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap">
-            <Link className="min-w-0" href="/booking" onClick={() => setActiveResource("booking")}>
+            <Link prefetch={false} className="min-w-0" href="/booking" onClick={() => setActiveResource("booking")}>
               <Button className="w-full sm:w-auto">Tạo booking</Button>
             </Link>
             <Button className="w-full sm:w-auto" variant="secondary" onClick={() => goToResource("ai")}>
@@ -323,7 +323,7 @@ export function ModuleHome() {
               </div>
             );
             return item.href ? (
-              <Link key={item.title} href={item.href} onClick={() => setActiveResource(item.id)}>
+              <Link key={item.title} prefetch={false} href={item.href} onClick={() => setActiveResource(item.id)}>
                 {tile}
               </Link>
             ) : (

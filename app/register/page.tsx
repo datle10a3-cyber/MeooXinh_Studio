@@ -132,7 +132,7 @@ export default function RegisterPage() {
             Tạo studio
           </Button>
 
-          <Link href="/login" className="mt-5 block text-center text-sm font-black text-[#EA7188] hover:text-[#C85168]">
+          <Link prefetch={false} href="/login" className="mt-5 block text-center text-sm font-black text-[#EA7188] hover:text-[#C85168]">
             Đã có tài khoản
           </Link>
         </form>

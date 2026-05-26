@@ -16,11 +16,11 @@ export function UserMenu({ session, onLogout, rootAdminTheme = false }: { sessio
   if (!session) {
     return (
       <div className="flex items-center gap-1 sm:gap-2">
-        <Link href="/login" className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[#F4C7C4] bg-white px-3 text-sm font-bold text-[#5B342C] shadow-sm transition duration-200 hover:bg-[#FFF0F4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EA7188]/35 sm:h-11 sm:rounded-2xl sm:px-5">
+        <Link prefetch={false} href="/login" className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-[#F4C7C4] bg-white px-3 text-sm font-bold text-[#5B342C] shadow-sm transition duration-200 hover:bg-[#FFF0F4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EA7188]/35 sm:h-11 sm:rounded-2xl sm:px-5">
           <LogIn size={17} />
           <span className="hidden min-[420px]:inline">Đăng nhập</span>
         </Link>
-        <Link href="/register" className="hidden h-10 items-center justify-center gap-2 rounded-xl bg-[#FFE1E8] px-3 text-sm font-bold text-[#A84E61] shadow-sm transition duration-200 hover:bg-[#FFD4DF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EA7188]/35 sm:inline-flex sm:h-11 sm:rounded-2xl sm:px-5">
+        <Link prefetch={false} href="/register" className="hidden h-10 items-center justify-center gap-2 rounded-xl bg-[#FFE1E8] px-3 text-sm font-bold text-[#A84E61] shadow-sm transition duration-200 hover:bg-[#FFD4DF] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EA7188]/35 sm:inline-flex sm:h-11 sm:rounded-2xl sm:px-5">
           <UserPlus size={17} />
           <span>Tạo studio bằng mã mời</span>
         </Link>

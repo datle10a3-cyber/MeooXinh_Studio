@@ -26,11 +26,11 @@ export function WelcomeScreen() {
               Booking, khách hàng, dự án, hóa đơn, thu chi, nhân sự, thiết bị và AI trong cùng một hệ thống.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/login" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#EA7188] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#DA5E79] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EA7188]/35">
+              <Link prefetch={false} href="/login" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl bg-[#EA7188] px-5 text-sm font-bold text-white shadow-sm transition hover:bg-[#DA5E79] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EA7188]/35">
                 Đăng nhập
                 <ArrowRight size={17} />
               </Link>
-              <Link href="/register" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-5 text-sm font-bold text-[#5B342C] shadow-sm transition hover:bg-[#FFF0F4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EA7188]/35">
+              <Link prefetch={false} href="/register" className="inline-flex h-11 items-center justify-center gap-2 rounded-2xl border border-[#F4C7C4] bg-white px-5 text-sm font-bold text-[#5B342C] shadow-sm transition hover:bg-[#FFF0F4] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#EA7188]/35">
                 Tạo studio mới
               </Link>
             </div>
