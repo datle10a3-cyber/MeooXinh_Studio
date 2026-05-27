@@ -739,13 +739,13 @@ function PackageDetailModal({
                     {thumbs.length + (row.imageUrl ? 1 : 0)} ảnh
                   </span>
                 </div>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+                <div className="grid grid-cols-4 gap-2">
                   {thumbs.map((url, index) => (
                     <button
                       key={`${url}-${index}`}
                       type="button"
                       onClick={() => onOpenGallery(row, index + (row.imageUrl ? 1 : 0))}
-                      className="group grid aspect-[4/3] min-h-[7.5rem] place-items-center overflow-hidden rounded-2xl border border-[#F4C7C4] bg-[#FFF8F1] p-2 transition hover:-translate-y-0.5 hover:border-[#EA7188] hover:bg-white hover:shadow-md sm:min-h-[8.5rem]"
+                      className="group grid h-20 place-items-center overflow-hidden rounded-2xl border border-[#F4C7C4] bg-[#FFF8F1] p-1 transition hover:-translate-y-0.5 hover:border-[#EA7188] hover:bg-white hover:shadow-md sm:h-24"
                     >
                       <img src={url} alt="" className="block max-h-full max-w-full object-contain transition group-hover:scale-[1.02]" />
                     </button>
