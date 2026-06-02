@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
@@ -59,19 +59,37 @@ export function ImagePreview({
         window.history.back();
       }
     };
-  }, []);  const list = images?.length ? images : src ? [src] : [];
+  }, []);
+  const list = useMemo(() => (images?.length ? images : src ? [src] : []), [images, src]);
   const currentIndex = Math.min(Math.max(index, 0), Math.max(list.length - 1, 0));
   const currentSrc = list[currentIndex];
   const canSlide = list.length > 1 && onIndexChange;
 
   useEffect(() => {
     if (!mounted || list.length <= 1) return;
-    thumbnailRefs.current[currentIndex]?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "center",
+    const frame = window.requestAnimationFrame(() => {
+      thumbnailRefs.current[currentIndex]?.scrollIntoView({
+        behavior: window.matchMedia("(pointer: coarse)").matches ? "auto" : "smooth",
+        block: "nearest",
+        inline: "center",
+      });
     });
+    return () => window.cancelAnimationFrame(frame);
   }, [currentIndex, list.length, mounted]);
+
+  useEffect(() => {
+    if (!mounted || !list.length) return;
+    const preloadIndexes = [currentIndex, currentIndex - 1, currentIndex + 1, currentIndex + 2];
+    const seen = new Set<string>();
+    preloadIndexes.forEach((itemIndex) => {
+      const url = list[(itemIndex + list.length) % list.length];
+      if (!url || seen.has(url)) return;
+      seen.add(url);
+      const image = new window.Image();
+      image.decoding = "async";
+      image.src = url;
+    });
+  }, [currentIndex, list, mounted]);
 
   function move(step: number) {
     if (!canSlide) return;
@@ -205,7 +223,21 @@ export function ImagePreview({
             </>
           ) : null}
           <div className="grid max-h-[calc(100dvh-11rem)] min-h-[260px] w-full place-items-center overflow-hidden bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_58%)] p-3 sm:min-h-[360px] sm:max-h-[72vh] sm:p-6" onWheel={handleWheel}>
-            <img src={currentSrc} alt={alt ?? ""} draggable={false} className="block h-auto max-h-[calc(100dvh-13rem)] w-auto max-w-full rounded-[1.25rem] object-contain shadow-[0_25px_80px_rgba(0,0,0,0.58)] ring-1 ring-white/20 sm:max-h-[68vh] sm:rounded-[1.5rem]" />
+            <style>{`
+              @keyframes image-preview-in {
+                from { opacity: 0.18; transform: scale(0.985); filter: blur(1px); }
+                to { opacity: 1; transform: scale(1); filter: blur(0); }
+              }
+            `}</style>
+            <img
+              key={currentSrc}
+              src={currentSrc}
+              alt={alt ?? ""}
+              draggable={false}
+              decoding="async"
+              className="block h-auto max-h-[calc(100dvh-13rem)] w-auto max-w-full transform-gpu rounded-[1.25rem] object-contain shadow-[0_25px_80px_rgba(0,0,0,0.58)] ring-1 ring-white/20 will-change-transform sm:max-h-[68vh] sm:rounded-[1.5rem]"
+              style={{ animation: "image-preview-in 260ms ease-out" }}
+            />
           </div>
         </div>
 
