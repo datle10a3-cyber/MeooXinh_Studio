@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, RotateCcw, X, ZoomIn, ZoomOut } from "lucide-react";
 import { Button } from "@/app/components/ui/button";
 import { cn } from "@/app/utils/cn";
 
@@ -27,11 +27,16 @@ export function ImagePreview({
   const touchMoved = useRef(false);
   const lastWheelAt = useRef(0);
   const thumbnailRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const pinchStartDistance = useRef<number | null>(null);
+  const pinchStartZoom = useRef(1);
+  const panStart = useRef<{ x: number; y: number; panX: number; panY: number } | null>(null);
   const [mounted, setMounted] = useState(false);
   const [slideDirection, setSlideDirection] = useState<"next" | "prev" | "fade">("fade");
   const [dragOffset, setDragOffset] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [settlingDrag, setSettlingDrag] = useState(false);
+  const [zoom, setZoom] = useState(1);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setMounted(true));
@@ -69,6 +74,35 @@ export function ImagePreview({
   const currentSrc = list[currentIndex];
   const canSlide = list.length > 1 && onIndexChange;
   const progressPercent = list.length ? ((currentIndex + 1) / list.length) * 100 : 0;
+  const zoomPercent = Math.round(zoom * 100);
+  const zoomed = zoom > 1.01;
+
+  function clampZoom(value: number) {
+    return Math.min(3, Math.max(1, value));
+  }
+
+  function updateZoom(value: number) {
+    const nextZoom = clampZoom(value);
+    setZoom(nextZoom);
+    if (nextZoom <= 1.01) {
+      setPan({ x: 0, y: 0 });
+    }
+  }
+
+  function resetZoom() {
+    setZoom(1);
+    setPan({ x: 0, y: 0 });
+    panStart.current = null;
+    pinchStartDistance.current = null;
+  }
+
+  function getTouchDistance(touches: React.TouchList) {
+    const first = touches[0];
+    const second = touches[1];
+    const deltaX = second.clientX - first.clientX;
+    const deltaY = second.clientY - first.clientY;
+    return Math.hypot(deltaX, deltaY);
+  }
 
   useEffect(() => {
     if (!mounted || list.length <= 1) return;
@@ -98,6 +132,7 @@ export function ImagePreview({
 
   function move(step: number) {
     if (!canSlide) return;
+    resetZoom();
     setSlideDirection(step > 0 ? "next" : "prev");
     setDragOffset(0);
     setDragging(false);
@@ -129,17 +164,50 @@ export function ImagePreview({
   if (!currentSrc) return null;
 
   function handleTouchStart(event: React.TouchEvent<HTMLDivElement>) {
+    if (event.touches.length >= 2) {
+      pinchStartDistance.current = getTouchDistance(event.touches);
+      pinchStartZoom.current = zoom;
+      panStart.current = null;
+      touchIntent.current = "horizontal";
+      touchMoved.current = true;
+      setDragOffset(0);
+      setDragging(false);
+      setSettlingDrag(false);
+      return;
+    }
+
     const touch = event.touches[0];
     touchStartX.current = touch.clientX;
     touchStartY.current = touch.clientY;
     touchIntent.current = null;
     touchMoved.current = false;
+    if (zoomed) {
+      panStart.current = { x: touch.clientX, y: touch.clientY, panX: pan.x, panY: pan.y };
+    }
     setDragOffset(0);
     setDragging(false);
     setSettlingDrag(false);
   }
 
   function handleTouchMove(event: React.TouchEvent<HTMLDivElement>) {
+    if (event.touches.length >= 2 && pinchStartDistance.current) {
+      if (event.cancelable) event.preventDefault();
+      touchMoved.current = true;
+      updateZoom(pinchStartZoom.current * (getTouchDistance(event.touches) / pinchStartDistance.current));
+      return;
+    }
+
+    if (zoomed && panStart.current && event.touches.length === 1) {
+      if (event.cancelable) event.preventDefault();
+      const touch = event.touches[0];
+      touchMoved.current = true;
+      setPan({
+        x: panStart.current.panX + touch.clientX - panStart.current.x,
+        y: panStart.current.panY + touch.clientY - panStart.current.y,
+      });
+      return;
+    }
+
     if (!canSlide || touchStartX.current === null || touchStartY.current === null) return;
 
     const touch = event.touches[0];
@@ -159,6 +227,31 @@ export function ImagePreview({
   }
 
   function handleTouchEnd(event: React.TouchEvent<HTMLDivElement>) {
+    if (pinchStartDistance.current) {
+      if (event.touches.length < 2) {
+        pinchStartDistance.current = null;
+        pinchStartZoom.current = zoom;
+      }
+      if (zoomed || zoom > 1.01) {
+        panStart.current = null;
+        touchStartX.current = null;
+        touchStartY.current = null;
+        touchIntent.current = null;
+        return;
+      }
+    }
+
+    if (zoomed) {
+      panStart.current = null;
+      touchStartX.current = null;
+      touchStartY.current = null;
+      touchIntent.current = null;
+      setDragOffset(0);
+      setDragging(false);
+      setSettlingDrag(false);
+      return;
+    }
+
     if (!canSlide || touchStartX.current === null || touchStartY.current === null) {
       touchStartX.current = null;
       touchStartY.current = null;
@@ -192,6 +285,23 @@ export function ImagePreview({
   }
 
   function handleWheel(event: React.WheelEvent<HTMLDivElement>) {
+    if (event.ctrlKey || event.metaKey) {
+      event.preventDefault();
+      event.stopPropagation();
+      updateZoom(zoom + (event.deltaY < 0 ? 0.18 : -0.18));
+      return;
+    }
+
+    if (zoomed) {
+      event.preventDefault();
+      event.stopPropagation();
+      setPan((currentPan) => ({
+        x: currentPan.x - event.deltaX,
+        y: currentPan.y - event.deltaY,
+      }));
+      return;
+    }
+
     if (!canSlide) return;
     const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
     if (Math.abs(delta) < 18) return;
@@ -206,6 +316,7 @@ export function ImagePreview({
 
   function selectImage(itemIndex: number) {
     if (!onIndexChange || itemIndex === currentIndex) return;
+    resetZoom();
     setSlideDirection(itemIndex > currentIndex ? "next" : "prev");
     setDragOffset(0);
     setDragging(false);
@@ -242,19 +353,64 @@ export function ImagePreview({
                 <span className="hidden text-[11px] font-semibold text-white/[0.55] sm:inline">MÈOO XINHH STUDIO</span>
               </div>
             </div>
-            <Button
-              variant="secondary"
-              size="icon"
-              className="relative z-50 !h-12 !w-12 shrink-0 rounded-full border border-white/20 bg-white/95 text-[#2B1C1A] shadow-[0_14px_35px_rgba(0,0,0,0.36)] transition hover:-translate-y-0.5 hover:scale-105 hover:bg-white active:scale-95"
-              aria-label="Đóng ảnh"
-              onPointerDown={(event) => event.stopPropagation()}
-              onClick={(event) => {
-                event.stopPropagation();
-                onClose();
-              }}
-            >
-              <X size={18} />
-            </Button>
+            <div className="flex shrink-0 items-center gap-2">
+              <div className="hidden items-center gap-1 rounded-full border border-white/10 bg-white/[0.08] p-1 shadow-inner shadow-white/[0.04] backdrop-blur-xl sm:flex">
+                <button
+                  type="button"
+                  className="grid h-8 w-8 place-items-center rounded-full text-white/75 transition hover:bg-white/15 hover:text-white active:scale-95 disabled:opacity-35"
+                  aria-label="Thu nhỏ ảnh"
+                  disabled={zoom <= 1.01}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    updateZoom(zoom - 0.25);
+                  }}
+                >
+                  <ZoomOut size={15} />
+                </button>
+                <span className="min-w-12 text-center text-[11px] font-black text-white/75">{zoomPercent}%</span>
+                <button
+                  type="button"
+                  className="grid h-8 w-8 place-items-center rounded-full text-white/75 transition hover:bg-white/15 hover:text-white active:scale-95 disabled:opacity-35"
+                  aria-label="Phóng to ảnh"
+                  disabled={zoom >= 3}
+                  onPointerDown={(event) => event.stopPropagation()}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    updateZoom(zoom + 0.25);
+                  }}
+                >
+                  <ZoomIn size={15} />
+                </button>
+                {zoomed ? (
+                  <button
+                    type="button"
+                    className="grid h-8 w-8 place-items-center rounded-full text-white/70 transition hover:bg-white/15 hover:text-white active:scale-95"
+                    aria-label="Đưa ảnh về 100%"
+                    onPointerDown={(event) => event.stopPropagation()}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      resetZoom();
+                    }}
+                  >
+                    <RotateCcw size={14} />
+                  </button>
+                ) : null}
+              </div>
+              <Button
+                variant="secondary"
+                size="icon"
+                className="relative z-50 !h-12 !w-12 shrink-0 rounded-full border border-white/20 bg-white/95 text-[#2B1C1A] shadow-[0_14px_35px_rgba(0,0,0,0.36)] transition hover:-translate-y-0.5 hover:scale-105 hover:bg-white active:scale-95"
+                aria-label="Đóng ảnh"
+                onPointerDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onClose();
+                }}
+              >
+                <X size={18} />
+              </Button>
+            </div>
           </div>
           <div className="mt-2 h-1 overflow-hidden rounded-full bg-white/10">
             <div className="h-full rounded-full bg-[linear-gradient(90deg,#F6A8B8,#EA7188,#FFE0C9)] transition-[width] duration-300 ease-out" style={{ width: `${progressPercent}%` }} />
@@ -280,7 +436,7 @@ export function ImagePreview({
               </Button>
             </>
           ) : null}
-          <div className="relative grid h-full w-full place-items-center overflow-visible px-0 py-1 sm:px-10 sm:py-4 md:px-14" onWheel={handleWheel}>
+          <div className={cn("relative grid h-full w-full place-items-center overflow-hidden px-0 py-1 sm:px-10 sm:py-4 md:px-14", zoomed ? "cursor-grab touch-none" : "touch-pan-y")} onWheel={handleWheel}>
             <style>{`
               @keyframes image-preview-in {
                 from { opacity: 0.48; transform: scale(0.982); filter: blur(1px); }
@@ -295,17 +451,24 @@ export function ImagePreview({
                 to { opacity: 1; transform: translate3d(0,0,0) scale(1); filter: blur(0); }
               }
             `}</style>
-            <div className="grid h-full max-h-full w-full max-w-[min(100%,860px)] place-items-center overflow-visible sm:max-w-[min(100%,820px)] lg:max-w-[min(100%,900px)] xl:max-w-[min(100%,960px)]">
+            <div className="grid h-full max-h-full w-full max-w-[min(100%,900px)] place-items-center overflow-hidden rounded-[1.35rem] bg-black/[0.16] sm:max-w-[min(100%,860px)] sm:rounded-[1.85rem] lg:max-w-[min(100%,960px)] xl:max-w-[min(100%,1040px)]">
               <div
                 key={currentSrc}
                 role="img"
                 aria-label={alt ?? ""}
-                className="h-full max-h-full w-full max-w-full transform-gpu rounded-[1.25rem] bg-contain bg-center bg-no-repeat shadow-[0_26px_85px_rgba(0,0,0,0.58),0_0_0_1px_rgba(255,255,255,0.18)] ring-1 ring-white/15 will-change-transform sm:rounded-[1.75rem]"
+                className={cn(
+                  "h-full max-h-full w-full max-w-full transform-gpu rounded-[1.25rem] bg-contain bg-center bg-no-repeat shadow-[0_26px_85px_rgba(0,0,0,0.58),0_0_0_1px_rgba(255,255,255,0.18)] ring-1 ring-white/15 will-change-transform sm:rounded-[1.75rem]",
+                  zoomed && "cursor-grab active:cursor-grabbing"
+                )}
                 style={{
                   backgroundImage: `url("${currentSrc}")`,
-                  animation: dragging ? undefined : `image-preview-${slideDirection} 420ms cubic-bezier(0.16, 1, 0.3, 1)`,
-                  transform: dragging ? `translate3d(${dragOffset}px,0,0) scale(${1 - Math.min(Math.abs(dragOffset) / 3000, 0.025)})` : undefined,
-                  transition: dragging ? (settlingDrag ? "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)" : "transform 80ms linear") : undefined,
+                  animation: dragging || zoomed ? undefined : `image-preview-${slideDirection} 420ms cubic-bezier(0.16, 1, 0.3, 1)`,
+                  transform: zoomed
+                    ? `translate3d(${pan.x}px,${pan.y}px,0) scale(${zoom})`
+                    : dragging
+                      ? `translate3d(${dragOffset}px,0,0) scale(${1 - Math.min(Math.abs(dragOffset) / 3000, 0.025)})`
+                      : undefined,
+                  transition: zoomed ? "transform 120ms cubic-bezier(0.2, 0.8, 0.2, 1)" : dragging ? (settlingDrag ? "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)" : "transform 80ms linear") : undefined,
                 }}
               />
             </div>
