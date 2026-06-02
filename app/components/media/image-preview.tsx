@@ -280,7 +280,7 @@ export function ImagePreview({
               </Button>
             </>
           ) : null}
-          <div className="relative grid h-full w-full place-items-center overflow-hidden px-0 py-1 sm:px-10 sm:py-4 md:px-14" onWheel={handleWheel}>
+          <div className="relative grid h-full w-full place-items-center overflow-visible px-0 py-1 sm:px-10 sm:py-4 md:px-14" onWheel={handleWheel}>
             <style>{`
               @keyframes image-preview-in {
                 from { opacity: 0.48; transform: scale(0.982); filter: blur(1px); }
@@ -295,19 +295,21 @@ export function ImagePreview({
                 to { opacity: 1; transform: translate3d(0,0,0) scale(1); filter: blur(0); }
               }
             `}</style>
-            <img
-              key={currentSrc}
-              src={currentSrc}
-              alt={alt ?? ""}
-              draggable={false}
-              decoding="async"
-              className="block h-auto max-h-[calc(100dvh-12rem)] w-auto max-w-[calc(100vw-1rem)] transform-gpu rounded-[1.25rem] object-contain shadow-[0_26px_85px_rgba(0,0,0,0.58),0_0_0_1px_rgba(255,255,255,0.18)] ring-1 ring-white/15 will-change-transform sm:max-h-[calc(100dvh-13rem)] sm:max-w-[min(86vw,980px)] sm:rounded-[1.75rem] lg:max-h-[calc(100dvh-15rem)] lg:max-w-[min(76vw,1120px)] xl:max-w-[min(72vw,1180px)]"
-              style={{
-                animation: dragging ? undefined : `image-preview-${slideDirection} 420ms cubic-bezier(0.16, 1, 0.3, 1)`,
-                transform: dragging ? `translate3d(${dragOffset}px,0,0) scale(${1 - Math.min(Math.abs(dragOffset) / 3000, 0.025)})` : undefined,
-                transition: dragging ? (settlingDrag ? "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)" : "transform 80ms linear") : undefined,
-              }}
-            />
+            <div className="grid h-full max-h-full w-full max-w-[min(100%,1080px)] place-items-center overflow-visible sm:max-w-[min(100%,980px)] lg:max-w-[min(100%,1040px)] xl:max-w-[min(100%,1080px)]">
+              <img
+                key={currentSrc}
+                src={currentSrc}
+                alt={alt ?? ""}
+                draggable={false}
+                decoding="async"
+                className="block h-full max-h-full w-full max-w-full transform-gpu rounded-[1.25rem] object-contain object-center shadow-[0_26px_85px_rgba(0,0,0,0.58),0_0_0_1px_rgba(255,255,255,0.18)] ring-1 ring-white/15 will-change-transform sm:rounded-[1.75rem]"
+                style={{
+                  animation: dragging ? undefined : `image-preview-${slideDirection} 420ms cubic-bezier(0.16, 1, 0.3, 1)`,
+                  transform: dragging ? `translate3d(${dragOffset}px,0,0) scale(${1 - Math.min(Math.abs(dragOffset) / 3000, 0.025)})` : undefined,
+                  transition: dragging ? (settlingDrag ? "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)" : "transform 80ms linear") : undefined,
+                }}
+              />
+            </div>
           </div>
         </div>
 
