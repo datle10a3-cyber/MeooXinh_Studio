@@ -28,6 +28,10 @@ export function ImagePreview({
   const lastWheelAt = useRef(0);
   const thumbnailRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [mounted, setMounted] = useState(false);
+  const [slideDirection, setSlideDirection] = useState<"next" | "prev" | "fade">("fade");
+  const [dragOffset, setDragOffset] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [settlingDrag, setSettlingDrag] = useState(false);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => setMounted(true));
@@ -93,6 +97,10 @@ export function ImagePreview({
 
   function move(step: number) {
     if (!canSlide) return;
+    setSlideDirection(step > 0 ? "next" : "prev");
+    setDragOffset(0);
+    setDragging(false);
+    setSettlingDrag(false);
     onIndexChange((currentIndex + step + list.length) % list.length);
   }
 
@@ -125,6 +133,9 @@ export function ImagePreview({
     touchStartY.current = touch.clientY;
     touchIntent.current = null;
     touchMoved.current = false;
+    setDragOffset(0);
+    setDragging(false);
+    setSettlingDrag(false);
   }
 
   function handleTouchMove(event: React.TouchEvent<HTMLDivElement>) {
@@ -141,6 +152,8 @@ export function ImagePreview({
 
     if (touchIntent.current === "horizontal" && event.cancelable) {
       event.preventDefault();
+      setDragging(true);
+      setDragOffset(Math.max(-120, Math.min(120, deltaX * 0.42)));
     }
   }
 
@@ -149,6 +162,9 @@ export function ImagePreview({
       touchStartX.current = null;
       touchStartY.current = null;
       touchIntent.current = null;
+      setDragOffset(0);
+      setDragging(false);
+      setSettlingDrag(false);
       return;
     }
 
@@ -159,7 +175,18 @@ export function ImagePreview({
     touchStartY.current = null;
     touchIntent.current = null;
 
-    if (Math.abs(deltaX) < 52 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) return;
+    if (Math.abs(deltaX) < 52 || Math.abs(deltaX) < Math.abs(deltaY) * 1.35) {
+      setSettlingDrag(true);
+      setDragOffset(0);
+      window.setTimeout(() => {
+        setDragging(false);
+        setSettlingDrag(false);
+      }, 180);
+      return;
+    }
+    setDragOffset(0);
+    setDragging(false);
+    setSettlingDrag(false);
     move(deltaX < 0 ? 1 : -1);
   }
 
@@ -174,6 +201,15 @@ export function ImagePreview({
     event.preventDefault();
     event.stopPropagation();
     move(delta > 0 ? 1 : -1);
+  }
+
+  function selectImage(itemIndex: number) {
+    if (!onIndexChange || itemIndex === currentIndex) return;
+    setSlideDirection(itemIndex > currentIndex ? "next" : "prev");
+    setDragOffset(0);
+    setDragging(false);
+    setSettlingDrag(false);
+    onIndexChange(itemIndex);
   }
 
   function handleBackdropClick() {
@@ -225,8 +261,16 @@ export function ImagePreview({
           <div className="grid max-h-[calc(100dvh-11rem)] min-h-[260px] w-full place-items-center overflow-hidden bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.08),transparent_58%)] p-3 sm:min-h-[360px] sm:max-h-[72vh] sm:p-6" onWheel={handleWheel}>
             <style>{`
               @keyframes image-preview-in {
-                from { opacity: 0.18; transform: scale(0.985); filter: blur(1px); }
+                from { opacity: 0.12; transform: scale(0.985); filter: blur(1px); }
                 to { opacity: 1; transform: scale(1); filter: blur(0); }
+              }
+              @keyframes image-preview-next {
+                from { opacity: 0.12; transform: translate3d(42px,0,0) scale(0.985); filter: blur(1px); }
+                to { opacity: 1; transform: translate3d(0,0,0) scale(1); filter: blur(0); }
+              }
+              @keyframes image-preview-prev {
+                from { opacity: 0.12; transform: translate3d(-42px,0,0) scale(0.985); filter: blur(1px); }
+                to { opacity: 1; transform: translate3d(0,0,0) scale(1); filter: blur(0); }
               }
             `}</style>
             <img
@@ -236,7 +280,11 @@ export function ImagePreview({
               draggable={false}
               decoding="async"
               className="block h-auto max-h-[calc(100dvh-13rem)] w-auto max-w-full transform-gpu rounded-[1.25rem] object-contain shadow-[0_25px_80px_rgba(0,0,0,0.58)] ring-1 ring-white/20 will-change-transform sm:max-h-[68vh] sm:rounded-[1.5rem]"
-              style={{ animation: "image-preview-in 260ms ease-out" }}
+              style={{
+                animation: dragging ? undefined : `image-preview-${slideDirection} 360ms cubic-bezier(0.2, 0.8, 0.2, 1)`,
+                transform: dragging ? `translate3d(${dragOffset}px,0,0) scale(${1 - Math.min(Math.abs(dragOffset) / 3000, 0.025)})` : undefined,
+                transition: dragging ? (settlingDrag ? "transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1)" : "transform 80ms linear") : undefined,
+              }}
             />
           </div>
         </div>
@@ -250,7 +298,7 @@ export function ImagePreview({
                   thumbnailRefs.current[itemIndex] = element;
                 }}
                 type="button"
-                onClick={() => onIndexChange?.(itemIndex)}
+                onClick={() => selectImage(itemIndex)}
                 className={cn(
                   "grid h-20 w-20 shrink-0 place-items-center overflow-hidden rounded-2xl border bg-white/10 p-1.5 shadow-sm transition hover:-translate-y-0.5 hover:scale-[1.03]",
                   itemIndex === currentIndex ? "border-[#F6A8B8] bg-white/95 ring-4 ring-[#EA7188]/35" : "border-white/15 opacity-70 hover:bg-white/20 hover:opacity-100",
