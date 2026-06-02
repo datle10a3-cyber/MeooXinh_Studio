@@ -225,7 +225,7 @@ export function ImagePreview({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[420] overflow-hidden overscroll-contain bg-[radial-gradient(circle_at_18%_0%,rgba(234,113,136,0.28),transparent_32%),radial-gradient(circle_at_86%_10%,rgba(255,226,206,0.16),transparent_30%),radial-gradient(circle_at_50%_110%,rgba(122,62,55,0.32),transparent_36%),linear-gradient(135deg,#0B0606_0%,#241412_48%,#070303_100%)] p-3 text-white backdrop-blur-2xl sm:p-5"
+      className="fixed inset-0 z-[420] overflow-hidden overscroll-contain bg-[radial-gradient(circle_at_18%_0%,rgba(234,113,136,0.28),transparent_32%),radial-gradient(circle_at_86%_10%,rgba(255,226,206,0.16),transparent_30%),radial-gradient(circle_at_50%_110%,rgba(122,62,55,0.32),transparent_36%),linear-gradient(135deg,#0B0606_0%,#241412_48%,#070303_100%)] p-2 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-[max(0.75rem,env(safe-area-inset-top))] text-white backdrop-blur-2xl sm:p-5"
       onClick={handleBackdropClick}
       onWheel={handleWheel}
     >
@@ -245,9 +245,13 @@ export function ImagePreview({
             <Button
               variant="secondary"
               size="icon"
-              className="h-10 w-10 shrink-0 rounded-full border border-white/20 bg-white/90 text-[#2B1C1A] shadow-[0_14px_35px_rgba(0,0,0,0.36)] transition hover:-translate-y-0.5 hover:scale-105 hover:bg-white active:scale-95"
+              className="relative z-50 !h-12 !w-12 shrink-0 rounded-full border border-white/20 bg-white/95 text-[#2B1C1A] shadow-[0_14px_35px_rgba(0,0,0,0.36)] transition hover:-translate-y-0.5 hover:scale-105 hover:bg-white active:scale-95"
               aria-label="Đóng ảnh"
-              onClick={onClose}
+              onPointerDown={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation();
+                onClose();
+              }}
             >
               <X size={18} />
             </Button>
@@ -276,7 +280,7 @@ export function ImagePreview({
               </Button>
             </>
           ) : null}
-          <div className="relative grid h-full w-full place-items-center overflow-hidden px-10 py-2 sm:px-16 sm:py-4" onWheel={handleWheel}>
+          <div className="relative grid h-full w-full place-items-center overflow-hidden px-1 py-1 sm:px-12 sm:py-4 md:px-16" onWheel={handleWheel}>
             <style>{`
               @keyframes image-preview-in {
                 from { opacity: 0.48; transform: scale(0.982); filter: blur(1px); }
@@ -297,7 +301,7 @@ export function ImagePreview({
               alt={alt ?? ""}
               draggable={false}
               decoding="async"
-              className="block h-auto max-h-full w-auto max-w-full transform-gpu rounded-[1.5rem] object-contain shadow-[0_26px_85px_rgba(0,0,0,0.58),0_0_0_1px_rgba(255,255,255,0.18)] ring-1 ring-white/15 will-change-transform sm:rounded-[1.75rem]"
+              className="block h-full max-h-full w-full max-w-full transform-gpu rounded-[1.25rem] object-contain shadow-[0_26px_85px_rgba(0,0,0,0.58),0_0_0_1px_rgba(255,255,255,0.18)] ring-1 ring-white/15 will-change-transform sm:rounded-[1.75rem]"
               style={{
                 animation: dragging ? undefined : `image-preview-${slideDirection} 420ms cubic-bezier(0.16, 1, 0.3, 1)`,
                 transform: dragging ? `translate3d(${dragOffset}px,0,0) scale(${1 - Math.min(Math.abs(dragOffset) / 3000, 0.025)})` : undefined,
