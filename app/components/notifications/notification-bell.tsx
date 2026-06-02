@@ -57,6 +57,8 @@ function canSendBrowserNotification(id: string) {
   return true;
 }
 
+const NOTIFICATION_REFRESH_MS = 5 * 60 * 1000;
+
 function urlBase64ToUint8Array(base64String: string) {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
@@ -99,6 +101,7 @@ export function NotificationBell() {
   const [read, setRead] = useState<Set<string>>(() => readIds());
   const [toast, setToast] = useState("");
   const [pushEnabled, setPushEnabled] = useState(false);
+  const lastNotificationsFetchAt = useRef(0);
 
   function showToast(message: string, duration = 3500) {
     setToast(message);
@@ -197,7 +200,10 @@ export function NotificationBell() {
   }, [open]);
 
   useEffect(() => {
-    async function load() {
+    async function load(force = false) {
+      const now = Date.now();
+      if (!force && now - lastNotificationsFetchAt.current < NOTIFICATION_REFRESH_MS) return;
+      lastNotificationsFetchAt.current = now;
       const result = await fetch("/api/notifications")
         .then((res) => res.json())
         .catch(() => null);
@@ -244,8 +250,8 @@ export function NotificationBell() {
     };
     const first = window.setTimeout(() => void load(), 0);
     const timer = window.setInterval(() => {
-      if (document.visibilityState === "visible") void load();
-    }, 5 * 60 * 1000);
+      if (document.visibilityState === "visible") void load(true);
+    }, NOTIFICATION_REFRESH_MS);
     window.addEventListener("focus", reloadWhenVisible);
     document.addEventListener("visibilitychange", reloadWhenVisible);
     return () => {

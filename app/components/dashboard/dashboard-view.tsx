@@ -10,6 +10,7 @@ import type { ApiResult, DashboardData } from "@/app/types/studio";
 import { formatDate, formatMoney } from "@/app/utils/format";
 import { useUiStore } from "@/app/store/ui-store";
 import dynamic from "next/dynamic";
+import { cachedFetch } from "@/app/lib/cached-fetch";
 
 const RevenueChart = dynamic(() => import("@/app/components/dashboard/revenue-chart").then((mod) => mod.RevenueChart), {
   ssr: false,
@@ -145,8 +146,11 @@ export function DashboardView() {
       fromYear: String(Math.min(fromYear, toYear)),
       toYear: String(Math.max(fromYear, toYear)),
     });
-    const dashboardRes = await fetch(`/api/dashboard?${params.toString()}`).then((res) => res.json() as Promise<ApiResult<DashboardData>>).catch(() => null);
-    if (dashboardRes?.data) setDashboard(dashboardRes.data);
+    const dashboardRes = await cachedFetch<DashboardData | ApiResult<DashboardData>>(`/api/dashboard?${params.toString()}`, { staleTime: 60_000 }).catch(() => null);
+    if (dashboardRes) {
+      if ("summary" in dashboardRes) setDashboard(dashboardRes);
+      else if (dashboardRes.data) setDashboard(dashboardRes.data);
+    }
     setLoading(false);
 
     window.setTimeout(async () => {

@@ -31,6 +31,7 @@ import { useUiStore } from "@/app/store/ui-store";
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 import { Portal } from "@/app/components/ui/portal";
+import { cachedFetch, invalidateCache } from "@/app/lib/cached-fetch";
 
 type PackagePageData = { items: PackageItem[]; nextCursor: string | null; hasMore: boolean };
 
@@ -170,12 +171,16 @@ export function PackagePage() {
     }
     const packageUrl = `/api/packages${packageParams.toString() ? `?${packageParams.toString()}` : ""}`;
     const [categoryResult, packageResult] = await Promise.all([
-      fetch("/api/categories").then((res) => res.json() as Promise<ApiResult<CategoryItem[]>>),
-      fetch(packageUrl).then((res) => res.json() as Promise<ApiResult<PackageItem[] | PackagePageData>>),
+      cachedFetch<CategoryItem[] | ApiResult<CategoryItem[]>>("/api/categories", { staleTime: 5 * 60 * 1000 }),
+      mode === "reset"
+        ? cachedFetch<PackageItem[] | PackagePageData | ApiResult<PackageItem[] | PackagePageData>>(packageUrl, { staleTime: 5 * 60 * 1000 })
+        : fetch(packageUrl).then((res) => res.json() as Promise<ApiResult<PackageItem[] | PackagePageData>>),
     ]);
-    if (categoryResult.data) setCategories(categoryResult.data);
-    if (packageResult.data) {
-      const page = packageResult.data;
+    if (Array.isArray(categoryResult)) setCategories(categoryResult);
+    else if (categoryResult.data) setCategories(categoryResult.data);
+    const packagePage = Array.isArray(packageResult) || ("items" in packageResult && Array.isArray(packageResult.items)) ? packageResult : "data" in packageResult ? packageResult.data : undefined;
+    if (packagePage) {
+      const page = packagePage;
       const items = Array.isArray(page) ? page : page.items;
       startTransition(() => {
         setRows((current) => {
@@ -192,8 +197,8 @@ export function PackagePage() {
         setHasMoreRows(page.hasMore);
       }
     }
-    if (categoryResult.error && !/chưa đăng nhập/i.test(categoryResult.error.message)) setMessage(categoryResult.error.message);
-    if (packageResult.error && !/chưa đăng nhập/i.test(packageResult.error.message)) setMessage(packageResult.error.message);
+    if (!Array.isArray(categoryResult) && categoryResult.error && !/chưa đăng nhập/i.test(categoryResult.error.message)) setMessage(categoryResult.error.message);
+    if (!Array.isArray(packageResult) && !("items" in packageResult) && "error" in packageResult && packageResult.error && !/chưa đăng nhập/i.test(packageResult.error.message)) setMessage(packageResult.error.message);
     setLoadingMoreRows(false);
     if (tabletTouch) {
       window.setTimeout(() => setInitialLoading(false), 80);
@@ -255,6 +260,7 @@ export function PackagePage() {
     setEditStudioPassword("");
     setShowForm(false);
     setMessage(editingId ? "Đã cập nhật gói." : "Đã tạo gói mới.");
+    invalidateCache("/api/packages");
     void loadData();
   }
 
@@ -278,6 +284,7 @@ export function PackagePage() {
       setDetail(null);
       setDeleteTarget(null);
       setSelectedIds((current) => current.filter((id) => id !== row.id));
+      invalidateCache("/api/packages");
       await loadData();
     } finally {
       setDeleting(false);
@@ -308,6 +315,7 @@ export function PackagePage() {
       setMessage(mode === "hard" ? `Đã xóa ${source.length} gói.` : `Đã chuyển ${source.length} gói vào thùng rác.`);
       setSelectedIds([]);
       setBulkDeleteMode(null);
+      invalidateCache("/api/packages");
       await loadData();
     } finally {
       setDeleting(false);

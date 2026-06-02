@@ -138,7 +138,7 @@ export function ModuleHome() {
 
   useEffect(() => {
     let cancelled = false;
-    cachedFetch<DashboardData>("/api/dashboard?chartMode=month", { staleTime: 30_000 })
+    cachedFetch<DashboardData>("/api/dashboard?chartMode=month", { staleTime: 60_000 })
       .then((data) => {
         if (cancelled || !data) return;
         // Chuẩn hóa dữ liệu để tránh lỗi render nếu API trả về thiếu field

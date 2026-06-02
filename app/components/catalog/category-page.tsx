@@ -15,6 +15,7 @@ import { useUiStore } from "@/app/store/ui-store";
 import { PageSpinner } from "@/app/components/ui/skeleton";
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { Portal } from "@/app/components/ui/portal";
+import { cachedFetch, invalidateCache } from "@/app/lib/cached-fetch";
 
 const emptyForm = { name: "", description: "" };
 
@@ -47,10 +48,11 @@ export function CategoryPage() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  async function loadRows() {
-    const result = await fetch("/api/categories").then((res) => res.json() as Promise<ApiResult<CategoryItem[]>>);
-    if (result.data) setRows(result.data);
-    if (result.error && !/chưa đăng nhập/i.test(result.error.message)) setMessage(result.error.message);
+  async function loadRows(force = false) {
+    const result = await cachedFetch<CategoryItem[] | ApiResult<CategoryItem[]>>("/api/categories", { staleTime: 5 * 60 * 1000, force });
+    if (Array.isArray(result)) setRows(result);
+    else if (result.data) setRows(result.data);
+    else if (result.error && !/chưa đăng nhập/i.test(result.error.message)) setMessage(result.error.message);
     setInitialLoading(false);
   }
 
@@ -105,7 +107,8 @@ export function CategoryPage() {
     setEditStudioPassword("");
     setShowForm(false);
     setMessage(editingId ? "Đã cập nhật danh mục." : "Đã tạo danh mục.");
-    void loadRows();
+    invalidateCache("/api/categories");
+    void loadRows(true);
   }
 
   async function remove(row: CategoryItem, mode: "trash" | "hard") {
@@ -126,7 +129,8 @@ export function CategoryPage() {
       setDetail(null);
       setDeleteTarget(null);
       setSelectedIds((current) => current.filter((id) => id !== row.id));
-      await loadRows();
+      invalidateCache("/api/categories");
+      await loadRows(true);
     } finally {
       setDeleting(false);
     }
@@ -156,7 +160,8 @@ export function CategoryPage() {
       setMessage(mode === "hard" ? `Đã xóa ${source.length} danh mục.` : `Đã chuyển ${source.length} danh mục vào thùng rác.`);
       setSelectedIds([]);
       setBulkDeleteMode(null);
-      await loadRows();
+      invalidateCache("/api/categories");
+      await loadRows(true);
     } finally {
       setDeleting(false);
     }

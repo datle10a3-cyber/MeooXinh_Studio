@@ -17,6 +17,7 @@ import { useUiStore } from "@/app/store/ui-store";
 import { AlertModal } from "@/app/components/ui/alert-modal";
 import { Portal } from "@/app/components/ui/portal";
 import { buildStudioReceiptHtml, openReceiptPrintWindow, type StudioReceiptLine } from "@/app/utils/receipt-template";
+import { cachedFetch } from "@/app/lib/cached-fetch";
 
 type CustomerItem = { id: string; name: string; phone?: string | null; avatarUrl?: string | null };
 type CustomerPage = { items: CustomerItem[] };
@@ -477,12 +478,13 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
       const bookingUrl = `/api/bookings${bookingParams.toString() ? `?${bookingParams.toString()}` : ""}`;
       const [customerResult, packageResult, bookingResult] = await Promise.all([
         fetch("/api/resources/customers").then((res) => res.json() as Promise<ApiResult<CustomerItem[] | CustomerPage>>),
-        fetch("/api/packages").then((res) => res.json() as Promise<ApiResult<PackageItem[]>>),
+        cachedFetch<PackageItem[] | ApiResult<PackageItem[]>>("/api/packages", { staleTime: 5 * 60 * 1000 }),
         fetch(bookingUrl).then((res) => res.json() as Promise<ApiResult<BookingItem[] | BookingPageData>>),
       ]);
       const nextCustomers = customerListFromData(customerResult.data);
       if (customerResult.data) setCustomers(nextCustomers);
-      if (packageResult.data) setPackages(packageResult.data);
+      if (Array.isArray(packageResult)) setPackages(packageResult);
+      else if (packageResult.data) setPackages(packageResult.data);
       if (bookingResult.data) {
         const page = bookingResult.data;
         const pageItems = Array.isArray(page) ? page : page.items;
@@ -507,7 +509,7 @@ export function BookingPage({ completedOnly = false }: { completedOnly?: boolean
         }
       }
       if (customerResult.error && !/chưa đăng nhập/i.test(customerResult.error.message)) setMessage(customerResult.error.message);
-      if (packageResult.error && !/chưa đăng nhập/i.test(packageResult.error.message)) setMessage(packageResult.error.message);
+      if (!Array.isArray(packageResult) && packageResult.error && !/chưa đăng nhập/i.test(packageResult.error.message)) setMessage(packageResult.error.message);
       if (bookingResult.error && !/chưa đăng nhập/i.test(bookingResult.error.message)) setMessage(bookingResult.error.message);
     } catch (err) {
       console.error("Booking load error:", err);

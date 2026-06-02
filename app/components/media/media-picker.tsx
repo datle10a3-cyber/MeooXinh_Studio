@@ -6,6 +6,7 @@ import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
 import { cn } from "@/app/utils/cn";
 import { Portal } from "@/app/components/ui/portal";
+import { cachedFetch, invalidateCache } from "@/app/lib/cached-fetch";
 
 type MediaItem = {
   id: string;
@@ -176,6 +177,7 @@ function ImageSlot({
       const res = await fetch("/api/media", { method: "POST", body: form });
       const result = await res.json().catch(() => null);
       if (res.ok && result?.data?.url) {
+        invalidateCache("/api/media");
         onChange(result.data.url);
       } else {
         const errorMsg = result?.error?.message || "Lỗi tải ảnh lên máy chủ. Vui lòng kiểm tra lại.";
@@ -316,11 +318,14 @@ function MediaLibraryModal({ open, onClose, onPick }: { open: boolean; onClose: 
     setLoading(true);
     const params = new URLSearchParams({ cursorMode: "1", take: "72" });
     if (mode === "append" && nextCursor) params.set("cursor", nextCursor);
-    const result = await fetch(`/api/media?${params.toString()}`)
-      .then((res) => res.json())
-      .catch(() => null);
-    if (result?.data) {
-      const page = result.data as MediaPage;
+    const url = `/api/media?${params.toString()}`;
+    const page = mode === "reset"
+      ? await cachedFetch<MediaPage>(url, { staleTime: 5 * 60 * 1000 }).catch(() => null)
+      : await fetch(url)
+        .then((res) => res.json())
+        .then((result) => result?.data as MediaPage | undefined)
+        .catch(() => null);
+    if (page) {
       setItems((current) => {
         if (mode === "reset") return page.items;
         const seen = new Set(current.map((item) => item.id));
@@ -382,6 +387,7 @@ function MediaLibraryModal({ open, onClose, onPick }: { open: boolean; onClose: 
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(all ? { all: true } : { ids: selectedIds }),
     });
+    invalidateCache("/api/media");
     setSelectedIds([]);
     setSelectionMode(false);
     await loadMedia("reset");
