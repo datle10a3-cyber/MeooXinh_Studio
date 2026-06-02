@@ -55,7 +55,7 @@ function gallery(value?: string | null) {
   if (!value) return [];
   try {
     const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string").slice(0, 4) : [];
+    return Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string").slice(0, 10) : [];
   } catch {
     return [];
   }
@@ -739,13 +739,13 @@ function PackageDetailModal({
                     {thumbs.length + (row.imageUrl ? 1 : 0)} ảnh
                   </span>
                 </div>
-                <div className="grid grid-cols-4 gap-2">
+                <div className="grid grid-cols-5 gap-2">
                   {thumbs.map((url, index) => (
                     <button
                       key={`${url}-${index}`}
                       type="button"
                       onClick={() => onOpenGallery(row, index + (row.imageUrl ? 1 : 0))}
-                      className="group grid h-20 place-items-center overflow-hidden rounded-2xl border border-[#F4C7C4] bg-[#FFF8F1] p-1 transition hover:-translate-y-0.5 hover:border-[#EA7188] hover:bg-white hover:shadow-md sm:h-24"
+                      className="group grid h-[4.5rem] place-items-center overflow-hidden rounded-2xl border border-[#F4C7C4] bg-[#FFF8F1] p-1.5 shadow-sm transition hover:-translate-y-0.5 hover:border-[#EA7188] hover:bg-white hover:shadow-md min-[430px]:h-20 sm:h-24"
                     >
                       <img src={url} alt="" className="block max-h-full max-w-full object-contain transition group-hover:scale-[1.02]" />
                     </button>
@@ -846,6 +846,7 @@ function PackageForm({
           galleryUrls={form.galleryUrls}
           onMainChange={(value) => setForm((current) => ({ ...current, imageUrl: value }))}
           onGalleryChange={(value) => setForm((current) => ({ ...current, galleryUrls: value }))}
+          maxGallery={10}
         />
         <label>
           <span className="mb-2 block text-sm font-bold text-[#5B342C]">Danh mục</span>

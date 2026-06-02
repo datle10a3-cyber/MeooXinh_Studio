@@ -13,7 +13,7 @@ function normalizeGallery(value: unknown) {
   try {
     const parsed = JSON.parse(String(value));
     if (!Array.isArray(parsed)) return null;
-    return JSON.stringify(parsed.filter((item) => typeof item === "string" && item.trim()).slice(0, 4));
+    return JSON.stringify(parsed.filter((item) => typeof item === "string" && item.trim()).slice(0, 10));
   } catch {
     return null;
   }

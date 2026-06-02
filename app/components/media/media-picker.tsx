@@ -19,18 +19,20 @@ type MediaPage = {
   hasMore: boolean;
 };
 
-function parseGallery(value?: string | null) {
+const DEFAULT_GALLERY_LIMIT = 4;
+
+function parseGallery(value?: string | null, limit = DEFAULT_GALLERY_LIMIT) {
   if (!value) return [];
   try {
     const parsed = JSON.parse(value);
-    return Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string").slice(0, 4) : [];
+    return Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string").slice(0, limit) : [];
   } catch {
     return [];
   }
 }
 
-function stringifyGallery(urls: string[]) {
-  return JSON.stringify(urls.filter(Boolean).slice(0, 4));
+function stringifyGallery(urls: string[], limit = DEFAULT_GALLERY_LIMIT) {
+  return JSON.stringify(urls.filter(Boolean).slice(0, limit));
 }
 
 export function MediaPicker({
@@ -50,18 +52,21 @@ export function MediaGalleryPicker({
   galleryUrls,
   onMainChange,
   onGalleryChange,
+  maxGallery = DEFAULT_GALLERY_LIMIT,
 }: {
   mainUrl: string;
   galleryUrls?: string | null;
   onMainChange: (value: string) => void;
   onGalleryChange: (value: string) => void;
+  maxGallery?: number;
 }) {
-  const gallery = parseGallery(galleryUrls);
+  const gallery = parseGallery(galleryUrls, maxGallery);
+  const slots = Array.from({ length: maxGallery }, (_, index) => index);
 
   function updateGallery(index: number, url: string) {
     const next = [...gallery];
     next[index] = url;
-    onGalleryChange(stringifyGallery(next));
+    onGalleryChange(stringifyGallery(next, maxGallery));
   }
 
   return (
@@ -69,17 +74,17 @@ export function MediaGalleryPicker({
       <div className="mb-3 flex items-center justify-between gap-3">
         <div>
           <p className="text-sm font-bold text-[#5B342C]">Bộ ảnh</p>
-          <p className="text-xs text-[#9B746B]">1 ảnh chính + 4 ảnh phụ.</p>
+          <p className="text-xs text-[#9B746B]">1 ảnh chính + {maxGallery} ảnh phụ.</p>
         </div>
         <span className="rounded-full bg-[#FFF3EC] px-3 py-1 text-xs font-bold text-[#9B746B]">
-          {(mainUrl ? 1 : 0) + gallery.filter(Boolean).length}/5
+          {(mainUrl ? 1 : 0) + gallery.filter(Boolean).length}/{maxGallery + 1}
         </span>
       </div>
 
       <ImageSlot value={mainUrl} title="Ảnh chính" featured onChange={onMainChange} />
 
-      <div className="mt-3 grid grid-cols-4 gap-2">
-        {[0, 1, 2, 3].map((index) => (
+      <div className={cn("mt-3 grid gap-2", maxGallery > 4 ? "grid-cols-2 min-[430px]:grid-cols-3 sm:grid-cols-5 md:grid-cols-2 xl:grid-cols-5" : "grid-cols-4")}>
+        {slots.map((index) => (
           <ImageSlot
             key={index}
             value={gallery[index] ?? ""}
@@ -221,14 +226,14 @@ function ImageSlot({
         onChange={(event) => void upload(event.target.files?.[0])}
       />
 
-      <div className={cn("flex items-center gap-1.5", compact ? "justify-center" : "flex-wrap gap-2")}>
+      <div className={cn(compact ? "grid grid-cols-3 gap-1.5" : "flex flex-wrap items-center gap-2")}>
         <button
           type="button"
           onClick={() => inputRef.current?.click()}
           disabled={uploading}
           className={cn(
             "flex items-center justify-center border border-[#F4C7C4] bg-white text-[#5B342C] shadow-sm hover:bg-[#FFF0F4] transition duration-200 disabled:opacity-50",
-            compact ? "h-8 w-8 rounded-lg" : "h-10 px-3 sm:px-4 rounded-2xl text-sm font-bold gap-2"
+            compact ? "h-8 w-full rounded-lg" : "h-10 px-3 sm:px-4 rounded-2xl text-sm font-bold gap-2"
           )}
           title="Tải ảnh lên"
         >
@@ -241,7 +246,7 @@ function ImageSlot({
           onClick={() => setLibraryOpen(true)}
           className={cn(
             "flex items-center justify-center border border-[#F4C7C4] bg-white text-[#5B342C] shadow-sm hover:bg-[#FFF0F4] transition duration-200",
-            compact ? "h-8 w-8 rounded-lg" : "h-10 px-3 sm:px-4 rounded-2xl text-sm font-bold gap-2"
+            compact ? "h-8 w-full rounded-lg" : "h-10 px-3 sm:px-4 rounded-2xl text-sm font-bold gap-2"
           )}
           title="Thư viện ảnh"
         >
@@ -263,7 +268,7 @@ function ImageSlot({
             className={cn(
               "flex items-center justify-center transition duration-200",
               compact
-                ? "h-8 w-8 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 shadow-sm"
+                ? "h-8 w-full rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 shadow-sm"
                 : "h-10 px-3 sm:px-4 rounded-2xl text-sm font-bold border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 shadow-sm gap-2"
             )}
             title="Xóa ảnh"

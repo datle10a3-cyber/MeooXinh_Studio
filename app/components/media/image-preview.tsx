@@ -26,6 +26,7 @@ export function ImagePreview({
   const touchIntent = useRef<"horizontal" | "vertical" | null>(null);
   const touchMoved = useRef(false);
   const lastWheelAt = useRef(0);
+  const thumbnailRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -62,6 +63,15 @@ export function ImagePreview({
   const currentIndex = Math.min(Math.max(index, 0), Math.max(list.length - 1, 0));
   const currentSrc = list[currentIndex];
   const canSlide = list.length > 1 && onIndexChange;
+
+  useEffect(() => {
+    if (!mounted || list.length <= 1) return;
+    thumbnailRefs.current[currentIndex]?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [currentIndex, list.length, mounted]);
 
   function move(step: number) {
     if (!canSlide) return;
@@ -204,6 +214,9 @@ export function ImagePreview({
             {list.map((url, itemIndex) => (
               <button
                 key={`${url}-${itemIndex}`}
+                ref={(element) => {
+                  thumbnailRefs.current[itemIndex] = element;
+                }}
                 type="button"
                 onClick={() => onIndexChange?.(itemIndex)}
                 className={cn(
